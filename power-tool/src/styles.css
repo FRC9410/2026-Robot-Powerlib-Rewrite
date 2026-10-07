@@ -1,0 +1,15 @@
+:root {
+  background: #0d0d0d;
+}
+
+body {
+  margin: 0;
+  min-width: 960px;
+}
+
+button,
+input,
+select,
+textarea {
+  letter-spacing: 0;
+}
