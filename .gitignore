@@ -191,3 +191,6 @@ power-tool/dist-electron/
 power-tool/dist-renderer/
 power-tool/.vite/
 power-tool/node_modules/
+
+/PowerTool-local/
+/PowerTool/
