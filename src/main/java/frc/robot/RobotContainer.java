@@ -1,50 +1,60 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.powerlib.PowerRobotContainer;
 import frc.powerlib.auto.AutoBuilder;
+import frc.robot.commands.Game2026Auto;
 import frc.robot.commands.SwerveDriveCommand;
-import frc.robot.Constants;
 import frc.robot.subsystems.PowerDashboard;
 import frc.robot.subsystems.StateMachine;
 
 public class RobotContainer implements PowerRobotContainer {
   private final StateMachine stateMachine = new StateMachine();
   private final PowerDashboard powerDashboard = new PowerDashboard(stateMachine);
-  private final CommandXboxController driverController =
-      new CommandXboxController(Constants.OI.DRIVER_CONTROLLER_PORT);
+  private final CommandXboxController driverController = new CommandXboxController(Constants.OI.DRIVER_CONTROLLER_PORT);
   private final AutoBuilder autoBuilder = new AutoBuilder();
+  private boolean collecting, ejecting;
 
   public RobotContainer() {
     configureBindings();
-    stateMachine.drivetrain.setDefaultCommand(
-        new SwerveDriveCommand(stateMachine.drivetrain, driverController));
+    stateMachine.drivetrain.setDefaultCommand(new SwerveDriveCommand(stateMachine, driverController));
     configureAutos();
   }
 
   private void configureBindings() {
-    // Configure driver controller button commands here.
+    driverController.leftTrigger(0.5).and(DriverStation::isTeleopEnabled)
+        .onTrue(Commands.runOnce(() -> { collecting = true; updateIntake(); }))
+        .onFalse(Commands.runOnce(() -> { collecting = false; updateIntake(); }));
+    driverController.b().and(DriverStation::isTeleopEnabled)
+        .onTrue(Commands.runOnce(() -> { ejecting = true; updateIntake(); }))
+        .onFalse(Commands.runOnce(() -> { ejecting = false; updateIntake(); }));
+    driverController.rightTrigger(0.5).and(DriverStation::isTeleopEnabled)
+        .onTrue(Commands.runOnce(() -> stateMachine.setWantedState(StateMachine.RobotState.SHOOTING)))
+        .onFalse(Commands.runOnce(() -> stateMachine.setWantedState(StateMachine.RobotState.READY)));
+    driverController.back().onTrue(Commands.runOnce(() -> {
+      boolean seeded = stateMachine.vision.seedFromFreshVision();
+      stateMachine.setAutoStatus("POSE SEED", seeded ? "Fresh vision pose seeded" : "Requires disabled robot and a fresh vision frame");
+    }).ignoringDisable(true));
   }
-
+  private void updateIntake() { stateMachine.setIntake(collecting, ejecting); }
   private void configureAutos() {
-    // Register command factories here before publishing, for example:
-    // autoBuilder.addAuto("My Auto", this::buildMyAuto);
+    autoBuilder.addAuto("Red Left", Alliance.Red, () -> new Game2026Auto(stateMachine, "Red Left"));
+    autoBuilder.addAuto("Red Right", Alliance.Red, () -> new Game2026Auto(stateMachine, "Red Right"));
+    autoBuilder.addAuto("Blue Left", Alliance.Blue, () -> new Game2026Auto(stateMachine, "Blue Left"));
+    autoBuilder.addAuto("Blue Right", Alliance.Blue, () -> new Game2026Auto(stateMachine, "Blue Right"));
     autoBuilder.publish();
   }
-
+  public void resetForMode() {
+    collecting = ejecting = false;
+    stateMachine.stopAll();
+  }
   public Command getAutonomousCommand() {
+    stateMachine.setAutoStatus("NONE", "No autonomous selected");
     return autoBuilder.getAutonomousCommand();
   }
-
-  public StateMachine getStateMachine() {
-    return stateMachine;
-  }
+  public StateMachine getStateMachine() { return stateMachine; }
 }
-
-
-

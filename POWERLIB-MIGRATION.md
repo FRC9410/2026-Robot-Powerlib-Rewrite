@@ -16,11 +16,11 @@ The installed library-test-robot provided the Power Tool JSON shapes. Its six me
 - Replaced test-only reduced-speed OI value with historical operator port 1 and interchange speed coefficient 0.75. Restored all three camera names and historical camera constants.
 - Supplementary game reference JSON uses the historical field bounds 17.5 by 8.0, actual source commit, shot tables, intake setpoints, autonomous poses, and location/sweep constants. Removed test-only alert thresholds, image metadata and start/hood tolerances without historical counterparts.
 
-`power-tool/generated/powerlib-subsystems.json`, `powerlib-constants.json`, and `powerlib-tuning-selection.json` are native Power Tool configuration files. `powerlib-game-2026.json` is supplementary reference data from the test robot; stock Update Code does not consume it. Tuning selection starts empty because it is UI state rather than a robot calibration.
+`power-tool/generated/powerlib-subsystems.json`, `powerlib-constants.json`, and `powerlib-tuning-selection.json` are native Power Tool configuration files. `powerlib-game-2026.json` is supplementary data from the test robot; the game scaffold consumes it at runtime after Gradle copies it to the deploy directory. Stock Update Code does not consume it. Tuning selection starts empty because it is UI state rather than a robot calibration.
 
 ## Scope and verification
 
-The Power Tool Update Code action generates the mechanism configurations, initialization, characterization commands, custom constants and tuning registry. It does not port the old game's StateMachine behavior, controller bindings or autonomous command sequences. The installed scaffold retains an empty periodic method; this branch is a configuration migration, not a complete operational robot rewrite.
+The Power Tool Update Code action generates the mechanism configurations, initialization, characterization commands, custom constants and tuning registry. It does not port the old game's StateMachine behavior, controller bindings or autonomous command sequences. The follow-up scaffold implements driver control, intake/eject, hub shooting, and the original four quadrant autonomous sequences. Passing and climbing are excluded. See [GAME2026-SCAFFOLD.md](GAME2026-SCAFFOLD.md) for controls, new behavior defaults, guards, and hardware validation still required.
 
 The machine-readable `power-tool/generated/comparison.json` records 351 reference checks and the corrected test-robot differences. The CTRE TunerConstants hardware calibration already matches the reference; its only differences are comments and whitespace. The installed PowerLib vision validation retains `LimelightVisionConfig.DEFAULT` as new library behavior. `motorType: X60` is inherited Power Tool simulation metadata: historical TalonFX declarations do not distinguish an X60 from an X44. These two items are not claimed as recovered legacy calibration.
 
@@ -36,8 +36,8 @@ Power Tool's installed node_modules is included in the final migration commit at
 ## Validation results
 
 - 351 historical configuration checks passed before generation.
-- 205 Java configuration values, four JSON documents, seven subsystem initializations and 451 installed dependency versions passed verification.
-- Gradle build passed with WPILib JDK 17. There are no JUnit test sources; the build reports test NO-SOURCE.
+- 215 Java configuration values (including ten new behavior constants), four JSON documents, seven subsystem initializations and 451 installed dependency versions passed verification.
+- Gradle build passed with WPILib JDK 17, including 24 JUnit behavior tests added with the game scaffold.
 - Renderer and Electron TypeScript checks passed.
 - Existing CANdle deprecation warning remains.
 

@@ -97,6 +97,27 @@
                                                                    "value":  "RobotState.READY",
                                                                    "custom":  false,
                                                                    "tunable":  false
+                                                               },
+                                                               {
+                                                                   "name":  "HOOD_TOLERANCE_ROTATIONS",
+                                                                   "type":  "double",
+                                                                   "value":  "0.005",
+                                                                   "custom":  true,
+                                                                   "tunable":  true
+                                                               },
+                                                               {
+                                                                   "name":  "SHOOTER_EXTRA_RPS",
+                                                                   "type":  "double",
+                                                                   "value":  "1.0",
+                                                                   "custom":  true,
+                                                                   "tunable":  true
+                                                               },
+                                                               {
+                                                                   "name":  "SPINDEXER_SHOOT_RPS",
+                                                                   "type":  "double",
+                                                                   "value":  "60.0",
+                                                                   "custom":  true,
+                                                                   "tunable":  true
                                                                }
                                                            ]
                                          },
@@ -141,7 +162,55 @@
                                },
                   "robot:RobotContainer":  {
                                                "constants":  [
-
+                                                                 {
+                                                                     "name":  "AUTO_START_TOLERANCE_METERS",
+                                                                     "type":  "double",
+                                                                     "value":  "0.5",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 },
+                                                                 {
+                                                                     "name":  "AUTO_START_TOLERANCE_DEGREES",
+                                                                     "type":  "double",
+                                                                     "value":  "15.0",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 },
+                                                                 {
+                                                                     "name":  "AUTO_LEG_TIMEOUT_SECONDS",
+                                                                     "type":  "double",
+                                                                     "value":  "3.0",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 },
+                                                                 {
+                                                                     "name":  "AUTO_TRANSLATION_KP",
+                                                                     "type":  "double",
+                                                                     "value":  "3.2",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 },
+                                                                 {
+                                                                     "name":  "AUTO_TRANSLATION_KD",
+                                                                     "type":  "double",
+                                                                     "value":  "0.2",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 },
+                                                                 {
+                                                                     "name":  "DRIVE_WHILE_SHOOTING_COEFFICIENT",
+                                                                     "type":  "double",
+                                                                     "value":  "0.0",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 },
+                                                                 {
+                                                                     "name":  "DRIVE_WHILE_INTAKING_COEFFICIENT",
+                                                                     "type":  "double",
+                                                                     "value":  "0.4",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 }
                                                              ]
                                            },
                   "robot:Swerve":  {

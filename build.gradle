@@ -105,3 +105,18 @@ wpi.java.configureTestTasks(test)
 tasks.withType(JavaCompile) {
     options.compilerArgs.add '-XDstringConcat=inline'
 }
+
+// Power Tool owns game data; every build/deploy stages the same file for runtime loading.
+def generatedGameConfig = file('power-tool/generated/powerlib-game-2026.json')
+def deployedGameConfig = file('src/main/deploy/powerlib-game-2026.json')
+tasks.register('syncGameConfiguration') {
+    inputs.file(generatedGameConfig)
+    outputs.file(deployedGameConfig)
+    doLast {
+        copy {
+            from generatedGameConfig
+            into deployedGameConfig.parentFile
+        }
+    }
+}
+tasks.named('processResources') { dependsOn tasks.named('syncGameConfiguration') }

@@ -16,7 +16,18 @@ function equivalent(a,b,label) {
  else assert.deepEqual(b,a,label);
 }
 equivalent(expected,actual,'subsystems');
-for (const file of ['powerlib-constants.json','powerlib-game-2026.json','powerlib-tuning-selection.json']) equivalent(readJson(verifiedJsonRoot,file),readJson(generated,file),file);
+for (const file of ['powerlib-game-2026.json','powerlib-tuning-selection.json']) equivalent(readJson(verifiedJsonRoot,file),readJson(generated,file),file);
+const savedConstants = readJson(generated,'powerlib-constants.json');
+const originalConstants = readJson(verifiedJsonRoot,'powerlib-constants.json');
+assert.equal(savedConstants.version,originalConstants.version);
+for (const [key,file] of Object.entries(originalConstants.files)) {
+  assert(savedConstants.files[key],`Missing constants target ${key}`);
+  for (const row of file.constants) {
+    const matches=savedConstants.files[key].constants.filter((candidate)=>candidate.name===row.name);
+    assert.equal(matches.length,1,`Missing or duplicated baseline constant ${key}.${row.name}`);
+    equivalent(row,matches[0],`constants.${key}.${row.name}`);
+  }
+}
 let checked=0;
 const java = (name) => fs.readFileSync(path.join(robotRoot,`src/main/java/frc/robot/constants/${name}Constants.java`),'utf8');
 function value(source,key) {
@@ -66,7 +77,7 @@ const swerveNames={
  heading:{kP:'HEADING_KP',kI:'HEADING_KI',kD:'HEADING_KD'}
 };
 for (const [section,rows] of Object.entries(swerveNames)) for (const [key,javaName] of Object.entries(rows)) check(java('Swerve'),javaName,expected.swerve[section][key]);
-for (const [key,file] of Object.entries(readJson(verifiedJsonRoot,'powerlib-constants.json').files)) {
+for (const [key,file] of Object.entries(savedConstants.files)) {
  const [kind,id]=key.split(':');
  const name=kind==='subsystem'?pascal(expected.subsystems.find((s)=>s.id===id).name):id;
  const source=java(name);

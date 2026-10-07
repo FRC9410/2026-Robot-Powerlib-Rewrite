@@ -14,6 +14,17 @@ public class Vision extends SubsystemBase implements AutoCloseable {
   private final Swerve drivetrain;
   private final LimelightVision limelights;
   private boolean shouldUpdatePose = true;
+  private LimelightVision.Measurement lastMeasurement;
+
+  /** Explicit disabled-only pose seed; normal vision correction still uses the library reader. */
+  public boolean seedFromFreshVision() {
+    if (!DriverStation.isDisabled() || lastMeasurement == null) return false;
+    double age = edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - lastMeasurement.timestampSeconds();
+    if (!Double.isFinite(age) || age < 0 || age > Constants.Vision.CONFIG.maxMeasurementAgeSeconds()
+        || !frc.robot.game.Game2026Config.finitePose(lastMeasurement.pose())) return false;
+    drivetrain.resetPose(lastMeasurement.pose());
+    return true;
+  }
 
   public Vision(Swerve drivetrain) {
     this.drivetrain = drivetrain;
@@ -37,6 +48,7 @@ public class Vision extends SubsystemBase implements AutoCloseable {
         state.Pose.getRotation().getDegrees(),
         drivetrain.getPigeon2().getPitch().getValueAsDouble(),
         drivetrain.getPigeon2().getRoll().getValueAsDouble());
+    estimate.ifPresent(measurement -> lastMeasurement = measurement);
     // Continue reading while disabled so those cached frames are not applied after enabling.
     if (shouldUpdatePose && DriverStation.isEnabled()) {
       estimate.ifPresent(measurement -> drivetrain.addVisionMeasurement(
