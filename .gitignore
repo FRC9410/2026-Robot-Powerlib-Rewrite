@@ -185,3 +185,8 @@ compile_commands.json
 
 # Eclipse generated file for annotation processors
 .factorypath
+
+# Power Tool compiled output
+power-tool/dist-electron/
+power-tool/dist-renderer/
+power-tool/.vite/

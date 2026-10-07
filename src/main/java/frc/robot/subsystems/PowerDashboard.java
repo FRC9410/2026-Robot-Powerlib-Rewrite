@@ -14,6 +14,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.powerlib.PowerRobotContainer;
 import java.util.HashMap;
 import java.util.Map;
+import frc.robot.characterization.FeederCharacterization;
+import frc.robot.characterization.IntakeRollerCharacterization;
+import frc.robot.characterization.ShooterCharacterization;
+import frc.robot.characterization.SpindexerCharacterization;
 
 public class PowerDashboard extends SubsystemBase {
   private static final double TUNING_MODE_SYNC_INTERVAL_SECONDS = 1.0;
@@ -57,6 +61,26 @@ public class PowerDashboard extends SubsystemBase {
 
   private void initCharacterizationRoutines() {
     // POWERLIB GENERATED CHARACTERIZATION START - DO NOT DELETE
+    var feederCharacterization = new FeederCharacterization(stateMachine.feeder);
+    registerCharacterizationCommand("Feeder", "Quasistatic Forward", feederCharacterization.quasistaticForward());
+    registerCharacterizationCommand("Feeder", "Quasistatic Reverse", feederCharacterization.quasistaticReverse());
+    registerCharacterizationCommand("Feeder", "Dynamic Forward", feederCharacterization.dynamicForward());
+    registerCharacterizationCommand("Feeder", "Dynamic Reverse", feederCharacterization.dynamicReverse());
+    var intakeRollerCharacterization = new IntakeRollerCharacterization(stateMachine.intakeRoller);
+    registerCharacterizationCommand("IntakeRoller", "Quasistatic Forward", intakeRollerCharacterization.quasistaticForward());
+    registerCharacterizationCommand("IntakeRoller", "Quasistatic Reverse", intakeRollerCharacterization.quasistaticReverse());
+    registerCharacterizationCommand("IntakeRoller", "Dynamic Forward", intakeRollerCharacterization.dynamicForward());
+    registerCharacterizationCommand("IntakeRoller", "Dynamic Reverse", intakeRollerCharacterization.dynamicReverse());
+    var shooterCharacterization = new ShooterCharacterization(stateMachine.shooter);
+    registerCharacterizationCommand("Shooter", "Quasistatic Forward", shooterCharacterization.quasistaticForward());
+    registerCharacterizationCommand("Shooter", "Quasistatic Reverse", shooterCharacterization.quasistaticReverse());
+    registerCharacterizationCommand("Shooter", "Dynamic Forward", shooterCharacterization.dynamicForward());
+    registerCharacterizationCommand("Shooter", "Dynamic Reverse", shooterCharacterization.dynamicReverse());
+    var spindexerCharacterization = new SpindexerCharacterization(stateMachine.spindexer);
+    registerCharacterizationCommand("Spindexer", "Quasistatic Forward", spindexerCharacterization.quasistaticForward());
+    registerCharacterizationCommand("Spindexer", "Quasistatic Reverse", spindexerCharacterization.quasistaticReverse());
+    registerCharacterizationCommand("Spindexer", "Dynamic Forward", spindexerCharacterization.dynamicForward());
+    registerCharacterizationCommand("Spindexer", "Dynamic Reverse", spindexerCharacterization.dynamicReverse());
     // POWERLIB GENERATED CHARACTERIZATION END - DO NOT DELETE
   }
 

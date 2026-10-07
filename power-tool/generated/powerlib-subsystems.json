@@ -1,0 +1,315 @@
+{
+    "swerve":  {
+                   "driveToPoint":  {
+                                        "maxSpeedCoefficient":  0.75,
+                                        "maxAngularRateRadiansPerSecond":  4.71238898038469,
+                                        "slowSpeedCoefficient":  0.1875,
+                                        "staticFrictionConstant":  0.085
+                                    },
+                   "driver":  {
+                                  "maxSpeedCoefficient":  0.75,
+                                  "velocityScale":  0.95,
+                                  "maxAngularRateRadiansPerSecond":  9.42477796076938,
+                                  "joystickDeadband":  0.1,
+                                  "skewCompensation":  -0.03
+                              },
+                   "requests":  {
+                                    "maxAngularRateRadiansPerSecond":  4.71238898038469,
+                                    "translationDeadbandMetersPerSecond":  0.572,
+                                    "rotationalDeadbandRadiansPerSecond":  0.471238898038469
+                                },
+                   "heading":  {
+                                   "kP":  6,
+                                   "kI":  0,
+                                   "kD":  0
+                               }
+               },
+    "subsystems":  [
+                       {
+                           "id":  "feeder",
+                           "name":  "feeder",
+                           "type":  "velocity",
+                           "focEnabled":  true,
+                           "torqueFF":  0,
+                           "motors":  [
+                                          {
+                                              "id":  40,
+                                              "reversed":  false,
+                                              "neutralMode":  "Coast",
+                                              "role":  "leader",
+                                              "motorType":  "X60"
+                                          },
+                                          {
+                                              "id":  41,
+                                              "reversed":  true,
+                                              "neutralMode":  "Brake",
+                                              "role":  "follower",
+                                              "motorType":  "X60"
+                                          }
+                                      ],
+                           "pid":  {
+                                       "kP":  0.3,
+                                       "kI":  0,
+                                       "kD":  0,
+                                       "kG":  0,
+                                       "kS":  0.36803,
+                                       "kV":  0.098272,
+                                       "kA":  0.0032188
+                                   },
+                           "ratios":  {
+                                          "sensorToMechanism":  1,
+                                          "rotorToSensor":  1
+                                      },
+                           "motionMagic":  {
+                                               "cruiseVelocity":  0,
+                                               "acceleration":  200
+                                           }
+                       },
+                       {
+                           "id":  "intakeRoller",
+                           "name":  "intakeRoller",
+                           "type":  "velocityTorque",
+                           "focEnabled":  true,
+                           "torqueFF":  0,
+                           "motors":  [
+                                          {
+                                              "id":  20,
+                                              "reversed":  false,
+                                              "neutralMode":  "Coast",
+                                              "role":  "leader",
+                                              "motorType":  "X60"
+                                          }
+                                      ],
+                           "pid":  {
+                                       "kP":  0.4,
+                                       "kI":  0,
+                                       "kD":  0,
+                                       "kG":  0,
+                                       "kS":  null,
+                                       "kV":  null,
+                                       "kA":  null
+                                   },
+                           "ratios":  {
+                                          "sensorToMechanism":  1,
+                                          "rotorToSensor":  1
+                                      },
+                           "motionMagic":  {
+                                               "cruiseVelocity":  0,
+                                               "acceleration":  200
+                                           }
+                       },
+                       {
+                           "id":  "intakeWrist",
+                           "name":  "intakeWrist",
+                           "type":  "absolutePosition",
+                           "focEnabled":  false,
+                           "torqueFF":  0,
+                           "motors":  [
+                                          {
+                                              "id":  21,
+                                              "reversed":  false,
+                                              "neutralMode":  "Brake",
+                                              "role":  "leader",
+                                              "motorType":  "X60"
+                                          },
+                                          {
+                                              "id":  22,
+                                              "reversed":  true,
+                                              "neutralMode":  "Brake",
+                                              "role":  "follower",
+                                              "motorType":  "X60"
+                                          }
+                                      ],
+                           "pid":  {
+                                       "kP":  30,
+                                       "kI":  0,
+                                       "kD":  0,
+                                       "kG":  0,
+                                       "kS":  null,
+                                       "kV":  null,
+                                       "kA":  null
+                                   },
+                           "ratios":  {
+                                          "sensorToMechanism":  -1,
+                                          "rotorToSensor":  44.444
+                                      },
+                           "motionMagic":  {
+                                               "cruiseVelocity":  1,
+                                               "acceleration":  20
+                                           },
+                           "cancoder":  {
+                                            "id":  23,
+                                            "magnetOffset":  0.285,
+                                            "discontinuityPoint":  0.5
+                                        },
+                           "absolutePosition":  {
+                                                    "units":  "degrees",
+                                                    "default":  -0.09
+                                                }
+                       },
+                       {
+                           "id":  "shooter",
+                           "name":  "shooter",
+                           "type":  "velocity",
+                           "focEnabled":  true,
+                           "torqueFF":  0,
+                           "motors":  [
+                                          {
+                                              "id":  51,
+                                              "reversed":  true,
+                                              "neutralMode":  "Coast",
+                                              "role":  "leader",
+                                              "motorType":  "X60"
+                                          },
+                                          {
+                                              "id":  52,
+                                              "reversed":  true,
+                                              "neutralMode":  "Brake",
+                                              "role":  "follower",
+                                              "motorType":  "X60"
+                                          },
+                                          {
+                                              "id":  53,
+                                              "reversed":  true,
+                                              "neutralMode":  "Brake",
+                                              "role":  "follower",
+                                              "motorType":  "X60"
+                                          }
+                                      ],
+                           "pid":  {
+                                       "kP":  0.3,
+                                       "kI":  0,
+                                       "kD":  0,
+                                       "kG":  0,
+                                       "kS":  0.23295,
+                                       "kV":  0.12161,
+                                       "kA":  0.0030738
+                                   },
+                           "ratios":  {
+                                          "sensorToMechanism":  1,
+                                          "rotorToSensor":  1
+                                      },
+                           "motionMagic":  {
+                                               "cruiseVelocity":  0,
+                                               "acceleration":  200
+                                           }
+                       },
+                       {
+                           "id":  "shooterHood",
+                           "name":  "shooterHood",
+                           "type":  "absolutePosition",
+                           "focEnabled":  false,
+                           "torqueFF":  0,
+                           "motors":  [
+                                          {
+                                              "id":  50,
+                                              "reversed":  true,
+                                              "neutralMode":  "Brake",
+                                              "role":  "leader",
+                                              "motorType":  "X60"
+                                          }
+                                      ],
+                           "pid":  {
+                                       "kP":  8,
+                                       "kI":  0,
+                                       "kD":  2,
+                                       "kG":  0,
+                                       "kS":  null,
+                                       "kV":  null,
+                                       "kA":  null
+                                   },
+                           "ratios":  {
+                                          "sensorToMechanism":  1,
+                                          "rotorToSensor":  60
+                                      },
+                           "motionMagic":  {
+                                               "cruiseVelocity":  15,
+                                               "acceleration":  30
+                                           },
+                           "cancoder":  {
+                                            "id":  54,
+                                            "magnetOffset":  -0.851,
+                                            "discontinuityPoint":  0.5
+                                        },
+                           "absolutePosition":  {
+                                                    "units":  "degrees",
+                                                    "default":  0.09
+                                                }
+                       },
+                       {
+                           "id":  "spindexer",
+                           "name":  "spindexer",
+                           "type":  "velocity",
+                           "focEnabled":  true,
+                           "torqueFF":  0,
+                           "motors":  [
+                                          {
+                                              "id":  30,
+                                              "reversed":  false,
+                                              "neutralMode":  "Brake",
+                                              "role":  "leader",
+                                              "motorType":  "X60"
+                                          }
+                                      ],
+                           "pid":  {
+                                       "kP":  0.1,
+                                       "kI":  0,
+                                       "kD":  0,
+                                       "kG":  0,
+                                       "kS":  0.30415,
+                                       "kV":  0.12429,
+                                       "kA":  0.0034288
+                                   },
+                           "ratios":  {
+                                          "sensorToMechanism":  1,
+                                          "rotorToSensor":  1
+                                      },
+                           "motionMagic":  {
+                                               "cruiseVelocity":  0,
+                                               "acceleration":  200
+                                           }
+                       },
+                       {
+                           "id":  "turret",
+                           "name":  "turret",
+                           "type":  "absolutePosition",
+                           "focEnabled":  false,
+                           "torqueFF":  0,
+                           "motors":  [
+                                          {
+                                              "id":  60,
+                                              "reversed":  true,
+                                              "neutralMode":  "Brake",
+                                              "role":  "leader",
+                                              "motorType":  "X60"
+                                          }
+                                      ],
+                           "pid":  {
+                                       "kP":  57,
+                                       "kI":  0,
+                                       "kD":  0,
+                                       "kG":  0,
+                                       "kS":  null,
+                                       "kV":  null,
+                                       "kA":  null
+                                   },
+                           "ratios":  {
+                                          "sensorToMechanism":  -1,
+                                          "rotorToSensor":  48.166666666666664
+                                      },
+                           "motionMagic":  {
+                                               "cruiseVelocity":  3,
+                                               "acceleration":  60
+                                           },
+                           "cancoder":  {
+                                            "id":  61,
+                                            "magnetOffset":  0.1255,
+                                            "discontinuityPoint":  0.5
+                                        },
+                           "absolutePosition":  {
+                                                    "units":  "degrees",
+                                                    "default":  0
+                                                }
+                       }
+                   ]
+}

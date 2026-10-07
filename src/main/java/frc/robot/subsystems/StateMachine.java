@@ -13,13 +13,20 @@ import frc.robot.Constants;
 
 public class StateMachine extends SubsystemBase {
   public enum RobotState {
-    IDLE
+    IDLE, READY, SHOOTING
   }
 
   public final Swerve drivetrain = Constants.Tuner.createDrivetrain();
   public final Vision vision = new Vision(drivetrain);
 
   // POWERLIB GENERATED SUBSYSTEMS START - DO NOT DELETE
+  public final VelocitySubsystem feeder = new VelocitySubsystem(Constants.Feeder.FEEDER_CONFIG);
+  public final VelocityTorqueSubsystem intakeRoller = new VelocityTorqueSubsystem(Constants.IntakeRoller.INTAKE_ROLLER_CONFIG);
+  public final AbsolutePositionSubsystem intakeWrist = new AbsolutePositionSubsystem(Constants.IntakeWrist.INTAKE_WRIST_CONFIG);
+  public final VelocitySubsystem shooter = new VelocitySubsystem(Constants.Shooter.SHOOTER_CONFIG);
+  public final AbsolutePositionSubsystem shooterHood = new AbsolutePositionSubsystem(Constants.ShooterHood.SHOOTER_HOOD_CONFIG);
+  public final VelocitySubsystem spindexer = new VelocitySubsystem(Constants.Spindexer.SPINDEXER_CONFIG);
+  public final AbsolutePositionSubsystem turret = new AbsolutePositionSubsystem(Constants.Turret.TURRET_CONFIG);
   // POWERLIB GENERATED SUBSYSTEMS END - DO NOT DELETE
 
   private RobotState wantedState = Constants.StateMachine.DEFAULT_STATE;

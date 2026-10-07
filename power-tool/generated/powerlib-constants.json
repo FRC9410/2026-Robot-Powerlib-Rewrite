@@ -1,0 +1,399 @@
+{
+    "version":  1,
+    "files":  {
+                  "robot:Vision":  {
+                                       "constants":  [
+                                                         {
+                                                             "name":  "LIMELIGHT_NAME",
+                                                             "type":  "String",
+                                                             "value":  "\"limelight-left\"",
+                                                             "custom":  false,
+                                                             "tunable":  false
+                                                         },
+                                                         {
+                                                             "name":  "LIMELIGHT_NAMES",
+                                                             "type":  "String[]",
+                                                             "value":  "{\"limelight-left\", \"limelight-right\", \"limelight-turret\"}",
+                                                             "custom":  false,
+                                                             "tunable":  false
+                                                         },
+                                                         {
+                                                             "name":  "CONFIG",
+                                                             "type":  "LimelightVisionConfig",
+                                                             "value":  "LimelightVisionConfig.DEFAULT",
+                                                             "custom":  false,
+                                                             "tunable":  false
+                                                         },
+                                                         {
+                                                             "name":  "CAMERA_NAME",
+                                                             "type":  "String",
+                                                             "value":  "\"limelight\"",
+                                                             "custom":  true,
+                                                             "tunable":  false
+                                                         },
+                                                         {
+                                                             "name":  "CAMERA_FOV_DEGREES",
+                                                             "type":  "double",
+                                                             "value":  "60",
+                                                             "custom":  true,
+                                                             "tunable":  true
+                                                         },
+                                                         {
+                                                             "name":  "IMAGE_WIDTH",
+                                                             "type":  "int",
+                                                             "value":  "320",
+                                                             "custom":  true,
+                                                             "tunable":  true
+                                                         },
+                                                         {
+                                                             "name":  "IMAGE_HEIGHT",
+                                                             "type":  "int",
+                                                             "value":  "240",
+                                                             "custom":  true,
+                                                             "tunable":  true
+                                                         },
+                                                         {
+                                                             "name":  "TARGET_AREA_THRESHOLD",
+                                                             "type":  "double",
+                                                             "value":  "1",
+                                                             "custom":  true,
+                                                             "tunable":  true
+                                                         },
+                                                         {
+                                                             "name":  "MAX_TARGET_DISTANCE_METERS",
+                                                             "type":  "double",
+                                                             "value":  "5",
+                                                             "custom":  true,
+                                                             "tunable":  true
+                                                         },
+                                                         {
+                                                             "name":  "LEFT_TABLE",
+                                                             "type":  "String",
+                                                             "value":  "\"limelight-left\"",
+                                                             "custom":  true,
+                                                             "tunable":  false
+                                                         },
+                                                         {
+                                                             "name":  "RIGHT_TABLE",
+                                                             "type":  "String",
+                                                             "value":  "\"limelight-right\"",
+                                                             "custom":  true,
+                                                             "tunable":  false
+                                                         },
+                                                         {
+                                                             "name":  "TURRET_TABLE",
+                                                             "type":  "String",
+                                                             "value":  "\"limelight-turret\"",
+                                                             "custom":  true,
+                                                             "tunable":  false
+                                                         }
+                                                     ]
+                                   },
+                  "robot:StateMachine":  {
+                                             "constants":  [
+                                                               {
+                                                                   "name":  "DEFAULT_STATE",
+                                                                   "type":  "RobotState",
+                                                                   "value":  "RobotState.READY",
+                                                                   "custom":  false,
+                                                                   "tunable":  false
+                                                               }
+                                                           ]
+                                         },
+                  "robot:OI":  {
+                                   "constants":  [
+                                                     {
+                                                         "name":  "DRIVER_CONTROLLER_PORT",
+                                                         "type":  "int",
+                                                         "value":  "0",
+                                                         "custom":  false,
+                                                         "tunable":  true
+                                                     },
+                                                     {
+                                                         "name":  "OPERATOR_CONTROLLER_PORT",
+                                                         "type":  "int",
+                                                         "value":  "1",
+                                                         "custom":  true,
+                                                         "tunable":  true
+                                                     },
+                                                     {
+                                                         "name":  "DEADBAND",
+                                                         "type":  "double",
+                                                         "value":  "0.05",
+                                                         "custom":  false,
+                                                         "tunable":  true
+                                                     },
+                                                     {
+                                                         "name":  "MAX_SPEED_COEFFICIENT",
+                                                         "type":  "double",
+                                                         "value":  "0.75",
+                                                         "custom":  false,
+                                                         "tunable":  true
+                                                     },
+                                                     {
+                                                         "name":  "INTERCHANGE_SPEED_COEFFICIENT",
+                                                         "type":  "double",
+                                                         "value":  "0.75",
+                                                         "custom":  true,
+                                                         "tunable":  true
+                                                     }
+                                                 ]
+                               },
+                  "robot:RobotContainer":  {
+                                               "constants":  [
+
+                                                             ]
+                                           },
+                  "robot:Swerve":  {
+                                       "constants":  [
+
+                                                     ]
+                                   },
+                  "subsystem:shooterHood":  {
+                                                "constants":  [
+                                                                  {
+                                                                      "name":  "SHOOTER_HOOD_MIN",
+                                                                      "type":  "double",
+                                                                      "value":  "0.005",
+                                                                      "custom":  true,
+                                                                      "tunable":  true
+                                                                  },
+                                                                  {
+                                                                      "name":  "SHOOTER_HOOD_MAX",
+                                                                      "type":  "double",
+                                                                      "value":  "0.14",
+                                                                      "custom":  true,
+                                                                      "tunable":  true
+                                                                  },
+                                                                  {
+                                                                      "name":  "SHOOTER_HOOD_DEFAULT",
+                                                                      "type":  "double",
+                                                                      "value":  "0.09",
+                                                                      "custom":  true,
+                                                                      "tunable":  true
+                                                                  }
+                                                              ]
+                                            },
+                  "subsystem:intakeWrist":  {
+                                                "constants":  [
+                                                                  {
+                                                                      "name":  "INTAKE_MIN",
+                                                                      "type":  "double",
+                                                                      "value":  "-0.09",
+                                                                      "custom":  true,
+                                                                      "tunable":  true
+                                                                  },
+                                                                  {
+                                                                      "name":  "INTAKE_MAX",
+                                                                      "type":  "double",
+                                                                      "value":  "-0.445",
+                                                                      "custom":  true,
+                                                                      "tunable":  true
+                                                                  },
+                                                                  {
+                                                                      "name":  "INTAKE_IDLE",
+                                                                      "type":  "double",
+                                                                      "value":  "-0.4",
+                                                                      "custom":  true,
+                                                                      "tunable":  true
+                                                                  },
+                                                                  {
+                                                                      "name":  "INTAKE_FEED",
+                                                                      "type":  "double",
+                                                                      "value":  "-0.25",
+                                                                      "custom":  true,
+                                                                      "tunable":  true
+                                                                  },
+                                                                  {
+                                                                      "name":  "INTAKE_DEFAULT",
+                                                                      "type":  "double",
+                                                                      "value":  "-0.09",
+                                                                      "custom":  true,
+                                                                      "tunable":  true
+                                                                  }
+                                                              ]
+                                            },
+                  "subsystem:shooter":  {
+                                            "constants":  [
+
+                                                          ]
+                                        },
+                  "subsystem:intakeRoller":  {
+                                                 "constants":  [
+                                                                   {
+                                                                       "name":  "INTAKE_DOWN_SETPOINT",
+                                                                       "type":  "double",
+                                                                       "value":  "0",
+                                                                       "custom":  true,
+                                                                       "tunable":  true
+                                                                   },
+                                                                   {
+                                                                       "name":  "INTAKE_UP_SETPOINT",
+                                                                       "type":  "double",
+                                                                       "value":  "0",
+                                                                       "custom":  true,
+                                                                       "tunable":  true
+                                                                   },
+                                                                   {
+                                                                       "name":  "INTAKE_ROLLER_OUTPUT",
+                                                                       "type":  "double",
+                                                                       "value":  "0.8",
+                                                                       "custom":  true,
+                                                                       "tunable":  true
+                                                                   },
+                                                                   {
+                                                                       "name":  "ROLLER_TARGET_RPS",
+                                                                       "type":  "double",
+                                                                       "value":  "10",
+                                                                       "custom":  true,
+                                                                       "tunable":  true
+                                                                   }
+                                                               ]
+                                             },
+                  "subsystem:spindexer":  {
+                                              "constants":  [
+                                                                {
+                                                                    "name":  "LASER_1_CAN_ID",
+                                                                    "type":  "int",
+                                                                    "value":  "31",
+                                                                    "custom":  true,
+                                                                    "tunable":  true
+                                                                },
+                                                                {
+                                                                    "name":  "LASER_2_CAN_ID",
+                                                                    "type":  "int",
+                                                                    "value":  "32",
+                                                                    "custom":  true,
+                                                                    "tunable":  true
+                                                                }
+                                                            ]
+                                          },
+                  "subsystem:feeder":  {
+                                           "constants":  [
+                                                             {
+                                                                 "name":  "CANDI1_CAN_ID",
+                                                                 "type":  "int",
+                                                                 "value":  "42",
+                                                                 "custom":  true,
+                                                                 "tunable":  true
+                                                             },
+                                                             {
+                                                                 "name":  "CANDI2_CAN_ID",
+                                                                 "type":  "int",
+                                                                 "value":  "43",
+                                                                 "custom":  true,
+                                                                 "tunable":  true
+                                                             }
+                                                         ]
+                                       },
+                  "subsystem:turret":  {
+                                           "constants":  [
+                                                             {
+                                                                 "name":  "TURRET_MIN",
+                                                                 "type":  "double",
+                                                                 "value":  "-0.481",
+                                                                 "custom":  true,
+                                                                 "tunable":  true
+                                                             },
+                                                             {
+                                                                 "name":  "TURRET_MAX",
+                                                                 "type":  "double",
+                                                                 "value":  "0.46",
+                                                                 "custom":  true,
+                                                                 "tunable":  true
+                                                             },
+                                                             {
+                                                                 "name":  "TURRET_DEFAULT",
+                                                                 "type":  "double",
+                                                                 "value":  "0",
+                                                                 "custom":  true,
+                                                                 "tunable":  true
+                                                             },
+                                                             {
+                                                                 "name":  "TURRET_DIST_FROM_ROBOT_CENTER",
+                                                                 "type":  "double",
+                                                                 "value":  "-0.15875",
+                                                                 "custom":  true,
+                                                                 "tunable":  true
+                                                             },
+                                                             {
+                                                                 "name":  "TURRET_RADIUS",
+                                                                 "type":  "double",
+                                                                 "value":  "0.11596",
+                                                                 "custom":  true,
+                                                                 "tunable":  true
+                                                             },
+                                                             {
+                                                                 "name":  "TURRET_LIMELIGHT_STATIC_OFFSET",
+                                                                 "type":  "double",
+                                                                 "value":  "-0.04279000000000001",
+                                                                 "custom":  true,
+                                                                 "tunable":  true
+                                                             },
+                                                             {
+                                                                 "name":  "TURRET_SHOOT_ANGLE_TOLERANCE_DEG",
+                                                                 "type":  "double",
+                                                                 "value":  "2",
+                                                                 "custom":  true,
+                                                                 "tunable":  true
+                                                             },
+                                                             {
+                                                                 "name":  "SHOOT_MAX_DRIVETRAIN_SPEED_MPS",
+                                                                 "type":  "double",
+                                                                 "value":  "0.5",
+                                                                 "custom":  true,
+                                                                 "tunable":  true
+                                                             },
+                                                             {
+                                                                 "name":  "TURRET_CAMERA_Y_OFFSET",
+                                                                 "type":  "double",
+                                                                 "value":  "0",
+                                                                 "custom":  true,
+                                                                 "tunable":  true
+                                                             },
+                                                             {
+                                                                 "name":  "HOOD_ANGLES",
+                                                                 "type":  "double[][]",
+                                                                 "value":  "{\r\n            { 5.5, 0.135 },\r\n            { 4.85, 0.105 },\r\n            { 4.6, 0.09 },\r\n            { 4.05, 0.08 },\r\n            { 3.75, 0.07 },\r\n            { 3.29, 0.06 },\r\n            { 2.75, 0.05 },\r\n            { 2.38, 0.04 },\r\n            { 1.97, 0.03 },\r\n            { 1.68, 0.02 }\r\n    }",
+                                                                 "custom":  true,
+                                                                 "tunable":  false
+                                                             },
+                                                             {
+                                                                 "name":  "SHOOTER_SPEEDS",
+                                                                 "type":  "double[][]",
+                                                                 "value":  "{\r\n             { 5.5, 89},\r\n            { 4.85, 84},\r\n            { 4.6, 82},\r\n            { 4.05, 79},\r\n            { 3.75, 77},\r\n            { 3.29, 74},\r\n            { 2.75, 71},\r\n            { 2.38, 67},\r\n            { 1.97, 64},\r\n            { 1.68, 62}\r\n    }",
+                                                                 "custom":  true,
+                                                                 "tunable":  false
+                                                             },
+                                                             {
+                                                                 "name":  "FEEDER_SPEEDS",
+                                                                 "type":  "double[][]",
+                                                                 "value":  "{\r\n        { 5.5, 72},\r\n        { 4.85, 68},\r\n        { 4.6, 67},\r\n        { 4.05, 66},\r\n        { 3.75, 65},\r\n        { 3.29, 65},\r\n        { 2.75, 63},\r\n        { 2.38, 61},\r\n        { 1.97, 59},\r\n        { 1.68, 58}\r\n    }",
+                                                                 "custom":  true,
+                                                                 "tunable":  false
+                                                             },
+                                                             {
+                                                                 "name":  "HOOD_ANGLE_INTERPOLATOR",
+                                                                 "type":  "frc.powerlib.math.LinearInterpolator",
+                                                                 "value":  "new frc.powerlib.math.LinearInterpolator(HOOD_ANGLES)",
+                                                                 "custom":  true,
+                                                                 "tunable":  false
+                                                             },
+                                                             {
+                                                                 "name":  "SHOOTER_VELOCITY_INTERPOLATOR",
+                                                                 "type":  "frc.powerlib.math.LinearInterpolator",
+                                                                 "value":  "new frc.powerlib.math.LinearInterpolator(SHOOTER_SPEEDS)",
+                                                                 "custom":  true,
+                                                                 "tunable":  false
+                                                             },
+                                                             {
+                                                                 "name":  "FEEDER_VELOCITY_INTERPOLATOR",
+                                                                 "type":  "frc.powerlib.math.LinearInterpolator",
+                                                                 "value":  "new frc.powerlib.math.LinearInterpolator(FEEDER_SPEEDS)",
+                                                                 "custom":  true,
+                                                                 "tunable":  false
+                                                             }
+                                                         ]
+                                       }
+              }
+}

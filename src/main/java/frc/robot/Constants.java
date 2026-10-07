@@ -12,6 +12,14 @@ public final class Constants {
   public static final class Swerve extends frc.robot.constants.SwerveConstants {}
   public static final class Tuner extends frc.robot.constants.TunerConstants {}
   public static final class Vision extends frc.robot.constants.VisionConstants {}
+
+  // POWERLIB GENERATED CONSTANTS START - DO NOT DELETE
+  public static final class Feeder extends frc.robot.constants.FeederConstants {}
+  public static final class IntakeRoller extends frc.robot.constants.IntakeRollerConstants {}
+  public static final class IntakeWrist extends frc.robot.constants.IntakeWristConstants {}
+  public static final class Shooter extends frc.robot.constants.ShooterConstants {}
+  public static final class ShooterHood extends frc.robot.constants.ShooterHoodConstants {}
+  public static final class Spindexer extends frc.robot.constants.SpindexerConstants {}
+  public static final class Turret extends frc.robot.constants.TurretConstants {}
+  // POWERLIB GENERATED CONSTANTS END - DO NOT DELETE
 }
-
-

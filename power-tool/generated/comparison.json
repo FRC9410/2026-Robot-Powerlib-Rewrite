@@ -1,0 +1,2102 @@
+{
+  "baseline": {
+    "repository": "FRC9410/2026-Robot",
+    "commit": "a5f9d31c35f06de953dcdb5e9d7d4ce57001a65c",
+    "cutoff": "2026-05-01T00:00:00-05:00"
+  },
+  "testRobot": "library-test-robot",
+  "checks": [
+    {
+      "destination": "feeder.motors[0].id",
+      "value": 40,
+      "source": "FeederConstants.MOTOR_CONFIGS: MotorConfig.leader(PRIMARY_CAN_ID, NeutralModeValue.Coast)"
+    },
+    {
+      "destination": "feeder.motors[0].reversed",
+      "value": false,
+      "source": "FeederConstants.MOTOR_CONFIGS: MotorConfig.leader(PRIMARY_CAN_ID, NeutralModeValue.Coast)"
+    },
+    {
+      "destination": "feeder.motors[0].neutralMode",
+      "value": "Coast",
+      "source": "FeederConstants.MOTOR_CONFIGS: MotorConfig.leader(PRIMARY_CAN_ID, NeutralModeValue.Coast)"
+    },
+    {
+      "destination": "feeder.motors[0].role",
+      "value": "leader",
+      "source": "FeederConstants.MOTOR_CONFIGS: MotorConfig.leader(PRIMARY_CAN_ID, NeutralModeValue.Coast)"
+    },
+    {
+      "destination": "feeder.motors[0].motorType",
+      "value": "X60",
+      "source": "Power Tool motor-model metadata for existing TalonFX motors; legacy source does not identify X60/X44"
+    },
+    {
+      "destination": "feeder.motors[1].id",
+      "value": 41,
+      "source": "FeederConstants.MOTOR_CONFIGS: MotorConfig.follower(SECONDARY_CAN_ID, true)"
+    },
+    {
+      "destination": "feeder.motors[1].reversed",
+      "value": true,
+      "source": "FeederConstants.MOTOR_CONFIGS: MotorConfig.follower(SECONDARY_CAN_ID, true)"
+    },
+    {
+      "destination": "feeder.motors[1].neutralMode",
+      "value": "Brake",
+      "source": "FeederConstants.MOTOR_CONFIGS: MotorConfig.follower(SECONDARY_CAN_ID, true)"
+    },
+    {
+      "destination": "feeder.motors[1].role",
+      "value": "follower",
+      "source": "FeederConstants.MOTOR_CONFIGS: MotorConfig.follower(SECONDARY_CAN_ID, true)"
+    },
+    {
+      "destination": "feeder.motors[1].motorType",
+      "value": "X60",
+      "source": "Power Tool motor-model metadata for existing TalonFX motors; legacy source does not identify X60/X44"
+    },
+    {
+      "destination": "feeder.pid.kP",
+      "value": 0.3,
+      "source": "FeederConstants.FEEDER_KP"
+    },
+    {
+      "destination": "feeder.pid.kI",
+      "value": 0,
+      "source": "FeederConstants.FEEDER_KI"
+    },
+    {
+      "destination": "feeder.pid.kD",
+      "value": 0,
+      "source": "FeederConstants.FEEDER_KD"
+    },
+    {
+      "destination": "feeder.pid.kG",
+      "value": 0,
+      "source": "FeederConstants.FEEDER_KG"
+    },
+    {
+      "destination": "feeder.pid.kS",
+      "value": 0.36803,
+      "source": "FeederConstants.FEEDER_KS"
+    },
+    {
+      "destination": "feeder.pid.kV",
+      "value": 0.098272,
+      "source": "FeederConstants.FEEDER_KV"
+    },
+    {
+      "destination": "feeder.pid.kA",
+      "value": 0.0032188,
+      "source": "FeederConstants.FEEDER_KA"
+    },
+    {
+      "destination": "feeder.ratios.sensorToMechanism",
+      "value": 1,
+      "source": "FeederConstants.FEEDER_LEAD_CONFIG"
+    },
+    {
+      "destination": "feeder.ratios.rotorToSensor",
+      "value": 1,
+      "source": "FeederConstants.FEEDER_LEAD_CONFIG"
+    },
+    {
+      "destination": "feeder.motionMagic.cruiseVelocity",
+      "value": 0,
+      "source": "FeederConstants.FEEDER_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "feeder.motionMagic.acceleration",
+      "value": 200,
+      "source": "FeederConstants.FEEDER_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "feeder.type",
+      "value": "velocity",
+      "source": "StateMachine.feeder declaration"
+    },
+    {
+      "destination": "feeder.focEnabled",
+      "value": true,
+      "source": "VelocitySubsystem.setVelocity() (FOC enabled)"
+    },
+    {
+      "destination": "feeder.torqueFF",
+      "value": 0,
+      "source": "Unused for this control type"
+    },
+    {
+      "destination": "intakeRoller.motors[0].id",
+      "value": 20,
+      "source": "IntakeConstants.ROLLER_MOTOR_CONFIGS: MotorConfig.leader(ROLLER_CAN_ID, NeutralModeValue.Coast)"
+    },
+    {
+      "destination": "intakeRoller.motors[0].reversed",
+      "value": false,
+      "source": "IntakeConstants.ROLLER_MOTOR_CONFIGS: MotorConfig.leader(ROLLER_CAN_ID, NeutralModeValue.Coast)"
+    },
+    {
+      "destination": "intakeRoller.motors[0].neutralMode",
+      "value": "Coast",
+      "source": "IntakeConstants.ROLLER_MOTOR_CONFIGS: MotorConfig.leader(ROLLER_CAN_ID, NeutralModeValue.Coast)"
+    },
+    {
+      "destination": "intakeRoller.motors[0].role",
+      "value": "leader",
+      "source": "IntakeConstants.ROLLER_MOTOR_CONFIGS: MotorConfig.leader(ROLLER_CAN_ID, NeutralModeValue.Coast)"
+    },
+    {
+      "destination": "intakeRoller.motors[0].motorType",
+      "value": "X60",
+      "source": "Power Tool motor-model metadata for existing TalonFX motors; legacy source does not identify X60/X44"
+    },
+    {
+      "destination": "intakeRoller.pid.kP",
+      "value": 0.4,
+      "source": "IntakeConstants.ROLLER_KP"
+    },
+    {
+      "destination": "intakeRoller.pid.kI",
+      "value": 0,
+      "source": "IntakeConstants.ROLLER_KI"
+    },
+    {
+      "destination": "intakeRoller.pid.kD",
+      "value": 0,
+      "source": "IntakeConstants.ROLLER_KD"
+    },
+    {
+      "destination": "intakeRoller.pid.kG",
+      "value": 0,
+      "source": "IntakeConstants.ROLLER_KG"
+    },
+    {
+      "destination": "intakeRoller.pid.kS",
+      "value": null,
+      "source": "IntakeConstants.ROLLER_LEAD_CONFIG: Optional.empty()"
+    },
+    {
+      "destination": "intakeRoller.pid.kV",
+      "value": null,
+      "source": "IntakeConstants.ROLLER_LEAD_CONFIG: Optional.empty()"
+    },
+    {
+      "destination": "intakeRoller.pid.kA",
+      "value": null,
+      "source": "IntakeConstants.ROLLER_LEAD_CONFIG: Optional.empty()"
+    },
+    {
+      "destination": "intakeRoller.ratios.sensorToMechanism",
+      "value": 1,
+      "source": "IntakeConstants.ROLLER_LEAD_CONFIG"
+    },
+    {
+      "destination": "intakeRoller.ratios.rotorToSensor",
+      "value": 1,
+      "source": "IntakeConstants.ROLLER_LEAD_CONFIG"
+    },
+    {
+      "destination": "intakeRoller.motionMagic.cruiseVelocity",
+      "value": 0,
+      "source": "IntakeConstants.ROLLER_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "intakeRoller.motionMagic.acceleration",
+      "value": 200,
+      "source": "IntakeConstants.ROLLER_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "intakeRoller.type",
+      "value": "velocityTorque",
+      "source": "StateMachine.intakeRoller declaration"
+    },
+    {
+      "destination": "intakeRoller.focEnabled",
+      "value": true,
+      "source": "VelocityTorqueSubsystem.setVelocity() (FOC enabled)"
+    },
+    {
+      "destination": "intakeRoller.torqueFF",
+      "value": 0,
+      "source": "VelocityTorqueSubsystem.setVelocity(): withFeedForward(0)"
+    },
+    {
+      "destination": "intakeWrist.motors[0].id",
+      "value": 21,
+      "source": "IntakeConstants.WRIST_MOTOR_CONFIGS: MotorConfig.leader(PRIMARY_PIVOT_CAN_ID, NeutralModeValue.Brake)"
+    },
+    {
+      "destination": "intakeWrist.motors[0].reversed",
+      "value": false,
+      "source": "IntakeConstants.WRIST_MOTOR_CONFIGS: MotorConfig.leader(PRIMARY_PIVOT_CAN_ID, NeutralModeValue.Brake)"
+    },
+    {
+      "destination": "intakeWrist.motors[0].neutralMode",
+      "value": "Brake",
+      "source": "IntakeConstants.WRIST_MOTOR_CONFIGS: MotorConfig.leader(PRIMARY_PIVOT_CAN_ID, NeutralModeValue.Brake)"
+    },
+    {
+      "destination": "intakeWrist.motors[0].role",
+      "value": "leader",
+      "source": "IntakeConstants.WRIST_MOTOR_CONFIGS: MotorConfig.leader(PRIMARY_PIVOT_CAN_ID, NeutralModeValue.Brake)"
+    },
+    {
+      "destination": "intakeWrist.motors[0].motorType",
+      "value": "X60",
+      "source": "Power Tool motor-model metadata for existing TalonFX motors; legacy source does not identify X60/X44"
+    },
+    {
+      "destination": "intakeWrist.motors[1].id",
+      "value": 22,
+      "source": "IntakeConstants.WRIST_MOTOR_CONFIGS: MotorConfig.follower(SECONDARY_PIVOT_CAN_ID, true)"
+    },
+    {
+      "destination": "intakeWrist.motors[1].reversed",
+      "value": true,
+      "source": "IntakeConstants.WRIST_MOTOR_CONFIGS: MotorConfig.follower(SECONDARY_PIVOT_CAN_ID, true)"
+    },
+    {
+      "destination": "intakeWrist.motors[1].neutralMode",
+      "value": "Brake",
+      "source": "IntakeConstants.WRIST_MOTOR_CONFIGS: MotorConfig.follower(SECONDARY_PIVOT_CAN_ID, true)"
+    },
+    {
+      "destination": "intakeWrist.motors[1].role",
+      "value": "follower",
+      "source": "IntakeConstants.WRIST_MOTOR_CONFIGS: MotorConfig.follower(SECONDARY_PIVOT_CAN_ID, true)"
+    },
+    {
+      "destination": "intakeWrist.motors[1].motorType",
+      "value": "X60",
+      "source": "Power Tool motor-model metadata for existing TalonFX motors; legacy source does not identify X60/X44"
+    },
+    {
+      "destination": "intakeWrist.pid.kP",
+      "value": 30,
+      "source": "IntakeConstants.WRIST_KP"
+    },
+    {
+      "destination": "intakeWrist.pid.kI",
+      "value": 0,
+      "source": "IntakeConstants.WRIST_KI"
+    },
+    {
+      "destination": "intakeWrist.pid.kD",
+      "value": 0,
+      "source": "IntakeConstants.WRIST_KD"
+    },
+    {
+      "destination": "intakeWrist.pid.kG",
+      "value": 0,
+      "source": "IntakeConstants.WRIST_KG"
+    },
+    {
+      "destination": "intakeWrist.pid.kS",
+      "value": null,
+      "source": "IntakeConstants.WRIST_LEAD_CONFIG: Optional.empty()"
+    },
+    {
+      "destination": "intakeWrist.pid.kV",
+      "value": null,
+      "source": "IntakeConstants.WRIST_LEAD_CONFIG: Optional.empty()"
+    },
+    {
+      "destination": "intakeWrist.pid.kA",
+      "value": null,
+      "source": "IntakeConstants.WRIST_LEAD_CONFIG: Optional.empty()"
+    },
+    {
+      "destination": "intakeWrist.ratios.sensorToMechanism",
+      "value": -1,
+      "source": "IntakeConstants.WRIST_LEAD_CONFIG"
+    },
+    {
+      "destination": "intakeWrist.ratios.rotorToSensor",
+      "value": 44.444,
+      "source": "IntakeConstants.WRIST_LEAD_CONFIG"
+    },
+    {
+      "destination": "intakeWrist.motionMagic.cruiseVelocity",
+      "value": 1,
+      "source": "IntakeConstants.WRIST_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "intakeWrist.motionMagic.acceleration",
+      "value": 20,
+      "source": "IntakeConstants.WRIST_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "intakeWrist.type",
+      "value": "absolutePosition",
+      "source": "PositionSubsystem mapped to AbsolutePositionSubsystem"
+    },
+    {
+      "destination": "intakeWrist.focEnabled",
+      "value": false,
+      "source": "PositionSubsystem: MotionMagicVoltage without EnableFOC (false)"
+    },
+    {
+      "destination": "intakeWrist.torqueFF",
+      "value": 0,
+      "source": "Unused for this control type"
+    },
+    {
+      "destination": "intakeWrist.cancoder.id",
+      "value": 23,
+      "source": "IntakeConstants.WRIST_CANCODER_CONFIG"
+    },
+    {
+      "destination": "intakeWrist.cancoder.magnetOffset",
+      "value": 0.285,
+      "source": "IntakeConstants.WRIST_CANCODER_CONFIG"
+    },
+    {
+      "destination": "intakeWrist.cancoder.discontinuityPoint",
+      "value": 0.5,
+      "source": "IntakeConstants.WRIST_CANCODER_CONFIG"
+    },
+    {
+      "destination": "intakeWrist.absolutePosition.default",
+      "value": -0.09,
+      "source": "IntakeConstants.INTAKE_DEFAULT; setpoints remain rotations"
+    },
+    {
+      "destination": "intakeWrist.absolutePosition.units",
+      "value": "degrees",
+      "source": "IntakeConstants: legacy telemetry label (no setpoint conversion)"
+    },
+    {
+      "destination": "shooter.motors[0].id",
+      "value": 51,
+      "source": "ShooterConstants.FLYWHEEL_MOTOR_CONFIGS: MotorConfig.leader(PRIMARY_FLYWHEELS_CAN_ID, NeutralModeValue.Coast, true)"
+    },
+    {
+      "destination": "shooter.motors[0].reversed",
+      "value": true,
+      "source": "ShooterConstants.FLYWHEEL_MOTOR_CONFIGS: MotorConfig.leader(PRIMARY_FLYWHEELS_CAN_ID, NeutralModeValue.Coast, true)"
+    },
+    {
+      "destination": "shooter.motors[0].neutralMode",
+      "value": "Coast",
+      "source": "ShooterConstants.FLYWHEEL_MOTOR_CONFIGS: MotorConfig.leader(PRIMARY_FLYWHEELS_CAN_ID, NeutralModeValue.Coast, true)"
+    },
+    {
+      "destination": "shooter.motors[0].role",
+      "value": "leader",
+      "source": "ShooterConstants.FLYWHEEL_MOTOR_CONFIGS: MotorConfig.leader(PRIMARY_FLYWHEELS_CAN_ID, NeutralModeValue.Coast, true)"
+    },
+    {
+      "destination": "shooter.motors[0].motorType",
+      "value": "X60",
+      "source": "Power Tool motor-model metadata for existing TalonFX motors; legacy source does not identify X60/X44"
+    },
+    {
+      "destination": "shooter.motors[1].id",
+      "value": 52,
+      "source": "ShooterConstants.FLYWHEEL_MOTOR_CONFIGS: MotorConfig.follower(FOLLOWER_FLYWHEEL_1_CAN_ID, true)"
+    },
+    {
+      "destination": "shooter.motors[1].reversed",
+      "value": true,
+      "source": "ShooterConstants.FLYWHEEL_MOTOR_CONFIGS: MotorConfig.follower(FOLLOWER_FLYWHEEL_1_CAN_ID, true)"
+    },
+    {
+      "destination": "shooter.motors[1].neutralMode",
+      "value": "Brake",
+      "source": "ShooterConstants.FLYWHEEL_MOTOR_CONFIGS: MotorConfig.follower(FOLLOWER_FLYWHEEL_1_CAN_ID, true)"
+    },
+    {
+      "destination": "shooter.motors[1].role",
+      "value": "follower",
+      "source": "ShooterConstants.FLYWHEEL_MOTOR_CONFIGS: MotorConfig.follower(FOLLOWER_FLYWHEEL_1_CAN_ID, true)"
+    },
+    {
+      "destination": "shooter.motors[1].motorType",
+      "value": "X60",
+      "source": "Power Tool motor-model metadata for existing TalonFX motors; legacy source does not identify X60/X44"
+    },
+    {
+      "destination": "shooter.motors[2].id",
+      "value": 53,
+      "source": "ShooterConstants.FLYWHEEL_MOTOR_CONFIGS: MotorConfig.follower(FOLLOWER_FLYWHEEL_2_CAN_ID, true)"
+    },
+    {
+      "destination": "shooter.motors[2].reversed",
+      "value": true,
+      "source": "ShooterConstants.FLYWHEEL_MOTOR_CONFIGS: MotorConfig.follower(FOLLOWER_FLYWHEEL_2_CAN_ID, true)"
+    },
+    {
+      "destination": "shooter.motors[2].neutralMode",
+      "value": "Brake",
+      "source": "ShooterConstants.FLYWHEEL_MOTOR_CONFIGS: MotorConfig.follower(FOLLOWER_FLYWHEEL_2_CAN_ID, true)"
+    },
+    {
+      "destination": "shooter.motors[2].role",
+      "value": "follower",
+      "source": "ShooterConstants.FLYWHEEL_MOTOR_CONFIGS: MotorConfig.follower(FOLLOWER_FLYWHEEL_2_CAN_ID, true)"
+    },
+    {
+      "destination": "shooter.motors[2].motorType",
+      "value": "X60",
+      "source": "Power Tool motor-model metadata for existing TalonFX motors; legacy source does not identify X60/X44"
+    },
+    {
+      "destination": "shooter.pid.kP",
+      "value": 0.3,
+      "source": "ShooterConstants.FLYWHEEL_KP"
+    },
+    {
+      "destination": "shooter.pid.kI",
+      "value": 0,
+      "source": "ShooterConstants.FLYWHEEL_KI"
+    },
+    {
+      "destination": "shooter.pid.kD",
+      "value": 0,
+      "source": "ShooterConstants.FLYWHEEL_KD"
+    },
+    {
+      "destination": "shooter.pid.kG",
+      "value": 0,
+      "source": "ShooterConstants.FLYWHEEL_KG"
+    },
+    {
+      "destination": "shooter.pid.kS",
+      "value": 0.23295,
+      "source": "ShooterConstants.FLYWHEEL_KS"
+    },
+    {
+      "destination": "shooter.pid.kV",
+      "value": 0.12161,
+      "source": "ShooterConstants.FLYWHEEL_KV"
+    },
+    {
+      "destination": "shooter.pid.kA",
+      "value": 0.0030738,
+      "source": "ShooterConstants.FLYWHEEL_KA"
+    },
+    {
+      "destination": "shooter.ratios.sensorToMechanism",
+      "value": 1,
+      "source": "ShooterConstants.FLYWHEEL_LEAD_CONFIG"
+    },
+    {
+      "destination": "shooter.ratios.rotorToSensor",
+      "value": 1,
+      "source": "ShooterConstants.FLYWHEEL_LEAD_CONFIG"
+    },
+    {
+      "destination": "shooter.motionMagic.cruiseVelocity",
+      "value": 0,
+      "source": "ShooterConstants.FLYWHEEL_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "shooter.motionMagic.acceleration",
+      "value": 200,
+      "source": "ShooterConstants.FLYWHEEL_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "shooter.type",
+      "value": "velocity",
+      "source": "StateMachine.shooter declaration"
+    },
+    {
+      "destination": "shooter.focEnabled",
+      "value": true,
+      "source": "VelocitySubsystem.setVelocity() (FOC enabled)"
+    },
+    {
+      "destination": "shooter.torqueFF",
+      "value": 0,
+      "source": "Unused for this control type"
+    },
+    {
+      "destination": "shooterHood.motors[0].id",
+      "value": 50,
+      "source": "ShooterConstants.HOOD_MOTOR_CONFIGS: MotorConfig.leader(HOOD_CAN_ID, NeutralModeValue.Brake, true)"
+    },
+    {
+      "destination": "shooterHood.motors[0].reversed",
+      "value": true,
+      "source": "ShooterConstants.HOOD_MOTOR_CONFIGS: MotorConfig.leader(HOOD_CAN_ID, NeutralModeValue.Brake, true)"
+    },
+    {
+      "destination": "shooterHood.motors[0].neutralMode",
+      "value": "Brake",
+      "source": "ShooterConstants.HOOD_MOTOR_CONFIGS: MotorConfig.leader(HOOD_CAN_ID, NeutralModeValue.Brake, true)"
+    },
+    {
+      "destination": "shooterHood.motors[0].role",
+      "value": "leader",
+      "source": "ShooterConstants.HOOD_MOTOR_CONFIGS: MotorConfig.leader(HOOD_CAN_ID, NeutralModeValue.Brake, true)"
+    },
+    {
+      "destination": "shooterHood.motors[0].motorType",
+      "value": "X60",
+      "source": "Power Tool motor-model metadata for existing TalonFX motors; legacy source does not identify X60/X44"
+    },
+    {
+      "destination": "shooterHood.pid.kP",
+      "value": 8,
+      "source": "ShooterConstants.HOOD_KP"
+    },
+    {
+      "destination": "shooterHood.pid.kI",
+      "value": 0,
+      "source": "ShooterConstants.HOOD_KI"
+    },
+    {
+      "destination": "shooterHood.pid.kD",
+      "value": 2,
+      "source": "ShooterConstants.HOOD_KD"
+    },
+    {
+      "destination": "shooterHood.pid.kG",
+      "value": 0,
+      "source": "ShooterConstants.HOOD_KG"
+    },
+    {
+      "destination": "shooterHood.pid.kS",
+      "value": null,
+      "source": "ShooterConstants.HOOD_LEAD_CONFIG: Optional.empty()"
+    },
+    {
+      "destination": "shooterHood.pid.kV",
+      "value": null,
+      "source": "ShooterConstants.HOOD_LEAD_CONFIG: Optional.empty()"
+    },
+    {
+      "destination": "shooterHood.pid.kA",
+      "value": null,
+      "source": "ShooterConstants.HOOD_LEAD_CONFIG: Optional.empty()"
+    },
+    {
+      "destination": "shooterHood.ratios.sensorToMechanism",
+      "value": 1,
+      "source": "ShooterConstants.HOOD_LEAD_CONFIG"
+    },
+    {
+      "destination": "shooterHood.ratios.rotorToSensor",
+      "value": 60,
+      "source": "ShooterConstants.HOOD_LEAD_CONFIG"
+    },
+    {
+      "destination": "shooterHood.motionMagic.cruiseVelocity",
+      "value": 15,
+      "source": "ShooterConstants.HOOD_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "shooterHood.motionMagic.acceleration",
+      "value": 30,
+      "source": "ShooterConstants.HOOD_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "shooterHood.type",
+      "value": "absolutePosition",
+      "source": "PositionSubsystem mapped to AbsolutePositionSubsystem"
+    },
+    {
+      "destination": "shooterHood.focEnabled",
+      "value": false,
+      "source": "PositionSubsystem: MotionMagicVoltage without EnableFOC (false)"
+    },
+    {
+      "destination": "shooterHood.torqueFF",
+      "value": 0,
+      "source": "Unused for this control type"
+    },
+    {
+      "destination": "shooterHood.cancoder.id",
+      "value": 54,
+      "source": "ShooterConstants.HOOD_CANCODER_CONFIG"
+    },
+    {
+      "destination": "shooterHood.cancoder.magnetOffset",
+      "value": -0.851,
+      "source": "ShooterConstants.HOOD_CANCODER_CONFIG"
+    },
+    {
+      "destination": "shooterHood.cancoder.discontinuityPoint",
+      "value": 0.5,
+      "source": "ShooterConstants.HOOD_CANCODER_CONFIG"
+    },
+    {
+      "destination": "shooterHood.absolutePosition.default",
+      "value": 0.09,
+      "source": "ShooterConstants.SHOOTER_HOOD_DEFAULT; setpoints remain rotations"
+    },
+    {
+      "destination": "shooterHood.absolutePosition.units",
+      "value": "degrees",
+      "source": "ShooterConstants: legacy telemetry label (no setpoint conversion)"
+    },
+    {
+      "destination": "spindexer.motors[0].id",
+      "value": 30,
+      "source": "SpindexerConstants.SPINDEXER_MOTOR_CONFIGS: MotorConfig.leader(CAN_ID, NeutralModeValue.Brake)"
+    },
+    {
+      "destination": "spindexer.motors[0].reversed",
+      "value": false,
+      "source": "SpindexerConstants.SPINDEXER_MOTOR_CONFIGS: MotorConfig.leader(CAN_ID, NeutralModeValue.Brake)"
+    },
+    {
+      "destination": "spindexer.motors[0].neutralMode",
+      "value": "Brake",
+      "source": "SpindexerConstants.SPINDEXER_MOTOR_CONFIGS: MotorConfig.leader(CAN_ID, NeutralModeValue.Brake)"
+    },
+    {
+      "destination": "spindexer.motors[0].role",
+      "value": "leader",
+      "source": "SpindexerConstants.SPINDEXER_MOTOR_CONFIGS: MotorConfig.leader(CAN_ID, NeutralModeValue.Brake)"
+    },
+    {
+      "destination": "spindexer.motors[0].motorType",
+      "value": "X60",
+      "source": "Power Tool motor-model metadata for existing TalonFX motors; legacy source does not identify X60/X44"
+    },
+    {
+      "destination": "spindexer.pid.kP",
+      "value": 0.1,
+      "source": "SpindexerConstants.SPINDEXER_KP"
+    },
+    {
+      "destination": "spindexer.pid.kI",
+      "value": 0,
+      "source": "SpindexerConstants.SPINDEXER_KI"
+    },
+    {
+      "destination": "spindexer.pid.kD",
+      "value": 0,
+      "source": "SpindexerConstants.SPINDEXER_KD"
+    },
+    {
+      "destination": "spindexer.pid.kG",
+      "value": 0,
+      "source": "SpindexerConstants.SPINDEXER_KG"
+    },
+    {
+      "destination": "spindexer.pid.kS",
+      "value": 0.30415,
+      "source": "SpindexerConstants.SPINDEXER_KS"
+    },
+    {
+      "destination": "spindexer.pid.kV",
+      "value": 0.12429,
+      "source": "SpindexerConstants.SPINDEXER_KV"
+    },
+    {
+      "destination": "spindexer.pid.kA",
+      "value": 0.0034288,
+      "source": "SpindexerConstants.SPINDEXER_KA"
+    },
+    {
+      "destination": "spindexer.ratios.sensorToMechanism",
+      "value": 1,
+      "source": "SpindexerConstants.SPINDEXER_LEAD_CONFIG"
+    },
+    {
+      "destination": "spindexer.ratios.rotorToSensor",
+      "value": 1,
+      "source": "SpindexerConstants.SPINDEXER_LEAD_CONFIG"
+    },
+    {
+      "destination": "spindexer.motionMagic.cruiseVelocity",
+      "value": 0,
+      "source": "SpindexerConstants.SPINDEXER_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "spindexer.motionMagic.acceleration",
+      "value": 200,
+      "source": "SpindexerConstants.SPINDEXER_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "spindexer.type",
+      "value": "velocity",
+      "source": "StateMachine.spindexer declaration"
+    },
+    {
+      "destination": "spindexer.focEnabled",
+      "value": true,
+      "source": "VelocitySubsystem.setVelocity() (FOC enabled)"
+    },
+    {
+      "destination": "spindexer.torqueFF",
+      "value": 0,
+      "source": "Unused for this control type"
+    },
+    {
+      "destination": "turret.motors[0].id",
+      "value": 60,
+      "source": "TurretConstants.TURRET_MOTOR_CONFIGS: MotorConfig.leader(MOTOR_ID, NeutralModeValue.Brake, true)"
+    },
+    {
+      "destination": "turret.motors[0].reversed",
+      "value": true,
+      "source": "TurretConstants.TURRET_MOTOR_CONFIGS: MotorConfig.leader(MOTOR_ID, NeutralModeValue.Brake, true)"
+    },
+    {
+      "destination": "turret.motors[0].neutralMode",
+      "value": "Brake",
+      "source": "TurretConstants.TURRET_MOTOR_CONFIGS: MotorConfig.leader(MOTOR_ID, NeutralModeValue.Brake, true)"
+    },
+    {
+      "destination": "turret.motors[0].role",
+      "value": "leader",
+      "source": "TurretConstants.TURRET_MOTOR_CONFIGS: MotorConfig.leader(MOTOR_ID, NeutralModeValue.Brake, true)"
+    },
+    {
+      "destination": "turret.motors[0].motorType",
+      "value": "X60",
+      "source": "Power Tool motor-model metadata for existing TalonFX motors; legacy source does not identify X60/X44"
+    },
+    {
+      "destination": "turret.pid.kP",
+      "value": 57,
+      "source": "TurretConstants.TURRET_KP"
+    },
+    {
+      "destination": "turret.pid.kI",
+      "value": 0,
+      "source": "TurretConstants.TURRET_KI"
+    },
+    {
+      "destination": "turret.pid.kD",
+      "value": 0,
+      "source": "TurretConstants.TURRET_KD"
+    },
+    {
+      "destination": "turret.pid.kG",
+      "value": 0,
+      "source": "TurretConstants.TURRET_KG"
+    },
+    {
+      "destination": "turret.pid.kS",
+      "value": null,
+      "source": "TurretConstants.TURRET_LEAD_CONFIG: Optional.empty()"
+    },
+    {
+      "destination": "turret.pid.kV",
+      "value": null,
+      "source": "TurretConstants.TURRET_LEAD_CONFIG: Optional.empty()"
+    },
+    {
+      "destination": "turret.pid.kA",
+      "value": null,
+      "source": "TurretConstants.TURRET_LEAD_CONFIG: Optional.empty()"
+    },
+    {
+      "destination": "turret.ratios.sensorToMechanism",
+      "value": -1,
+      "source": "TurretConstants.TURRET_LEAD_CONFIG"
+    },
+    {
+      "destination": "turret.ratios.rotorToSensor",
+      "value": 48.166666666666664,
+      "source": "TurretConstants.TURRET_LEAD_CONFIG"
+    },
+    {
+      "destination": "turret.motionMagic.cruiseVelocity",
+      "value": 3,
+      "source": "TurretConstants.TURRET_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "turret.motionMagic.acceleration",
+      "value": 60,
+      "source": "TurretConstants.TURRET_MOTION_MAGIC_CONFIG"
+    },
+    {
+      "destination": "turret.type",
+      "value": "absolutePosition",
+      "source": "PositionSubsystem mapped to AbsolutePositionSubsystem"
+    },
+    {
+      "destination": "turret.focEnabled",
+      "value": false,
+      "source": "PositionSubsystem: MotionMagicVoltage without EnableFOC (false)"
+    },
+    {
+      "destination": "turret.torqueFF",
+      "value": 0,
+      "source": "Unused for this control type"
+    },
+    {
+      "destination": "turret.cancoder.id",
+      "value": 61,
+      "source": "TurretConstants.TURRET_CANCODER_CONFIG"
+    },
+    {
+      "destination": "turret.cancoder.magnetOffset",
+      "value": 0.1255,
+      "source": "TurretConstants.TURRET_CANCODER_CONFIG"
+    },
+    {
+      "destination": "turret.cancoder.discontinuityPoint",
+      "value": 0.5,
+      "source": "TurretConstants.TURRET_CANCODER_CONFIG"
+    },
+    {
+      "destination": "turret.absolutePosition.default",
+      "value": 0,
+      "source": "TurretConstants.TURRET_DEFAULT; setpoints remain rotations"
+    },
+    {
+      "destination": "turret.absolutePosition.units",
+      "value": "degrees",
+      "source": "TurretConstants: legacy telemetry label (no setpoint conversion)"
+    },
+    {
+      "destination": "swerve.heading.kP",
+      "value": 6,
+      "source": "Swerve.HEADING_CONTROLLER"
+    },
+    {
+      "destination": "swerve.heading.kI",
+      "value": 0,
+      "source": "Swerve.HEADING_CONTROLLER"
+    },
+    {
+      "destination": "swerve.heading.kD",
+      "value": 0,
+      "source": "Swerve.HEADING_CONTROLLER"
+    },
+    {
+      "destination": "swerve.driveToPoint.maxAngularRateRadiansPerSecond",
+      "value": 4.71238898038469,
+      "source": "Swerve.MAX_DRIVE_TO_POINT_ANGULAR_RATE (request clamp)"
+    },
+    {
+      "destination": "swerve.driver.maxSpeedCoefficient",
+      "value": 0.75,
+      "source": "OIConstants, SwerveDriveCommand and DriveUtil"
+    },
+    {
+      "destination": "swerve.driver.velocityScale",
+      "value": 0.95,
+      "source": "OIConstants, SwerveDriveCommand and DriveUtil"
+    },
+    {
+      "destination": "swerve.driver.maxAngularRateRadiansPerSecond",
+      "value": 9.42477796076938,
+      "source": "OIConstants, SwerveDriveCommand and DriveUtil"
+    },
+    {
+      "destination": "swerve.driver.joystickDeadband",
+      "value": 0.1,
+      "source": "OIConstants, SwerveDriveCommand and DriveUtil"
+    },
+    {
+      "destination": "swerve.driver.skewCompensation",
+      "value": -0.03,
+      "source": "OIConstants, SwerveDriveCommand and DriveUtil"
+    },
+    {
+      "destination": "swerve.requests.maxAngularRateRadiansPerSecond",
+      "value": 4.71238898038469,
+      "source": "Swerve and DriveUtil (radians/sec conversion where applicable)"
+    },
+    {
+      "destination": "swerve.requests.translationDeadbandMetersPerSecond",
+      "value": 0.572,
+      "source": "Swerve and DriveUtil (radians/sec conversion where applicable)"
+    },
+    {
+      "destination": "swerve.requests.rotationalDeadbandRadiansPerSecond",
+      "value": 0.47123889803846897,
+      "source": "Swerve and DriveUtil (radians/sec conversion where applicable)"
+    },
+    {
+      "destination": "swerve.driveToPoint.maxSpeedCoefficient",
+      "value": 0.75,
+      "source": "Swerve and DriveUtil (radians/sec conversion where applicable)"
+    },
+    {
+      "destination": "swerve.driveToPoint.maxAngularRateRadiansPerSecond",
+      "value": 4.71238898038469,
+      "source": "Swerve and DriveUtil (radians/sec conversion where applicable)"
+    },
+    {
+      "destination": "swerve.driveToPoint.slowSpeedCoefficient",
+      "value": 0.1875,
+      "source": "Swerve and DriveUtil (radians/sec conversion where applicable)"
+    },
+    {
+      "destination": "swerve.driveToPoint.staticFrictionConstant",
+      "value": 0.085,
+      "source": "Swerve and DriveUtil (radians/sec conversion where applicable)"
+    },
+    {
+      "destination": "swerve.heading.kP",
+      "value": 6,
+      "source": "Swerve and DriveUtil (radians/sec conversion where applicable)"
+    },
+    {
+      "destination": "swerve.heading.kI",
+      "value": 0,
+      "source": "Swerve and DriveUtil (radians/sec conversion where applicable)"
+    },
+    {
+      "destination": "swerve.heading.kD",
+      "value": 0,
+      "source": "Swerve and DriveUtil (radians/sec conversion where applicable)"
+    },
+    {
+      "destination": "constants.OI.DRIVER_CONTROLLER_PORT",
+      "value": "0",
+      "source": "OIConstants.DRIVER_CONTROLLER_PORT"
+    },
+    {
+      "destination": "constants.OI.OPERATOR_CONTROLLER_PORT",
+      "value": "1",
+      "source": "OIConstants.OPERATOR_CONTROLLER_PORT"
+    },
+    {
+      "destination": "constants.OI.DEADBAND",
+      "value": "0.05",
+      "source": "OIConstants.DEADBAND"
+    },
+    {
+      "destination": "constants.OI.MAX_SPEED_COEFFICIENT",
+      "value": "0.75",
+      "source": "OIConstants.MAX_SPEED_COEFFICIENT"
+    },
+    {
+      "destination": "constants.OI.INTERCHANGE_SPEED_COEFFICIENT",
+      "value": "0.75",
+      "source": "OIConstants.INTERCHANGE_SPEED_COEFFICIENT"
+    },
+    {
+      "destination": "constants.Vision.CAMERA_NAME",
+      "value": "\"limelight\"",
+      "source": "VisionConstants.CAMERA_NAME"
+    },
+    {
+      "destination": "constants.Vision.CAMERA_FOV_DEGREES",
+      "value": "60",
+      "source": "VisionConstants.CAMERA_FOV_DEGREES"
+    },
+    {
+      "destination": "constants.Vision.IMAGE_WIDTH",
+      "value": "320",
+      "source": "VisionConstants.IMAGE_WIDTH"
+    },
+    {
+      "destination": "constants.Vision.IMAGE_HEIGHT",
+      "value": "240",
+      "source": "VisionConstants.IMAGE_HEIGHT"
+    },
+    {
+      "destination": "constants.Vision.TARGET_AREA_THRESHOLD",
+      "value": "1",
+      "source": "VisionConstants.TARGET_AREA_THRESHOLD"
+    },
+    {
+      "destination": "constants.Vision.MAX_TARGET_DISTANCE_METERS",
+      "value": "5",
+      "source": "VisionConstants.MAX_TARGET_DISTANCE_METERS"
+    },
+    {
+      "destination": "constants.Vision.LEFT_TABLE",
+      "value": "\"limelight-left\"",
+      "source": "VisionConstants.LEFT_TABLE"
+    },
+    {
+      "destination": "constants.Vision.RIGHT_TABLE",
+      "value": "\"limelight-right\"",
+      "source": "VisionConstants.RIGHT_TABLE"
+    },
+    {
+      "destination": "constants.Vision.TURRET_TABLE",
+      "value": "\"limelight-turret\"",
+      "source": "VisionConstants.TURRET_TABLE"
+    },
+    {
+      "destination": "constants.robot:Vision.CONFIG",
+      "value": "LimelightVisionConfig.DEFAULT",
+      "source": "Installed PowerLib measurement validation defaults (new library behavior)"
+    },
+    {
+      "destination": "constants.Feeder.CANDI1_CAN_ID",
+      "value": "42",
+      "source": "FeederConstants.CANDI1_CAN_ID"
+    },
+    {
+      "destination": "constants.Feeder.CANDI2_CAN_ID",
+      "value": "43",
+      "source": "FeederConstants.CANDI2_CAN_ID"
+    },
+    {
+      "destination": "constants.Intake.INTAKE_DOWN_SETPOINT",
+      "value": "0",
+      "source": "IntakeConstants.INTAKE_DOWN_SETPOINT"
+    },
+    {
+      "destination": "constants.Intake.INTAKE_UP_SETPOINT",
+      "value": "0",
+      "source": "IntakeConstants.INTAKE_UP_SETPOINT"
+    },
+    {
+      "destination": "constants.Intake.INTAKE_ROLLER_OUTPUT",
+      "value": "0.8",
+      "source": "IntakeConstants.INTAKE_ROLLER_OUTPUT"
+    },
+    {
+      "destination": "constants.Intake.ROLLER_TARGET_RPS",
+      "value": "10",
+      "source": "IntakeConstants.ROLLER_TARGET_RPS"
+    },
+    {
+      "destination": "constants.Intake.INTAKE_MIN",
+      "value": "-0.09",
+      "source": "IntakeConstants.INTAKE_MIN"
+    },
+    {
+      "destination": "constants.Intake.INTAKE_MAX",
+      "value": "-0.445",
+      "source": "IntakeConstants.INTAKE_MAX"
+    },
+    {
+      "destination": "constants.Intake.INTAKE_IDLE",
+      "value": "-0.4",
+      "source": "IntakeConstants.INTAKE_IDLE"
+    },
+    {
+      "destination": "constants.Intake.INTAKE_FEED",
+      "value": "-0.25",
+      "source": "IntakeConstants.INTAKE_FEED"
+    },
+    {
+      "destination": "constants.Intake.INTAKE_DEFAULT",
+      "value": "-0.09",
+      "source": "IntakeConstants.INTAKE_DEFAULT"
+    },
+    {
+      "destination": "constants.Shooter.SHOOTER_HOOD_MIN",
+      "value": "0.005",
+      "source": "ShooterConstants.SHOOTER_HOOD_MIN"
+    },
+    {
+      "destination": "constants.Shooter.SHOOTER_HOOD_MAX",
+      "value": "0.14",
+      "source": "ShooterConstants.SHOOTER_HOOD_MAX"
+    },
+    {
+      "destination": "constants.Shooter.SHOOTER_HOOD_DEFAULT",
+      "value": "0.09",
+      "source": "ShooterConstants.SHOOTER_HOOD_DEFAULT"
+    },
+    {
+      "destination": "constants.Spindexer.LASER_1_CAN_ID",
+      "value": "31",
+      "source": "SpindexerConstants.LASER_1_CAN_ID"
+    },
+    {
+      "destination": "constants.Spindexer.LASER_2_CAN_ID",
+      "value": "32",
+      "source": "SpindexerConstants.LASER_2_CAN_ID"
+    },
+    {
+      "destination": "constants.Turret.TURRET_MIN",
+      "value": "-0.481",
+      "source": "TurretConstants.TURRET_MIN"
+    },
+    {
+      "destination": "constants.Turret.TURRET_MAX",
+      "value": "0.46",
+      "source": "TurretConstants.TURRET_MAX"
+    },
+    {
+      "destination": "constants.Turret.TURRET_DEFAULT",
+      "value": "0",
+      "source": "TurretConstants.TURRET_DEFAULT"
+    },
+    {
+      "destination": "constants.Turret.TURRET_DIST_FROM_ROBOT_CENTER",
+      "value": "-0.15875",
+      "source": "TurretConstants.TURRET_DIST_FROM_ROBOT_CENTER"
+    },
+    {
+      "destination": "constants.Turret.TURRET_RADIUS",
+      "value": "0.11596",
+      "source": "TurretConstants.TURRET_RADIUS"
+    },
+    {
+      "destination": "constants.Turret.TURRET_LIMELIGHT_STATIC_OFFSET",
+      "value": "-0.04279000000000001",
+      "source": "TurretConstants.TURRET_LIMELIGHT_STATIC_OFFSET"
+    },
+    {
+      "destination": "constants.Turret.TURRET_SHOOT_ANGLE_TOLERANCE_DEG",
+      "value": "2",
+      "source": "TurretConstants.TURRET_SHOOT_ANGLE_TOLERANCE_DEG"
+    },
+    {
+      "destination": "constants.Turret.SHOOT_MAX_DRIVETRAIN_SPEED_MPS",
+      "value": "0.5",
+      "source": "TurretConstants.SHOOT_MAX_DRIVETRAIN_SPEED_MPS"
+    },
+    {
+      "destination": "constants.Turret.TURRET_CAMERA_Y_OFFSET",
+      "value": "0",
+      "source": "TurretConstants.TURRET_CAMERA_Y_OFFSET"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[0][0]",
+      "value": 5.5,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[0][1]",
+      "value": 0.135,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[1][0]",
+      "value": 4.85,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[1][1]",
+      "value": 0.105,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[2][0]",
+      "value": 4.6,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[2][1]",
+      "value": 0.09,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[3][0]",
+      "value": 4.05,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[3][1]",
+      "value": 0.08,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[4][0]",
+      "value": 3.75,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[4][1]",
+      "value": 0.07,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[5][0]",
+      "value": 3.29,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[5][1]",
+      "value": 0.06,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[6][0]",
+      "value": 2.75,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[6][1]",
+      "value": 0.05,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[7][0]",
+      "value": 2.38,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[7][1]",
+      "value": 0.04,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[8][0]",
+      "value": 1.97,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[8][1]",
+      "value": 0.03,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[9][0]",
+      "value": 1.68,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.HOOD_ANGLES[9][1]",
+      "value": 0.02,
+      "source": "TurretConstants.HOOD_ANGLES"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[0][0]",
+      "value": 5.5,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[0][1]",
+      "value": 89,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[1][0]",
+      "value": 4.85,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[1][1]",
+      "value": 84,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[2][0]",
+      "value": 4.6,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[2][1]",
+      "value": 82,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[3][0]",
+      "value": 4.05,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[3][1]",
+      "value": 79,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[4][0]",
+      "value": 3.75,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[4][1]",
+      "value": 77,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[5][0]",
+      "value": 3.29,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[5][1]",
+      "value": 74,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[6][0]",
+      "value": 2.75,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[6][1]",
+      "value": 71,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[7][0]",
+      "value": 2.38,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[7][1]",
+      "value": 67,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[8][0]",
+      "value": 1.97,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[8][1]",
+      "value": 64,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[9][0]",
+      "value": 1.68,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.SHOOTER_SPEEDS[9][1]",
+      "value": 62,
+      "source": "TurretConstants.SHOOTER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[0][0]",
+      "value": 5.5,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[0][1]",
+      "value": 72,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[1][0]",
+      "value": 4.85,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[1][1]",
+      "value": 68,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[2][0]",
+      "value": 4.6,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[2][1]",
+      "value": 67,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[3][0]",
+      "value": 4.05,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[3][1]",
+      "value": 66,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[4][0]",
+      "value": 3.75,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[4][1]",
+      "value": 65,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[5][0]",
+      "value": 3.29,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[5][1]",
+      "value": 65,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[6][0]",
+      "value": 2.75,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[6][1]",
+      "value": 63,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[7][0]",
+      "value": 2.38,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[7][1]",
+      "value": 61,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[8][0]",
+      "value": 1.97,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[8][1]",
+      "value": 59,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[9][0]",
+      "value": 1.68,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "constants.turret.FEEDER_SPEEDS[9][1]",
+      "value": 58,
+      "source": "TurretConstants.FEEDER_SPEEDS"
+    },
+    {
+      "destination": "game.hardware.canBus",
+      "value": "canivore",
+      "source": "CanBusConstants.CANIVORE_BUS"
+    },
+    {
+      "destination": "game.hardware.led.CANDLE_CAN_ID",
+      "value": 0,
+      "source": "LEDConstants.CANDLE_CAN_ID"
+    },
+    {
+      "destination": "game.hardware.led.STRIP_LENGTH",
+      "value": 60,
+      "source": "LEDConstants.STRIP_LENGTH"
+    },
+    {
+      "destination": "game.hardware.led.STRIP_START_INDEX",
+      "value": 8,
+      "source": "LEDConstants.STRIP_START_INDEX"
+    },
+    {
+      "destination": "game.field.points.BLUE_TOP_CORNER",
+      "value": [
+        0.5,
+        7.5,
+        0
+      ],
+      "source": "FieldConstants.BLUE_TOP_CORNER"
+    },
+    {
+      "destination": "game.field.points.BLUE_BOTTOM_CORNER",
+      "value": [
+        0.5,
+        0.5,
+        0
+      ],
+      "source": "FieldConstants.BLUE_BOTTOM_CORNER"
+    },
+    {
+      "destination": "game.field.points.RED_TOP_CORNER",
+      "value": [
+        16,
+        7.5,
+        0
+      ],
+      "source": "FieldConstants.RED_TOP_CORNER"
+    },
+    {
+      "destination": "game.field.points.RED_BOTTOM_CORNER",
+      "value": [
+        16,
+        0.5,
+        0
+      ],
+      "source": "FieldConstants.RED_BOTTOM_CORNER"
+    },
+    {
+      "destination": "game.field.points.NEU_TOP_LEFT",
+      "value": [
+        5.872,
+        7.443
+      ],
+      "source": "FieldConstants.NEU_TOP_LEFT"
+    },
+    {
+      "destination": "game.field.points.NEU_TOP_RIGHT",
+      "value": [
+        10.692,
+        7.443
+      ],
+      "source": "FieldConstants.NEU_TOP_RIGHT"
+    },
+    {
+      "destination": "game.field.points.NEU_BOTTOM_LEFT",
+      "value": [
+        5.872,
+        0.595
+      ],
+      "source": "FieldConstants.NEU_BOTTOM_LEFT"
+    },
+    {
+      "destination": "game.field.points.NEU_BOTTOM_RIGHT",
+      "value": [
+        10.692,
+        0.595
+      ],
+      "source": "FieldConstants.NEU_BOTTOM_RIGHT"
+    },
+    {
+      "destination": "game.field.points.HOPPER_RED",
+      "value": [
+        11.5,
+        4
+      ],
+      "source": "FieldConstants.HOPPER_RED"
+    },
+    {
+      "destination": "game.field.points.HOPPER_BLUE",
+      "value": [
+        4.62,
+        4
+      ],
+      "source": "FieldConstants.HOPPER_BLUE"
+    },
+    {
+      "destination": "game.sweep.margin",
+      "value": 0.5,
+      "source": "SweepConstants.margin"
+    },
+    {
+      "destination": "game.sweep.driveSpeed",
+      "value": 0.6,
+      "source": "SweepConstants.driveSpeed"
+    },
+    {
+      "destination": "game.sweep.center",
+      "value": [
+        8.282,
+        4.019
+      ],
+      "source": "SweepConstants.center"
+    },
+    {
+      "destination": "game.sweep.targets",
+      "value": {
+        "top": [
+          8.282,
+          6.943,
+          90
+        ],
+        "bottom": [
+          8.282,
+          1.095,
+          -90
+        ],
+        "left": [
+          6.372,
+          4.019,
+          180
+        ],
+        "right": [
+          10.192,
+          4.019,
+          0
+        ]
+      },
+      "source": "SweepConstants.targets"
+    },
+    {
+      "destination": "game.autos.Red Left",
+      "value": [
+        [
+          13.5,
+          2.4,
+          -90
+        ],
+        [
+          10,
+          2.4,
+          -90
+        ],
+        [
+          9.55,
+          0.73,
+          -90
+        ],
+        [
+          8.4,
+          1,
+          -90
+        ],
+        [
+          8.4,
+          3.5,
+          -90
+        ],
+        [
+          8.4,
+          2.4,
+          -90
+        ],
+        [
+          14.3,
+          2.4,
+          135
+        ]
+      ],
+      "source": "AutoConstants.RED_LEFT_1..7"
+    },
+    {
+      "destination": "game.autos.Red Right",
+      "value": [
+        [
+          13.5,
+          5.7,
+          90
+        ],
+        [
+          10,
+          5.7,
+          90
+        ],
+        [
+          9.55,
+          7.27,
+          90
+        ],
+        [
+          8.4,
+          7,
+          90
+        ],
+        [
+          8.4,
+          4.5,
+          90
+        ],
+        [
+          8.4,
+          5.7,
+          90
+        ],
+        [
+          14.3,
+          5.7,
+          -135
+        ]
+      ],
+      "source": "AutoConstants.RED_RIGHT_1..7"
+    },
+    {
+      "destination": "game.autos.Blue Left",
+      "value": [
+        [
+          3.1,
+          5.7,
+          -90
+        ],
+        [
+          6.5,
+          5.7,
+          -90
+        ],
+        [
+          6.95,
+          7.27,
+          -90
+        ],
+        [
+          8.1,
+          7,
+          -90
+        ],
+        [
+          8.1,
+          4.5,
+          -90
+        ],
+        [
+          8.1,
+          5.7,
+          -90
+        ],
+        [
+          2.1,
+          5.7,
+          135
+        ]
+      ],
+      "source": "AutoConstants.BLUE_LEFT_1..7"
+    },
+    {
+      "destination": "game.autos.Blue Right",
+      "value": [
+        [
+          3.1,
+          2.4,
+          90
+        ],
+        [
+          6.5,
+          2.4,
+          90
+        ],
+        [
+          6.95,
+          0.73,
+          90
+        ],
+        [
+          8.1,
+          1,
+          90
+        ],
+        [
+          8.1,
+          3.5,
+          90
+        ],
+        [
+          8.1,
+          2.4,
+          90
+        ],
+        [
+          2.1,
+          2.4,
+          -135
+        ]
+      ],
+      "source": "AutoConstants.BLUE_RIGHT_1..7"
+    },
+    {
+      "destination": "game.shots",
+      "value": [
+        [
+          1.68,
+          62,
+          0.02,
+          58
+        ],
+        [
+          1.97,
+          64,
+          0.03,
+          59
+        ],
+        [
+          2.38,
+          67,
+          0.04,
+          61
+        ],
+        [
+          2.75,
+          71,
+          0.05,
+          63
+        ],
+        [
+          3.29,
+          74,
+          0.06,
+          65
+        ],
+        [
+          3.75,
+          77,
+          0.07,
+          65
+        ],
+        [
+          4.05,
+          79,
+          0.08,
+          66
+        ],
+        [
+          4.6,
+          82,
+          0.09,
+          67
+        ],
+        [
+          4.85,
+          84,
+          0.105,
+          68
+        ],
+        [
+          5.5,
+          89,
+          0.135,
+          72
+        ]
+      ],
+      "source": "Joined TurretConstants HOOD_ANGLES, SHOOTER_SPEEDS, FEEDER_SPEEDS"
+    },
+    {
+      "destination": "game.intake.deployed",
+      "value": -0.445,
+      "source": "IntakeConstants.INTAKE_MAX"
+    },
+    {
+      "destination": "game.intake.idle",
+      "value": -0.4,
+      "source": "IntakeConstants.INTAKE_IDLE"
+    },
+    {
+      "destination": "game.intake.feed",
+      "value": -0.25,
+      "source": "IntakeConstants.INTAKE_FEED"
+    },
+    {
+      "destination": "game.intake.stowed",
+      "value": -0.09,
+      "source": "IntakeConstants.INTAKE_MIN"
+    },
+    {
+      "destination": "game.field.blueHub",
+      "value": [
+        4.62,
+        4
+      ],
+      "source": "FieldConstants.HOPPER_BLUE"
+    },
+    {
+      "destination": "game.field.redHub",
+      "value": [
+        11.5,
+        4
+      ],
+      "source": "FieldConstants.HOPPER_RED"
+    },
+    {
+      "destination": "game.field.constants.X_MIN",
+      "value": 0,
+      "source": "FieldConstants.X_MIN"
+    },
+    {
+      "destination": "game.field.constants.Y_MIN",
+      "value": 0,
+      "source": "FieldConstants.Y_MIN"
+    },
+    {
+      "destination": "game.field.constants.X_MAX",
+      "value": 17.5,
+      "source": "FieldConstants.X_MAX"
+    },
+    {
+      "destination": "game.field.constants.Y_MAX",
+      "value": 8,
+      "source": "FieldConstants.Y_MAX"
+    },
+    {
+      "destination": "game.field.constants.TOL",
+      "value": 2,
+      "source": "FieldConstants.TOL"
+    },
+    {
+      "destination": "game.field.constants.BLUE_START_X",
+      "value": 0,
+      "source": "FieldConstants.BLUE_START_X"
+    },
+    {
+      "destination": "game.field.constants.BLUE_END_X",
+      "value": 4,
+      "source": "FieldConstants.BLUE_END_X"
+    },
+    {
+      "destination": "game.field.constants.CENTER_START_X",
+      "value": 5.2,
+      "source": "FieldConstants.CENTER_START_X"
+    },
+    {
+      "destination": "game.field.constants.CENTER_END_X",
+      "value": 11.35,
+      "source": "FieldConstants.CENTER_END_X"
+    },
+    {
+      "destination": "game.field.constants.RED_START_X",
+      "value": 12.55,
+      "source": "FieldConstants.RED_START_X"
+    },
+    {
+      "destination": "game.field.constants.RED_END_X",
+      "value": 16.5,
+      "source": "FieldConstants.RED_END_X"
+    },
+    {
+      "destination": "game.field.constants.AUTO_LENGTH_IN_TIME",
+      "value": 15,
+      "source": "FieldConstants.AUTO_LENGTH_IN_TIME"
+    },
+    {
+      "destination": "game.field.constants.TIME_BETWEEN_SHIFTS",
+      "value": 25,
+      "source": "FieldConstants.TIME_BETWEEN_SHIFTS"
+    },
+    {
+      "destination": "game.field.constants.MAX_DISTANCE_TO_HOPPER",
+      "value": 5.406,
+      "source": "FieldConstants.MAX_DISTANCE_TO_HOPPER"
+    },
+    {
+      "destination": "game.location.PLEASE_DONT_HIT_THE_WALL_OFFSET",
+      "value": 0.5,
+      "source": "LocationConstants.PLEASE_DONT_HIT_THE_WALL_OFFSET"
+    },
+    {
+      "destination": "game.location.BLUE_ALLIANCE_WALL_X",
+      "value": 1.2850000000000001,
+      "source": "LocationConstants.BLUE_ALLIANCE_WALL_X"
+    },
+    {
+      "destination": "game.location.BLUE_HUB_WALL_X",
+      "value": 2.65,
+      "source": "LocationConstants.BLUE_HUB_WALL_X"
+    },
+    {
+      "destination": "game.location.BLUE_CENTER_WALL_X",
+      "value": 6.5,
+      "source": "LocationConstants.BLUE_CENTER_WALL_X"
+    },
+    {
+      "destination": "game.location.RED_ALLIANCE_WALL_X",
+      "value": 15.23,
+      "source": "LocationConstants.RED_ALLIANCE_WALL_X"
+    },
+    {
+      "destination": "game.location.RED_HUB_WALL_X",
+      "value": 13.86,
+      "source": "LocationConstants.RED_HUB_WALL_X"
+    },
+    {
+      "destination": "game.location.RED_CENTER_WALL_X",
+      "value": 10,
+      "source": "LocationConstants.RED_CENTER_WALL_X"
+    },
+    {
+      "destination": "game.location.NEAR_WALL_Y",
+      "value": 1.3199999999999998,
+      "source": "LocationConstants.NEAR_WALL_Y"
+    },
+    {
+      "destination": "game.location.FAR_WALL_Y",
+      "value": 6.75,
+      "source": "LocationConstants.FAR_WALL_Y"
+    },
+    {
+      "destination": "game.location.X_MIN_",
+      "value": 0,
+      "source": "LocationConstants.X_MIN_"
+    },
+    {
+      "destination": "game.location.X_MAX",
+      "value": 0,
+      "source": "LocationConstants.X_MAX"
+    },
+    {
+      "destination": "game.location.Y_MIN",
+      "value": 0,
+      "source": "LocationConstants.Y_MIN"
+    },
+    {
+      "destination": "game.location.Y_MAX",
+      "value": 0,
+      "source": "LocationConstants.Y_MAX"
+    },
+    {
+      "destination": "game.location.BLUE_ZONE_X_MID",
+      "value": 2,
+      "source": "LocationConstants.BLUE_ZONE_X_MID"
+    },
+    {
+      "destination": "game.location.RED_ZONE_X_MID",
+      "value": 14.54,
+      "source": "LocationConstants.RED_ZONE_X_MID"
+    },
+    {
+      "destination": "game.location.NEUTRAL_X_MID",
+      "value": 8.27,
+      "source": "LocationConstants.NEUTRAL_X_MID"
+    },
+    {
+      "destination": "game.intake.collectRps",
+      "value": 145,
+      "source": "RobotContainer.configureBindings"
+    },
+    {
+      "destination": "game.intake.ejectRps",
+      "value": -100,
+      "source": "RobotContainer.configureBindings"
+    },
+    {
+      "destination": "game.tolerances.shooterRps",
+      "value": 2,
+      "source": "StateMachine.runShootingToTarget"
+    },
+    {
+      "destination": "game.tolerances.headingDegrees",
+      "value": 5,
+      "source": "StateMachine.runShootingToTarget"
+    },
+    {
+      "destination": "game.cameras",
+      "value": [
+        "limelight-left",
+        "limelight-right",
+        "limelight-turret"
+      ],
+      "source": "VisionConstants.LEFT_TABLE, RIGHT_TABLE, TURRET_TABLE"
+    }
+  ],
+  "corrections": [
+    {
+      "destination": "intakeWrist.focEnabled",
+      "before": true,
+      "after": false,
+      "reason": "Match historical source; motorType remains tool metadata"
+    },
+    {
+      "destination": "intakeWrist.absolutePosition",
+      "before": {
+        "units": "rotations",
+        "default": -0.09
+      },
+      "after": {
+        "units": "degrees",
+        "default": -0.09
+      },
+      "reason": "Match historical source; motorType remains tool metadata"
+    },
+    {
+      "destination": "shooterHood.focEnabled",
+      "before": true,
+      "after": false,
+      "reason": "Match historical source; motorType remains tool metadata"
+    },
+    {
+      "destination": "shooterHood.absolutePosition",
+      "before": {
+        "units": "rotations",
+        "default": 0.09
+      },
+      "after": {
+        "units": "degrees",
+        "default": 0.09
+      },
+      "reason": "Match historical source; motorType remains tool metadata"
+    },
+    {
+      "destination": "turret",
+      "before": null,
+      "after": "added",
+      "reason": "Missing historical hardware config"
+    },
+    {
+      "destination": "swerve.heading.kP",
+      "before": 7,
+      "after": 6,
+      "reason": "Swerve.HEADING_CONTROLLER"
+    },
+    {
+      "destination": "swerve.driveToPoint.maxAngularRateRadiansPerSecond",
+      "before": 3.141592653589793,
+      "after": 4.71238898038469,
+      "reason": "Swerve.MAX_DRIVE_TO_POINT_ANGULAR_RATE (request clamp)"
+    }
+  ],
+  "notes": [
+    "Sweep is navigation software, not a motor subsystem. Turret config exists in the baseline constants but is not instantiated by its StateMachine.",
+    "The game JSON is supplementary test-robot reference data. Stock Power Tool only generates subsystems, constants, and tuning-selection JSON; its Update Code action does not consume the game file.",
+    "X60 is test-robot simulation metadata, not hardware model information established by legacy TalonFX declarations.",
+    "Position telemetry labels remain degrees to match the source; all default positions and setpoints remain rotations.",
+    "New library validation uses LimelightVisionConfig.DEFAULT. Empty tuning selections are UI state, not calibration.",
+    "TunerConstants calibration is already identical to the baseline; only comments and whitespace differ."
+  ]
+}
