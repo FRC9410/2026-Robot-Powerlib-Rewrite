@@ -40,4 +40,6 @@ Game state, shooting reason, intake/eject flags, feed readiness, hub distance, h
 
 ## Validation
 
-The Gradle build and 24 JUnit tests pass. Tests exercise shot interpolation/validation, both alliance heading conventions, scoring-zone gating, signed flywheel readiness, hood/alignment/feedback guards, mode resets, Test-mode handoff, intake/eject release, agitation timing, all four autonomous sequences, motion caps, timeouts and cancellation. The historical configuration verifier also passes for all four JSON files and 215 Java values, including the new behavior constants. Runtime/deploy game JSON hashes match. No hardware deployment was performed.
+The Gradle build and 25 JUnit tests pass. Tests exercise shot interpolation/validation, both alliance heading conventions, scoring-zone gating, signed flywheel readiness, hood/alignment/feedback guards, mode resets, Test-mode handoff, intake/eject release, agitation timing, all four autonomous sequences, motion caps, timeouts and cancellation. The historical configuration verifier also passes for all four JSON files and 215 Java values, including the new behavior constants. Runtime/deploy game JSON hashes match. No hardware deployment was performed.
+
+The screenshot-based 2026 Game dashboard is installed in Power Tool. See [power-tool/GAME2026-DASHBOARD.md](power-tool/GAME2026-DASHBOARD.md) for its telemetry contract, camera settings, route preview and development-only sample data.

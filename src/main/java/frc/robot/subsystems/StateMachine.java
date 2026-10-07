@@ -89,6 +89,15 @@ public class StateMachine extends SubsystemBase {
   }
 
   private void publish(String reason) {
+    boolean active = DriverStation.isEnabled() && !DriverStation.isTest();
+    PowerRobotContainer.setSubsystemData("Game2026", "Heartbeat", Timer.getFPGATimestamp());
+    PowerRobotContainer.setSubsystemData("Game2026", "ShotRequested", active && wantedState == RobotState.SHOOTING);
+    PowerRobotContainer.setSubsystemData("Game2026", "VelocityReady", active && output != null && output.velocityReady());
+    PowerRobotContainer.setSubsystemData("Game2026", "HoodReady", active && output != null && output.hoodReady());
+    PowerRobotContainer.setSubsystemData("Game2026", "Aligned", active && output != null && output.aligned());
+    PowerRobotContainer.setSubsystemData("Game2026", "CalibratedRange", active && output != null && output.calibratedRange());
+    PowerRobotContainer.setSubsystemData("Game2026", "Target", active && output != null && output.hubAvailable() ? "HUB" : "NONE");
+    PowerRobotContainer.setSubsystemData("Game2026", "VisionAccepted", vision.hasFreshAcceptedFrame());
     PowerRobotContainer.setSubsystemData("Game2026", "State", wantedState.name());
     PowerRobotContainer.setSubsystemData("Game2026", "ShotStatus", reason);
     PowerRobotContainer.setSubsystemData("Game2026", "Collecting", collecting);

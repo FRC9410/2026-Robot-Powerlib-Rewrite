@@ -40,6 +40,18 @@ class Game2026ControllerTest {
     var out = controller.update(input(Alliance.Blue, bluePose(), shot.shooterRps()+1, shot.hoodRotations(), true, 0), settings);
     assertFalse(out.feedReady()); assertEquals(0, out.feederRps()); assertEquals(0, out.spindexerRps());
   }
+  @Test void dashboardReadinessReportsEachIndependentFeedCondition() {
+    var shot = config.shot(2.62);
+    var spinning = controller.update(input(Alliance.Blue, bluePose(), 0, shot.hoodRotations(), true, 0), settings);
+    assertFalse(spinning.velocityReady()); assertTrue(spinning.hoodReady());
+    assertTrue(spinning.aligned()); assertTrue(spinning.calibratedRange()); assertFalse(spinning.feedReady());
+    var hoodMoving = controller.update(input(Alliance.Blue, bluePose(), -shot.shooterRps()-1, shot.hoodRotations()+.02, true, 0), settings);
+    assertTrue(hoodMoving.velocityReady()); assertFalse(hoodMoving.hoodReady()); assertFalse(hoodMoving.feedReady());
+    var aiming = controller.update(input(Alliance.Blue, new Pose2d(2, 4, Rotation2d.fromDegrees(30)), -shot.shooterRps()-1, shot.hoodRotations(), true, 0), settings);
+    assertFalse(aiming.aligned()); assertFalse(aiming.feedReady());
+    var outside = ready(Alliance.Blue, new Pose2d(8, 4, new Rotation2d()), 0);
+    assertFalse(outside.calibratedRange()); assertFalse(outside.feedReady());
+  }
   @Test void hoodHeadingAndFeedbackEachBlockFeeding() {
     var shot = config.shot(2.62);
     assertFalse(controller.update(input(Alliance.Blue, bluePose(), -shot.shooterRps()-1, shot.hoodRotations()+.02, true, 0), settings).feedReady());

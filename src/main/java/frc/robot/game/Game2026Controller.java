@@ -12,7 +12,8 @@ public final class Game2026Controller {
       double shooterRps, double hoodRotations, boolean feedbackHealthy, double nowSeconds) {}
   public record Output(double rollerRps, double wristRotations, double shooterRps, double hoodRotations,
       double feederRps, double spindexerRps, boolean runShooter, boolean feedReady,
-      boolean hubAvailable, double headingErrorDegrees, double distance, String reason) {}
+      boolean hubAvailable, double headingErrorDegrees, double distance, String reason,
+      boolean velocityReady, boolean hoodReady, boolean aligned, boolean calibratedRange) {}
 
   private final Game2026Config config;
   private State wanted = State.READY;
@@ -47,7 +48,7 @@ public final class Game2026Controller {
     if (!inZone || !config.inShotRange(distance)) {
       shootingStarted = Double.NaN;
       return new Output(roller, wrist, 0, 0, 0, 0, false, false, inZone, headingError, distance,
-          inZone ? "OUTSIDE SHOT TABLE" : "OUTSIDE SCORING ZONE");
+          inZone ? "OUTSIDE SHOT TABLE" : "OUTSIDE SCORING ZONE", false, false, false, false);
     }
     var shot = config.shot(distance);
     double demand = -shot.shooterRps() - settings.shooterExtraRps();
@@ -61,10 +62,11 @@ public final class Game2026Controller {
     String reason = intakeMode == IntakeMode.EJECT ? "EJECTING" : !in.feedbackHealthy() ? "FEEDBACK UNAVAILABLE" : !velocityReady ? "SPINNING UP"
         : !hoodReady ? "HOOD MOVING" : !aligned ? "AIMING" : "READY TO FEED";
     return new Output(roller, wrist, demand, shot.hoodRotations(), ready ? -shot.feederRps() : 0,
-        ready ? settings.spindexerRps() : 0, true, ready, true, headingError, distance, reason);
+        ready ? settings.spindexerRps() : 0, true, ready, true, headingError, distance, reason,
+        velocityReady, hoodReady, aligned, true);
   }
 
   private static Output idle(double wrist, double roller, String reason) {
-    return new Output(roller, wrist, 0, 0, 0, 0, false, false, false, 0, 0, reason);
+    return new Output(roller, wrist, 0, 0, 0, 0, false, false, false, 0, 0, reason, false, false, false, false);
   }
 }

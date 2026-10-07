@@ -37,7 +37,7 @@ Power Tool's installed node_modules is included in the final migration commit at
 
 - 351 historical configuration checks passed before generation.
 - 215 Java configuration values (including ten new behavior constants), four JSON documents, seven subsystem initializations and 451 installed dependency versions passed verification.
-- Gradle build passed with WPILib JDK 17, including 24 JUnit behavior tests added with the game scaffold.
+- Gradle build passed with WPILib JDK 17, including 25 JUnit behavior tests added with the game scaffold.
 - Renderer and Electron TypeScript checks passed.
 - Existing CANdle deprecation warning remains.
 
