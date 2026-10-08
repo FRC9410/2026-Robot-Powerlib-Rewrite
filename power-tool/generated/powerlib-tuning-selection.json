@@ -1,6 +1,18 @@
 {
   "version": 1,
-  "selectedTopics": [],
-  "monitorDrawerOpen": false,
+  "selectedTopics": [
+    "/PowerLib/Subsystems/IntakeWrist/Variables/Cancoder/MagnetOffset",
+    "/PowerLib/Subsystems/IntakeWrist/Variables/Custom/INTAKE_DEFAULT",
+    "/PowerLib/Subsystems/IntakeWrist/Variables/Custom/INTAKE_FEED",
+    "/PowerLib/Subsystems/IntakeWrist/Variables/Custom/INTAKE_IDLE",
+    "/PowerLib/Subsystems/IntakeWrist/Variables/Custom/INTAKE_MAX",
+    "/PowerLib/Subsystems/IntakeWrist/Variables/Custom/INTAKE_MIN",
+    "/PowerLib/Subsystems/Shooter/Variables/Ratios/RotorToSensor",
+    "/PowerLib/Subsystems/Shooter/Variables/Ratios/SensorToMechanism",
+    "/PowerLib/Subsystems/ShooterHood/Variables/Cancoder/MagnetOffset",
+    "/PowerLib/Subsystems/ShooterHood/Variables/PID/kP",
+    "/PowerLib/Subsystems/ShooterHood/Variables/Ratios/SensorToMechanism"
+  ],
+  "monitorDrawerOpen": true,
   "sidebarExpandedSection": "subsystem"
 }

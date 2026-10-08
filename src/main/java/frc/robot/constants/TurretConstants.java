@@ -20,9 +20,9 @@ public class TurretConstants {
   public static final double KI = 0;
   public static final double KD = 0;
   public static final double KG = 0;
-  public static final Optional<Double> KS = Optional.empty();
-  public static final Optional<Double> KV = Optional.empty();
-  public static final Optional<Double> KA = Optional.empty();
+  public static final Optional<Double> KS = Optional.of(0.0);
+  public static final Optional<Double> KV = Optional.of(0.0);
+  public static final Optional<Double> KA = Optional.of(0.0);
   public static final double SENSOR_TO_MECHANISM_RATIO = -1;
   public static final double ROTOR_TO_SENSOR_RATIO = 48.166666666666664;
   public static final boolean FOC_ENABLED = false;
@@ -76,43 +76,29 @@ public class TurretConstants {
   @frc.powerlib.tuning.TunableConstant
   public static volatile double TURRET_CAMERA_Y_OFFSET = 0;
   public static final double[][] HOOD_ANGLES = {
-            { 5.5, 0.135 },
-            { 4.85, 0.105 },
-            { 4.6, 0.09 },
-            { 4.05, 0.08 },
-            { 3.75, 0.07 },
-            { 3.29, 0.06 },
-            { 2.75, 0.05 },
-            { 2.38, 0.04 },
-            { 1.97, 0.03 },
-            { 1.68, 0.02 }
+            { 4.9, 0.09 },
+            { 4.1, 0.08 },
+            { 3.5, 0.07 },
+            { 3.0, 0.065 },
+            { 2.5, 0.055 }
     };
   public static final double[][] SHOOTER_SPEEDS = {
-             { 5.5, 89},
-            { 4.85, 84},
-            { 4.6, 82},
-            { 4.05, 79},
-            { 3.75, 77},
-            { 3.29, 74},
-            { 2.75, 71},
-            { 2.38, 67},
-            { 1.97, 64},
-            { 1.68, 62}
+             { 4.9, 37 },
+             { 4.1, 34 },
+             { 3.5, 32 },
+             { 3.0, 29.5 }, // 30
+             { 2.5, 28.5 } // 29
     };
   public static final double[][] FEEDER_SPEEDS = {
-        { 5.5, 72},
-        { 4.85, 68},
-        { 4.6, 67},
-        { 4.05, 66},
-        { 3.75, 65},
-        { 3.29, 65},
-        { 2.75, 63},
-        { 2.38, 61},
-        { 1.97, 59},
-        { 1.68, 58}
+        { 4.9, 80 },
+        { 4.1, 85 },
+        { 3.5, 85 },
+        { 3.0, 85 },
+        { 2.5, 85 },
     };
   public static final frc.powerlib.math.LinearInterpolator HOOD_ANGLE_INTERPOLATOR = new frc.powerlib.math.LinearInterpolator(HOOD_ANGLES);
   public static final frc.powerlib.math.LinearInterpolator SHOOTER_VELOCITY_INTERPOLATOR = new frc.powerlib.math.LinearInterpolator(SHOOTER_SPEEDS);
   public static final frc.powerlib.math.LinearInterpolator FEEDER_VELOCITY_INTERPOLATOR = new frc.powerlib.math.LinearInterpolator(FEEDER_SPEEDS);
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE
 }
+

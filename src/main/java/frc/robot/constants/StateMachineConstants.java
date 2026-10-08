@@ -7,10 +7,15 @@ public class StateMachineConstants {
 
   // POWERLIB CUSTOM CONSTANTS START - DO NOT DELETE
   @frc.powerlib.tuning.TunableConstant
-  public static volatile double HOOD_TOLERANCE_ROTATIONS = 0.005;
+  public static volatile double HOOD_TOLERANCE_ROTATIONS = 0.01;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double SHOOTER_EXTRA_RPS = 1.0;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double SPINDEXER_SHOOT_RPS = 60.0;
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE
 }
+
+
+
+
+

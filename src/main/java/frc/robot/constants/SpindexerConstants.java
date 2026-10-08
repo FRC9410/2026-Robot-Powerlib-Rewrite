@@ -56,3 +56,4 @@ public class SpindexerConstants {
   public static volatile int LASER_2_CAN_ID = 32;
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE
 }
+

@@ -72,7 +72,11 @@ public class StateMachine extends SubsystemBase {
         && Game2026Health.mechanism(spindexer) && Game2026Health.mechanism(intakeWrist);
     output = controller.update(new Game2026Controller.Inputs(true, false, DriverStation.getAlliance().orElse(null),
         drivetrain.getState().Pose, shooter.inputs.velocityRotationsPerSecond, shooterHood.inputs.positionRotations,
-        healthy, Timer.getFPGATimestamp()), Game2026Settings.current());
+        healthy, Timer.getFPGATimestamp()), Game2026Settings.current(),
+        new Game2026Config.Intake(Constants.IntakeWrist.INTAKE_MAX,
+            Constants.IntakeWrist.INTAKE_IDLE, Constants.IntakeWrist.INTAKE_FEED,
+            Constants.IntakeWrist.INTAKE_DEFAULT,
+            gameConfig.intake().collectRps(), gameConfig.intake().ejectRps()));
     intakeWrist.setPositionRotations(MathUtil.clamp(output.wristRotations(),
         Math.min(Constants.IntakeWrist.INTAKE_MIN, Constants.IntakeWrist.INTAKE_MAX),
         Math.max(Constants.IntakeWrist.INTAKE_MIN, Constants.IntakeWrist.INTAKE_MAX)));
@@ -114,3 +118,9 @@ public class StateMachine extends SubsystemBase {
     SmartDashboard.putString("Auto Reason", autoReason);
   }
 }
+
+
+
+
+
+

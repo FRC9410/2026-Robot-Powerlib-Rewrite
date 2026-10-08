@@ -3,6 +3,7 @@ package frc.robot.game;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import frc.robot.constants.TurretConstants;
 
 /** Mechanism decisions independent of CAN devices, for deterministic playbook tests. */
 public final class Game2026Controller {
@@ -27,7 +28,11 @@ public final class Game2026Controller {
   public void reset() { wanted = State.READY; intakeMode = IntakeMode.OFF; shootingStarted = Double.NaN; }
 
   public Output update(Inputs in, Game2026Settings settings) {
-    var intake = config.intake();
+    return update(in, settings, config.intake());
+  }
+
+  /** Accept a fresh snapshot so live wrist tuning is used on every scheduler loop. */
+  public Output update(Inputs in, Game2026Settings settings, Game2026Config.Intake intake) {
     if (!in.enabled() || in.testMode()) {
       reset();
       return idle(intake.idle(), 0, in.testMode() ? "SYSID OWNS OUTPUTS" : "DISABLED");
@@ -51,7 +56,9 @@ public final class Game2026Controller {
           inZone ? "OUTSIDE SHOT TABLE" : "OUTSIDE SCORING ZONE", false, false, false, false);
     }
     var shot = config.shot(distance);
-    double demand = -shot.shooterRps() - settings.shooterExtraRps();
+    // City of Fountains used positive velocity with counterclockwise-positive leader direction.
+    double demand = TurretConstants.SHOOTER_VELOCITY_INTERPOLATOR.getInterpolatedValue(distance)
+        + settings.shooterExtraRps();
     boolean velocityReady = Double.isFinite(in.shooterRps()) && Math.abs(in.shooterRps() - demand) <= config.number("tolerances", "shooterRps");
     boolean hoodReady = Double.isFinite(in.hoodRotations()) && Math.abs(in.hoodRotations() - shot.hoodRotations()) <= settings.hoodTolerance();
     boolean aligned = Math.abs(headingError) <= config.number("tolerances", "headingDegrees");

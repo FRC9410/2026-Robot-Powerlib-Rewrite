@@ -23,14 +23,14 @@ public class IntakeWristConstants {
   public static final double KI = 0;
   public static final double KD = 0;
   public static final double KG = 0;
-  public static final Optional<Double> KS = Optional.empty();
-  public static final Optional<Double> KV = Optional.empty();
-  public static final Optional<Double> KA = Optional.empty();
+  public static final Optional<Double> KS = Optional.of(0.0);
+  public static final Optional<Double> KV = Optional.of(0.0);
+  public static final Optional<Double> KA = Optional.of(0.0);
   public static final double SENSOR_TO_MECHANISM_RATIO = -1;
   public static final double ROTOR_TO_SENSOR_RATIO = 44.444;
   public static final boolean FOC_ENABLED = false;
   public static final int CANCODER_ID = 23;
-  public static final double CANCODER_MAGNET_OFFSET = 0.285;
+  public static final double CANCODER_MAGNET_OFFSET = -0.03;
   public static final double CANCODER_DISCONTINUITY_POINT = 0.5;
   public static final double MOTION_MAGIC_CRUISE_VELOCITY = 1;
   public static final double MOTION_MAGIC_ACCELERATION = 20;
@@ -64,7 +64,7 @@ public class IntakeWristConstants {
   @frc.powerlib.tuning.TunableConstant
   public static volatile double INTAKE_MIN = -0.09;
   @frc.powerlib.tuning.TunableConstant
-  public static volatile double INTAKE_MAX = -0.445;
+  public static volatile double INTAKE_MAX = -0.453;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double INTAKE_IDLE = -0.4;
   @frc.powerlib.tuning.TunableConstant
@@ -73,3 +73,4 @@ public class IntakeWristConstants {
   public static volatile double INTAKE_DEFAULT = -0.09;
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE
 }
+

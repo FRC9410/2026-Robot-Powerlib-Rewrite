@@ -304,11 +304,15 @@ public abstract class PowerSubsystem extends SubsystemBase {
 
   private static void applyMotorOutputConfig(
       TalonFX motor, boolean reversed, NeutralModeValue neutralMode) {
+    motor.getConfigurator().apply(motorOutputConfig(reversed, neutralMode));
+  }
+
+  static MotorOutputConfigs motorOutputConfig(boolean reversed, NeutralModeValue neutralMode) {
     MotorOutputConfigs motorOutputConfigs = new MotorOutputConfigs();
     motorOutputConfigs.Inverted =
         reversed ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
     motorOutputConfigs.NeutralMode = neutralMode;
-    motor.getConfigurator().apply(motorOutputConfigs);
+    return motorOutputConfigs;
   }
 
   public boolean isMotorRunning (int id) {

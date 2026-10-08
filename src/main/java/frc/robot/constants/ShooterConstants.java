@@ -14,7 +14,7 @@ import java.util.Optional;
 public class ShooterConstants {
   public static final int LEADER_MOTOR_ID = 51;
   public static final NeutralModeValue LEADER_NEUTRAL_MODE = NeutralModeValue.Coast;
-  public static final boolean LEADER_REVERSED = true;
+  public static final boolean LEADER_REVERSED = false;
   public static final int FOLLOWER_1_MOTOR_ID = 52;
   public static final NeutralModeValue FOLLOWER_1_NEUTRAL_MODE = NeutralModeValue.Brake;
   public static final boolean FOLLOWER_1_REVERSED = true;
@@ -61,3 +61,4 @@ public class ShooterConstants {
 
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE
 }
+

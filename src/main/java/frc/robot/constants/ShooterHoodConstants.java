@@ -16,18 +16,18 @@ public class ShooterHoodConstants {
   public static final int LEADER_MOTOR_ID = 50;
   public static final NeutralModeValue LEADER_NEUTRAL_MODE = NeutralModeValue.Brake;
   public static final boolean LEADER_REVERSED = true;
-  public static final double KP = 8;
+  public static final double KP = 10;
   public static final double KI = 0;
   public static final double KD = 2;
   public static final double KG = 0;
-  public static final Optional<Double> KS = Optional.empty();
-  public static final Optional<Double> KV = Optional.empty();
-  public static final Optional<Double> KA = Optional.empty();
-  public static final double SENSOR_TO_MECHANISM_RATIO = 1;
+  public static final Optional<Double> KS = Optional.of(0.0);
+  public static final Optional<Double> KV = Optional.of(0.0);
+  public static final Optional<Double> KA = Optional.of(0.0);
+  public static final double SENSOR_TO_MECHANISM_RATIO = -1;
   public static final double ROTOR_TO_SENSOR_RATIO = 60;
   public static final boolean FOC_ENABLED = false;
   public static final int CANCODER_ID = 54;
-  public static final double CANCODER_MAGNET_OFFSET = -0.851;
+  public static final double CANCODER_MAGNET_OFFSET = -0.941;
   public static final double CANCODER_DISCONTINUITY_POINT = 0.5;
   public static final double MOTION_MAGIC_CRUISE_VELOCITY = 15;
   public static final double MOTION_MAGIC_ACCELERATION = 30;
@@ -65,3 +65,4 @@ public class ShooterHoodConstants {
   public static volatile double SHOOTER_HOOD_DEFAULT = 0.09;
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE
 }
+

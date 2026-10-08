@@ -23,21 +23,21 @@ class Game2026ControllerTest {
   private Pose2d bluePose() { return new Pose2d(2, 4, new Rotation2d()); }
   private Game2026Controller.Output ready(Alliance alliance, Pose2d pose, double now) {
     var shot = config.shot(pose.getTranslation().getDistance(config.hub(alliance)));
-    return controller.update(input(alliance, pose, -shot.shooterRps()-1, shot.hoodRotations(), true, now), settings);
+    return controller.update(input(alliance, pose, shot.shooterRps()+1, shot.hoodRotations(), true, now), settings);
   }
   @Test void alignedReadyRobotFeedsForBothAlliances() {
     for (Alliance alliance : Alliance.values()) {
       Pose2d pose = alliance == Alliance.Blue ? bluePose() : new Pose2d(14, 4, new Rotation2d());
       var out = ready(alliance, pose, 0);
       assertTrue(out.feedReady());
-      assertTrue(out.shooterRps() < 0);
+      assertTrue(out.shooterRps() > 0);
       assertTrue(out.feederRps() < 0);
       assertEquals(60, out.spindexerRps());
     }
   }
   @Test void oppositeSignedSpeedNeverOpensFeedGate() {
     var shot = config.shot(2.62);
-    var out = controller.update(input(Alliance.Blue, bluePose(), shot.shooterRps()+1, shot.hoodRotations(), true, 0), settings);
+    var out = controller.update(input(Alliance.Blue, bluePose(), -shot.shooterRps()-1, shot.hoodRotations(), true, 0), settings);
     assertFalse(out.feedReady()); assertEquals(0, out.feederRps()); assertEquals(0, out.spindexerRps());
   }
   @Test void dashboardReadinessReportsEachIndependentFeedCondition() {
@@ -45,18 +45,18 @@ class Game2026ControllerTest {
     var spinning = controller.update(input(Alliance.Blue, bluePose(), 0, shot.hoodRotations(), true, 0), settings);
     assertFalse(spinning.velocityReady()); assertTrue(spinning.hoodReady());
     assertTrue(spinning.aligned()); assertTrue(spinning.calibratedRange()); assertFalse(spinning.feedReady());
-    var hoodMoving = controller.update(input(Alliance.Blue, bluePose(), -shot.shooterRps()-1, shot.hoodRotations()+.02, true, 0), settings);
+    var hoodMoving = controller.update(input(Alliance.Blue, bluePose(), shot.shooterRps()+1, shot.hoodRotations()+.02, true, 0), settings);
     assertTrue(hoodMoving.velocityReady()); assertFalse(hoodMoving.hoodReady()); assertFalse(hoodMoving.feedReady());
-    var aiming = controller.update(input(Alliance.Blue, new Pose2d(2, 4, Rotation2d.fromDegrees(30)), -shot.shooterRps()-1, shot.hoodRotations(), true, 0), settings);
+    var aiming = controller.update(input(Alliance.Blue, new Pose2d(2, 4, Rotation2d.fromDegrees(30)), shot.shooterRps()+1, shot.hoodRotations(), true, 0), settings);
     assertFalse(aiming.aligned()); assertFalse(aiming.feedReady());
     var outside = ready(Alliance.Blue, new Pose2d(8, 4, new Rotation2d()), 0);
     assertFalse(outside.calibratedRange()); assertFalse(outside.feedReady());
   }
   @Test void hoodHeadingAndFeedbackEachBlockFeeding() {
     var shot = config.shot(2.62);
-    assertFalse(controller.update(input(Alliance.Blue, bluePose(), -shot.shooterRps()-1, shot.hoodRotations()+.02, true, 0), settings).feedReady());
-    assertFalse(controller.update(input(Alliance.Blue, new Pose2d(2, 4, Rotation2d.fromDegrees(30)), -shot.shooterRps()-1, shot.hoodRotations(), true, 0), settings).feedReady());
-    assertFalse(controller.update(input(Alliance.Blue, bluePose(), -shot.shooterRps()-1, shot.hoodRotations(), false, 0), settings).feedReady());
+    assertFalse(controller.update(input(Alliance.Blue, bluePose(), shot.shooterRps()+1, shot.hoodRotations()+.02, true, 0), settings).feedReady());
+    assertFalse(controller.update(input(Alliance.Blue, new Pose2d(2, 4, Rotation2d.fromDegrees(30)), shot.shooterRps()+1, shot.hoodRotations(), true, 0), settings).feedReady());
+    assertFalse(controller.update(input(Alliance.Blue, bluePose(), shot.shooterRps()+1, shot.hoodRotations(), false, 0), settings).feedReady());
   }
   @Test void outsideScoringZoneNeverSelectsPassingTarget() {
     var out = ready(Alliance.Blue, new Pose2d(8, 4, new Rotation2d()), 0);
@@ -110,5 +110,45 @@ class Game2026ControllerTest {
     var invalid = new Game2026Settings(.005, Double.NaN, 60, 6, .5, 15, 3, 3.2, .2);
     var out = controller.update(input(Alliance.Blue, bluePose(), -70, .05, true, 0), invalid);
     assertFalse(out.runShooter()); assertEquals(0, out.rollerRps()); assertFalse(out.feedReady());
+  }
+  @Test void shooterDemandUsesLegacyInterpolatorInsteadOfGameJsonVelocity() throws Exception {
+    var data = (com.fasterxml.jackson.databind.node.ObjectNode) new com.fasterxml.jackson.databind.ObjectMapper()
+        .readTree(Path.of("power-tool/generated/powerlib-game-2026.json").toFile());
+    for (var row : data.withArray("shots")) {
+      ((com.fasterxml.jackson.databind.node.ArrayNode) row).set(1,
+          com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.numberNode(120));
+    }
+    config = Game2026Config.fromJson(data);
+    controller = new Game2026Controller(config);
+    controller.setWantedState(Game2026Controller.State.SHOOTING);
+    double distance = (2.5 + 3.0) / 2;
+    var hub = config.hub(Alliance.Blue);
+    var pose = new Pose2d(hub.getX() - distance, hub.getY(), new Rotation2d());
+    var out = controller.update(input(Alliance.Blue, pose, 30,
+        config.shot(distance).hoodRotations(), true, 0), settings);
+    assertEquals(30, out.shooterRps(), 1e-9);
+    assertTrue(out.velocityReady());
+    assertTrue(out.feedReady());
+    var offset = new Game2026Settings(.005, 3, 60, 6, .5, 15, 3, 3.2, .2);
+    assertEquals(32, controller.update(input(Alliance.Blue, pose, 32,
+        config.shot(distance).hoodRotations(), true, 0), offset).shooterRps(), 1e-9);
+  }
+
+  @Test void liveWristSnapshotChangesTargetsWithoutRestartingController() {
+    var live = new Game2026Config.Intake(-.42, -.35, -.22, -.1, 145, -100);
+    var in = input(Alliance.Blue, bluePose(), -70, .05, true, 0);
+    controller.setWantedState(Game2026Controller.State.READY);
+    assertEquals(-.35, controller.update(in, settings, live).wristRotations());
+    var edited = new Game2026Config.Intake(-.43, -.36, -.23, -.11, 145, -100);
+    assertEquals(-.36, controller.update(in, settings, edited).wristRotations());
+    controller.setIntakeMode(Game2026Controller.IntakeMode.COLLECT);
+    assertEquals(-.43, controller.update(in, settings, edited).wristRotations());
+    controller.setWantedState(Game2026Controller.State.IDLE);
+    assertEquals(-.11, controller.update(in, settings, edited).wristRotations());
+    controller.setIntakeMode(Game2026Controller.IntakeMode.OFF);
+    controller.setWantedState(Game2026Controller.State.SHOOTING);
+    controller.update(in, settings, edited);
+    assertEquals(-.23, controller.update(
+        input(Alliance.Blue, bluePose(), -70, .05, true, 1.02), settings, edited).wristRotations());
   }
 }

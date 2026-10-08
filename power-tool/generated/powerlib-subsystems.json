@@ -85,9 +85,9 @@
                                        "kI":  0,
                                        "kD":  0,
                                        "kG":  0,
-                                       "kS":  null,
-                                       "kV":  null,
-                                       "kA":  null
+                                       "kS":  0,
+                                       "kV":  0,
+                                       "kA":  0
                                    },
                            "ratios":  {
                                           "sensorToMechanism":  1,
@@ -125,9 +125,9 @@
                                        "kI":  0,
                                        "kD":  0,
                                        "kG":  0,
-                                       "kS":  null,
-                                       "kV":  null,
-                                       "kA":  null
+                                       "kS":  0,
+                                       "kV":  0,
+                                       "kA":  0
                                    },
                            "ratios":  {
                                           "sensorToMechanism":  -1,
@@ -139,7 +139,7 @@
                                            },
                            "cancoder":  {
                                             "id":  23,
-                                            "magnetOffset":  0.285,
+                                            "magnetOffset":  -0.03,
                                             "discontinuityPoint":  0.5
                                         },
                            "absolutePosition":  {
@@ -155,25 +155,25 @@
                            "torqueFF":  0,
                            "motors":  [
                                           {
-                                              "id":  51,
-                                              "reversed":  true,
-                                              "neutralMode":  "Coast",
                                               "role":  "leader",
-                                              "motorType":  "X60"
+                                              "id":  51,
+                                              "motorType":  "X60",
+                                              "neutralMode":  "Coast",
+                                              "reversed":  false
                                           },
                                           {
+                                              "role":  "follower",
                                               "id":  52,
-                                              "reversed":  true,
+                                              "motorType":  "X60",
                                               "neutralMode":  "Brake",
-                                              "role":  "follower",
-                                              "motorType":  "X60"
+                                              "reversed":  true
                                           },
                                           {
-                                              "id":  53,
-                                              "reversed":  true,
-                                              "neutralMode":  "Brake",
                                               "role":  "follower",
-                                              "motorType":  "X60"
+                                              "id":  53,
+                                              "motorType":  "X60",
+                                              "neutralMode":  "Brake",
+                                              "reversed":  true
                                           }
                                       ],
                            "pid":  {
@@ -202,24 +202,24 @@
                            "torqueFF":  0,
                            "motors":  [
                                           {
-                                              "id":  50,
-                                              "reversed":  true,
-                                              "neutralMode":  "Brake",
                                               "role":  "leader",
-                                              "motorType":  "X60"
+                                              "id":  50,
+                                              "motorType":  "X60",
+                                              "neutralMode":  "Brake",
+                                              "reversed":  true
                                           }
                                       ],
                            "pid":  {
-                                       "kP":  8,
+                                       "kP":  10,
                                        "kI":  0,
                                        "kD":  2,
                                        "kG":  0,
-                                       "kS":  null,
-                                       "kV":  null,
-                                       "kA":  null
+                                       "kS":  0,
+                                       "kV":  0,
+                                       "kA":  0
                                    },
                            "ratios":  {
-                                          "sensorToMechanism":  1,
+                                          "sensorToMechanism":  -1,
                                           "rotorToSensor":  60
                                       },
                            "motionMagic":  {
@@ -228,7 +228,7 @@
                                            },
                            "cancoder":  {
                                             "id":  54,
-                                            "magnetOffset":  -0.851,
+                                            "magnetOffset":  -0.941,
                                             "discontinuityPoint":  0.5
                                         },
                            "absolutePosition":  {
@@ -289,9 +289,9 @@
                                        "kI":  0,
                                        "kD":  0,
                                        "kG":  0,
-                                       "kS":  null,
-                                       "kV":  null,
-                                       "kA":  null
+                                       "kS":  0,
+                                       "kV":  0,
+                                       "kA":  0
                                    },
                            "ratios":  {
                                           "sensorToMechanism":  -1,

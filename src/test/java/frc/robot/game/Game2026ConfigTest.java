@@ -14,13 +14,13 @@ class Game2026ConfigTest {
   private static ObjectNode json() throws Exception { return (ObjectNode) new ObjectMapper().readTree(FILE.toFile()); }
   @Test void referenceShotTableInterpolatesAndClamps() throws Exception {
     var config = Game2026Config.read(FILE);
-    assertEquals(62, config.shot(1.68).shooterRps());
-    var shot = config.shot((1.68 + 1.97) / 2);
-    assertEquals(63, shot.shooterRps(), 1e-9);
-    assertEquals(0.025, shot.hoodRotations(), 1e-9);
-    assertEquals(58.5, shot.feederRps(), 1e-9);
-    assertEquals(62, config.shot(0).shooterRps());
-    assertEquals(89, config.shot(100).shooterRps());
+    assertEquals(28.5, config.shot(2.5).shooterRps());
+    var shot = config.shot((2.5 + 3.0) / 2);
+    assertEquals(29, shot.shooterRps(), 1e-9);
+    assertEquals(0.06, shot.hoodRotations(), 1e-9);
+    assertEquals(85, shot.feederRps(), 1e-9);
+    assertEquals(28.5, config.shot(0).shooterRps());
+    assertEquals(37, config.shot(100).shooterRps());
     assertFalse(config.inShotRange(100));
     assertThrows(IllegalArgumentException.class, () -> config.shot(Double.NaN));
   }

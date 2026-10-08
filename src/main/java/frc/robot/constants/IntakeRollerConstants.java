@@ -19,9 +19,9 @@ public class IntakeRollerConstants {
   public static final double KI = 0;
   public static final double KD = 0;
   public static final double KG = 0;
-  public static final Optional<Double> KS = Optional.empty();
-  public static final Optional<Double> KV = Optional.empty();
-  public static final Optional<Double> KA = Optional.empty();
+  public static final Optional<Double> KS = Optional.of(0.0);
+  public static final Optional<Double> KV = Optional.of(0.0);
+  public static final Optional<Double> KA = Optional.of(0.0);
   public static final double SENSOR_TO_MECHANISM_RATIO = 1;
   public static final double ROTOR_TO_SENSOR_RATIO = 1;
   public static final boolean FOC_ENABLED = true;
@@ -60,3 +60,4 @@ public class IntakeRollerConstants {
   public static volatile double ROLLER_TARGET_RPS = 10;
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE
 }
+

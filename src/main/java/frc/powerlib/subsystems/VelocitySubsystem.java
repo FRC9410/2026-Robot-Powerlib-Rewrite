@@ -13,6 +13,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.powerlib.configs.LeadMotorConfig;
 import frc.powerlib.configs.MotionMagicConfig;
+import frc.powerlib.configs.MotorConfig;
 import frc.powerlib.configs.VelocitySubsystemConfig;
 import frc.powerlib.subsystems.io.VelocitySubsystemIO;
 import frc.powerlib.subsystems.io.VelocitySubsystemIOReal;
@@ -54,7 +55,10 @@ public class VelocitySubsystem extends PowerSubsystem {
     super(config.motorConfigs(), config.subsystemName());
     TalonFX leader = getLeaderMotor();
     if (leader != null) {
-      configureMotorForVelocity(leader, config.leadConfig(), config.motionMagicConfig());
+      MotorConfig leaderConfig = config.motorConfigs().stream()
+          .filter(motor -> motor.canId() == leader.getDeviceID()).findFirst().orElseThrow();
+      leader.getConfigurator().apply(
+          velocityConfiguration(config.leadConfig(), config.motionMagicConfig(), leaderConfig));
       this.velocityMotor = leader;
     }
     this.subsystemName = config.subsystemName();
@@ -83,11 +87,13 @@ public class VelocitySubsystem extends PowerSubsystem {
   /**
    * Applies lead and motion magic config to an existing TalonFX for velocity control.
    */
-  private static void configureMotorForVelocity(
-      TalonFX motor,
+  static TalonFXConfiguration velocityConfiguration(
       LeadMotorConfig leadConfig,
-      MotionMagicConfig motionMagicConfig) {
+      MotionMagicConfig motionMagicConfig,
+      MotorConfig motorConfig) {
     TalonFXConfiguration config = new TalonFXConfiguration();
+    // A full configuration resets unspecified groups; include the registered motor direction.
+    config.MotorOutput = motorOutputConfig(motorConfig.isReversed(), motorConfig.neutralMode());
     config.Slot0.kP = leadConfig.kP();
     config.Slot0.kI = leadConfig.kI();
     config.Slot0.kD = leadConfig.kD();
@@ -104,8 +110,8 @@ public class VelocitySubsystem extends PowerSubsystem {
     motionMagicConfigs.withMotionMagicCruiseVelocity(motionMagicConfig.cruiseVelocity());
     motionMagicConfigs.withMotionMagicAcceleration(motionMagicConfig.acceleration());
 
-    motor.getConfigurator().apply(config);
-    motor.getConfigurator().apply(motionMagicConfigs);
+    config.MotionMagic = motionMagicConfigs;
+    return config;
   }
 
   private void initializeTunableState(
