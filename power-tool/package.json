@@ -6,6 +6,7 @@
   "main": "dist-electron/main.js",
   "type": "module",
   "scripts": {
+    "check:telemetry": "node scripts/telemetry-buffer-check.mjs",
     "check:drive": "node scripts/drive-model-check.mjs",
     "check:game": "node scripts/game-model-check.mjs",
     "build:electron": "rimraf dist-electron && tsc -p tsconfig.electron.json",

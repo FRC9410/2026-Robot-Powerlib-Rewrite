@@ -40,3 +40,5 @@ The build script belongs to this robot repository and uses the installed dashboa
 Use `10.94.10.2`, `roborio-9410-frc.local`, or `localhost` for robot or simulation telemetry. The dashboard connects over NT4 WebSocket on port `5810`. A Driver Station laptop address works only when that computer runs a NetworkTables server.
 
 See [GAME2026-DASHBOARD.md](GAME2026-DASHBOARD.md) for the game layout, generated configuration, telemetry, cameras, and preview mode.
+
+Telemetry requests and screen updates use a 100 ms (10 Hz) cadence. Incoming values replace the latest reading for each topic; intermediate samples are not queued for display. PowerLib publishes and signal-logs the latest subsystem snapshot every 100 ms. Run `npm run check:telemetry` to check batching, arrival timestamps, and connection resets.

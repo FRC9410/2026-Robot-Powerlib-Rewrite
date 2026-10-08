@@ -13,3 +13,5 @@ Optional `HubActive` and `HubTimeSeconds` remain unknown unless the robot suppli
 Camera streams use discovered CameraPublisher/explicit Limelight topics. Crew tools supports saved HTTP/HTTPS stream overrides for left/right/turret, retry, display-only field flip and JSON snapshot export. Unsupported cameras stay Offline. Settings are local to the laptop and do not change robot calibration.
 
 For a fixture-only local preview, start Vite and open `http://127.0.0.1:5174/?preview=2026` (use the port Vite reports). Preview is development-only, is visibly labeled, prevents the app's NT4 connection, and never publishes autonomous selections. Production builds use real telemetry. Run `npm run check:game`, `npm run check:drive`, and the standard renderer/Electron build to verify the template.
+
+Robot telemetry publication, NT4 requests, and batched screen updates use a 100 ms (10 Hz) cadence. The robot keeps collecting inputs and making control decisions at its normal loop rate. Freshness uses the actual arrival time of each reading, and connection resets discard pending readings.
