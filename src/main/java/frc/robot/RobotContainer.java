@@ -2,6 +2,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -38,6 +39,16 @@ public class RobotContainer implements PowerRobotContainer {
     driverController.back().onTrue(Commands.runOnce(() -> {
       boolean seeded = stateMachine.vision.seedFromFreshVision();
       stateMachine.setAutoStatus("POSE SEED", seeded ? "Fresh vision pose seeded" : "Requires disabled robot and a fresh vision frame");
+    }).ignoringDisable(true));
+    driverController.start().onTrue(Commands.runOnce(() -> {
+      if (!DriverStation.isDisabled()) {
+        stateMachine.setAutoStatus("HEADING RESET", "Disable robot before zeroing heading");
+        return;
+      }
+      // Reset the pose heading used by field-centric drive, aiming, and vision orientation.
+      // The robot must physically face blue-field +X (toward the red end).
+      stateMachine.drivetrain.resetRotation(new Rotation2d());
+      stateMachine.setAutoStatus("HEADING RESET", "Heading zeroed; X/Y preserved");
     }).ignoringDisable(true));
   }
   private void updateIntake() { stateMachine.setIntake(collecting, ejecting); }

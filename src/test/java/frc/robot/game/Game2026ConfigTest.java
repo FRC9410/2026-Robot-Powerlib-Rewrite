@@ -19,7 +19,7 @@ class Game2026ConfigTest {
     assertEquals(29, shot.shooterRps(), 1e-9);
     assertEquals(0.06, shot.hoodRotations(), 1e-9);
     assertEquals(85, shot.feederRps(), 1e-9);
-    assertEquals(28.5, config.shot(0).shooterRps());
+    assertEquals(25.9, config.shot(0).shooterRps());
     assertEquals(37, config.shot(100).shooterRps());
     assertFalse(config.inShotRange(100));
     assertThrows(IllegalArgumentException.class, () -> config.shot(Double.NaN));
@@ -31,6 +31,20 @@ class Game2026ConfigTest {
     assertEquals(-90, config.auto("Blue Left").get(0).getRotation().getDegrees(), 1e-9);
     assertEquals(0, config.hubHeadingDegrees(new Pose2d(2, 4, new Rotation2d()), Alliance.Blue), 1e-9);
     assertEquals(0, config.hubHeadingDegrees(new Pose2d(14, 4, new Rotation2d()), Alliance.Red), 1e-9);
+  }
+  @Test void closeShotsInterpolateFromExtendedOnePointTwoMeterRow() throws Exception {
+    var config = Game2026Config.read(FILE);
+    assertFalse(config.inShotRange(1.199));
+    assertTrue(config.inShotRange(1.2));
+    assertTrue(config.inShotRange(2.49));
+    assertTrue(config.inShotRange(4.9));
+    assertFalse(config.inShotRange(4.901));
+    assertFalse(config.inShotRange(Double.NaN));
+    assertEquals(25.9, config.shot(1.2).shooterRps());
+    assertEquals(.029, config.shot(1.2).hoodRotations());
+    assertEquals(85, config.shot(1.2).feederRps());
+    assertEquals(27.2, config.shot(1.85).shooterRps(), 1e-9);
+    assertEquals(.042, config.shot(1.85).hoodRotations(), 1e-9);
   }
   @Test void scoringZonesExcludeNeutralOtherAllianceAndUnknown() throws Exception {
     var config = Game2026Config.read(FILE);

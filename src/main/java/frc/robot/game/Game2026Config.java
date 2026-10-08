@@ -17,6 +17,7 @@ import java.util.Map;
 
 /** Validated game data copied from power-tool/generated into deploy by Gradle. */
 public final class Game2026Config {
+  private static final double MIN_SHOOTING_DISTANCE_METERS = 1.2;
   public record Shot(double distance, double shooterRps, double hoodRotations, double feederRps) {}
   public record Intake(double deployed, double idle, double feed, double stowed,
       double collectRps, double ejectRps) {}
@@ -115,7 +116,8 @@ public final class Game2026Config {
   }
 
   public boolean inShotRange(double distance) {
-    return Double.isFinite(distance) && distance >= shots.get(0).distance() && distance <= shots.get(shots.size() - 1).distance();
+    return Double.isFinite(distance) && distance >= MIN_SHOOTING_DISTANCE_METERS
+        && distance <= shots.get(shots.size() - 1).distance();
   }
 
   public Shot shot(double distance) {

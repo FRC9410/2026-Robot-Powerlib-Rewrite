@@ -133,6 +133,24 @@ class Game2026ControllerTest {
     assertEquals(32, controller.update(input(Alliance.Blue, pose, 32,
         config.shot(distance).hoodRotations(), true, 0), offset).shooterRps(), 1e-9);
   }
+  @Test void closeShotsFeedAtExtendedTargetsButBlockBelowMinimum() {
+    for (Alliance alliance : Alliance.values()) {
+      var hub = config.hub(alliance);
+      double direction = alliance == Alliance.Blue ? -1 : 1;
+      var closePose = new Pose2d(hub.getX() + direction * 1.21, hub.getY(), new Rotation2d());
+      var out = ready(alliance, closePose, 0);
+      assertTrue(out.runShooter());
+      assertTrue(out.feedReady());
+      assertEquals(26.92, out.shooterRps(), 1e-9);
+      assertEquals(.0292, out.hoodRotations(), 1e-9);
+      assertEquals(-85, out.feederRps());
+      var tooClose = new Pose2d(hub.getX() + direction * 1.19, hub.getY(), new Rotation2d());
+      var blocked = ready(alliance, tooClose, 0);
+      assertFalse(blocked.runShooter());
+      assertFalse(blocked.feedReady());
+      assertEquals("OUTSIDE SHOT TABLE", blocked.reason());
+    }
+  }
 
   @Test void liveWristSnapshotChangesTargetsWithoutRestartingController() {
     var live = new Game2026Config.Intake(-.42, -.35, -.22, -.1, 145, -100);
