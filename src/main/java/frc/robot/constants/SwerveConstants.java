@@ -20,13 +20,13 @@ public class SwerveConstants {
 
   public static final double DRIVE_TO_POINT_MAX_ANGULAR_RATE_RADIANS_PER_SECOND =
       4.71238898038469;
-  public static final double DRIVE_TO_POINT_MAX_SPEED_COEFFICIENT = 0.75;
+  public static final double DRIVE_TO_POINT_MAX_SPEED_COEFFICIENT = 1.0;
   public static final double DRIVE_TO_POINT_SLOW_SPEED_COEFFICIENT = 0.1875;
   public static final double DRIVE_TO_POINT_STATIC_FRICTION_CONSTANT = 0.085;
 
-  public static final double HEADING_KP = 6.0;
+  public static final double HEADING_KP = 6.5;
   public static final double HEADING_KI = 0.0;
-  public static final double HEADING_KD = 0.0;
+  public static final double HEADING_KD = 0.25;
 
   // POWERLIB CUSTOM CONSTANTS START - DO NOT DELETE
 

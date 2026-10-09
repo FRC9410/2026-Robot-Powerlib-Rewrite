@@ -81,12 +81,22 @@ public class PowerDashboard extends SubsystemBase {
 
   @Override
   public void periodic() {
+    publishShootingDistance();
     driveTelemetry.publish();
     syncTuningMode();
     publishSubsystemData();
     robotLogTelemetry.log();
     syncTuningValues();
     pollCharacterizationCommands();
+  }
+
+  private void publishShootingDistance() {
+    if (edu.wpi.first.wpilibj.DriverStation.isDisabled()
+        || edu.wpi.first.wpilibj.DriverStation.isTest()) return;
+    double distance = frc.robot.utils.ShootingUtils.distanceMeters(
+        stateMachine.drivetrain.getState().Pose,
+        edu.wpi.first.wpilibj.DriverStation.getAlliance().orElse(null));
+    PowerRobotContainer.setSubsystemData("Shooting", "Distance", distance, "meters");
   }
 
   private void syncTuningMode() {

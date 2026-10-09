@@ -16,7 +16,7 @@ public class FeederConstants {
   public static final NeutralModeValue LEADER_NEUTRAL_MODE = NeutralModeValue.Coast;
   public static final boolean LEADER_REVERSED = false;
   public static final int FOLLOWER_1_MOTOR_ID = 41;
-  public static final NeutralModeValue FOLLOWER_1_NEUTRAL_MODE = NeutralModeValue.Brake;
+  public static final NeutralModeValue FOLLOWER_1_NEUTRAL_MODE = NeutralModeValue.Coast;
   public static final boolean FOLLOWER_1_REVERSED = true;
   public static final double KP = 0.3;
   public static final double KI = 0;

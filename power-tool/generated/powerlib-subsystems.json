@@ -1,7 +1,7 @@
 {
     "swerve":  {
                    "driveToPoint":  {
-                                        "maxSpeedCoefficient":  0.75,
+                                        "maxSpeedCoefficient":  1,
                                         "maxAngularRateRadiansPerSecond":  4.71238898038469,
                                         "slowSpeedCoefficient":  0.1875,
                                         "staticFrictionConstant":  0.085
@@ -19,9 +19,9 @@
                                     "rotationalDeadbandRadiansPerSecond":  0.471238898038469
                                 },
                    "heading":  {
-                                   "kP":  6,
+                                   "kP":  6.5,
                                    "kI":  0,
-                                   "kD":  0
+                                   "kD":  0.25
                                }
                },
     "subsystems":  [
@@ -42,7 +42,7 @@
                                           {
                                               "id":  41,
                                               "reversed":  true,
-                                              "neutralMode":  "Brake",
+                                              "neutralMode":  "Coast",
                                               "role":  "follower",
                                               "motorType":  "X60"
                                           }
@@ -70,7 +70,7 @@
                            "name":  "intakeRoller",
                            "type":  "velocityTorque",
                            "focEnabled":  true,
-                           "torqueFF":  0,
+                           "torqueFF":  15,
                            "motors":  [
                                           {
                                               "id":  20,
@@ -102,7 +102,7 @@
                            "id":  "intakeWrist",
                            "name":  "intakeWrist",
                            "type":  "absolutePosition",
-                           "focEnabled":  false,
+                           "focEnabled":  true,
                            "torqueFF":  0,
                            "motors":  [
                                           {
@@ -115,7 +115,7 @@
                                           {
                                               "id":  22,
                                               "reversed":  true,
-                                              "neutralMode":  "Brake",
+                                              "neutralMode":  "Coast",
                                               "role":  "follower",
                                               "motorType":  "X60"
                                           }
@@ -139,12 +139,12 @@
                                            },
                            "cancoder":  {
                                             "id":  23,
-                                            "magnetOffset":  -0.03,
+                                            "magnetOffset":  -0.036,
                                             "discontinuityPoint":  0.5
                                         },
                            "absolutePosition":  {
                                                     "units":  "degrees",
-                                                    "default":  -0.09
+                                                    "default":  -0.41
                                                 }
                        },
                        {
@@ -155,35 +155,35 @@
                            "torqueFF":  0,
                            "motors":  [
                                           {
-                                              "role":  "leader",
                                               "id":  51,
-                                              "motorType":  "X60",
+                                              "reversed":  true,
                                               "neutralMode":  "Coast",
-                                              "reversed":  false
+                                              "role":  "leader",
+                                              "motorType":  "X60"
                                           },
                                           {
-                                              "role":  "follower",
                                               "id":  52,
-                                              "motorType":  "X60",
-                                              "neutralMode":  "Brake",
-                                              "reversed":  true
+                                              "reversed":  true,
+                                              "neutralMode":  "Coast",
+                                              "role":  "follower",
+                                              "motorType":  "X60"
                                           },
                                           {
-                                              "role":  "follower",
                                               "id":  53,
-                                              "motorType":  "X60",
-                                              "neutralMode":  "Brake",
-                                              "reversed":  true
+                                              "reversed":  true,
+                                              "neutralMode":  "Coast",
+                                              "role":  "follower",
+                                              "motorType":  "X60"
                                           }
                                       ],
                            "pid":  {
-                                       "kP":  0.3,
+                                       "kP":  0.0001,
                                        "kI":  0,
                                        "kD":  0,
                                        "kG":  0,
-                                       "kS":  0.23295,
-                                       "kV":  0.12161,
-                                       "kA":  0.0030738
+                                       "kS":  0.28159,
+                                       "kV":  0.12365,
+                                       "kA":  0.003086
                                    },
                            "ratios":  {
                                           "sensorToMechanism":  1,
@@ -198,21 +198,21 @@
                            "id":  "shooterHood",
                            "name":  "shooterHood",
                            "type":  "absolutePosition",
-                           "focEnabled":  false,
+                           "focEnabled":  true,
                            "torqueFF":  0,
                            "motors":  [
                                           {
-                                              "role":  "leader",
                                               "id":  50,
-                                              "motorType":  "X60",
+                                              "reversed":  false,
                                               "neutralMode":  "Brake",
-                                              "reversed":  true
+                                              "role":  "leader",
+                                              "motorType":  "X60"
                                           }
                                       ],
                            "pid":  {
-                                       "kP":  10,
+                                       "kP":  40,
                                        "kI":  0,
-                                       "kD":  2,
+                                       "kD":  0,
                                        "kG":  0,
                                        "kS":  0,
                                        "kV":  0,
@@ -228,12 +228,12 @@
                                            },
                            "cancoder":  {
                                             "id":  54,
-                                            "magnetOffset":  -0.941,
+                                            "magnetOffset":  0.058,
                                             "discontinuityPoint":  0.5
                                         },
                            "absolutePosition":  {
                                                     "units":  "degrees",
-                                                    "default":  0.09
+                                                    "default":  0
                                                 }
                        },
                        {
@@ -273,7 +273,7 @@
                            "id":  "turret",
                            "name":  "turret",
                            "type":  "absolutePosition",
-                           "focEnabled":  false,
+                           "focEnabled":  true,
                            "torqueFF":  0,
                            "motors":  [
                                           {

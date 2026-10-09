@@ -25,7 +25,7 @@ public class TurretConstants {
   public static final Optional<Double> KA = Optional.of(0.0);
   public static final double SENSOR_TO_MECHANISM_RATIO = -1;
   public static final double ROTOR_TO_SENSOR_RATIO = 48.166666666666664;
-  public static final boolean FOC_ENABLED = false;
+  public static final boolean FOC_ENABLED = true;
   public static final int CANCODER_ID = 61;
   public static final double CANCODER_MAGNET_OFFSET = 0.1255;
   public static final double CANCODER_DISCONTINUITY_POINT = 0.5;
@@ -80,16 +80,14 @@ public class TurretConstants {
             { 4.1, 0.08 },
             { 3.5, 0.07 },
             { 3.0, 0.065 },
-            { 2.5, 0.055 },
-        { 1.2, 0.029 } // Extended from the 2.5–3.0 m slope.
+            { 2.5, 0.055 }
     };
   public static final double[][] SHOOTER_SPEEDS = {
              { 4.9, 37 },
              { 4.1, 34 },
              { 3.5, 32 },
-             { 3.0, 29.5 }, // 30
-             { 2.5, 28.5 },
-        { 1.2, 25.9 } // Extended from the 2.5–3.0 m slope.
+             { 3.0, 29.5 },
+             { 2.5, 28.5 }
     };
   public static final double[][] FEEDER_SPEEDS = {
         { 4.9, 80 },
@@ -97,7 +95,6 @@ public class TurretConstants {
         { 3.5, 85 },
         { 3.0, 85 },
         { 2.5, 85 },
-        { 1.2, 85 } // Extended from the 2.5–3.0 m slope.
     };
   public static final frc.powerlib.math.LinearInterpolator HOOD_ANGLE_INTERPOLATOR = new frc.powerlib.math.LinearInterpolator(HOOD_ANGLES);
   public static final frc.powerlib.math.LinearInterpolator SHOOTER_VELOCITY_INTERPOLATOR = new frc.powerlib.math.LinearInterpolator(SHOOTER_SPEEDS);

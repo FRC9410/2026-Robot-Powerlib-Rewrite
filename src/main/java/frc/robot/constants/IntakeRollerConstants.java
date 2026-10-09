@@ -25,7 +25,7 @@ public class IntakeRollerConstants {
   public static final double SENSOR_TO_MECHANISM_RATIO = 1;
   public static final double ROTOR_TO_SENSOR_RATIO = 1;
   public static final boolean FOC_ENABLED = true;
-  public static final double TORQUE_FF = 0.0;
+  public static final double TORQUE_FF = 15.0;
   public static final double MOTION_MAGIC_CRUISE_VELOCITY = 0;
   public static final double MOTION_MAGIC_ACCELERATION = 200;
   public static final String NAME = "IntakeRoller";

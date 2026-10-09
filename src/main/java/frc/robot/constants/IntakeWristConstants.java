@@ -17,7 +17,7 @@ public class IntakeWristConstants {
   public static final NeutralModeValue LEADER_NEUTRAL_MODE = NeutralModeValue.Brake;
   public static final boolean LEADER_REVERSED = false;
   public static final int FOLLOWER_1_MOTOR_ID = 22;
-  public static final NeutralModeValue FOLLOWER_1_NEUTRAL_MODE = NeutralModeValue.Brake;
+  public static final NeutralModeValue FOLLOWER_1_NEUTRAL_MODE = NeutralModeValue.Coast;
   public static final boolean FOLLOWER_1_REVERSED = true;
   public static final double KP = 30;
   public static final double KI = 0;
@@ -28,15 +28,15 @@ public class IntakeWristConstants {
   public static final Optional<Double> KA = Optional.of(0.0);
   public static final double SENSOR_TO_MECHANISM_RATIO = -1;
   public static final double ROTOR_TO_SENSOR_RATIO = 44.444;
-  public static final boolean FOC_ENABLED = false;
+  public static final boolean FOC_ENABLED = true;
   public static final int CANCODER_ID = 23;
-  public static final double CANCODER_MAGNET_OFFSET = -0.03;
+  public static final double CANCODER_MAGNET_OFFSET = -0.036;
   public static final double CANCODER_DISCONTINUITY_POINT = 0.5;
   public static final double MOTION_MAGIC_CRUISE_VELOCITY = 1;
   public static final double MOTION_MAGIC_ACCELERATION = 20;
   public static final String NAME = "IntakeWrist";
   public static final String POSITION_UNITS = "degrees";
-  public static final Optional<Double> DEFAULT_POSITION = Optional.of(-0.09);
+  public static final Optional<Double> DEFAULT_POSITION = Optional.of(-0.41);
 
   public static final AbsolutePositionSubsystemConfig INTAKE_WRIST_CONFIG =
       new AbsolutePositionSubsystemConfig(
@@ -64,12 +64,12 @@ public class IntakeWristConstants {
   @frc.powerlib.tuning.TunableConstant
   public static volatile double INTAKE_MIN = -0.09;
   @frc.powerlib.tuning.TunableConstant
-  public static volatile double INTAKE_MAX = -0.453;
+  public static volatile double INTAKE_MAX = -0.452;
   @frc.powerlib.tuning.TunableConstant
-  public static volatile double INTAKE_IDLE = -0.4;
+  public static volatile double INTAKE_IDLE = -0.41;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double INTAKE_FEED = -0.25;
   @frc.powerlib.tuning.TunableConstant
-  public static volatile double INTAKE_DEFAULT = -0.09;
+  public static volatile double INTAKE_DEFAULT = -0.41;
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE
 }

@@ -11,6 +11,10 @@ public class StateMachineConstants {
   @frc.powerlib.tuning.TunableConstant
   public static volatile double SHOOTER_EXTRA_RPS = 1.0;
   @frc.powerlib.tuning.TunableConstant
-  public static volatile double SPINDEXER_SHOOT_RPS = 60.0;
+  public static volatile double SPINDEXER_SHOOT_RPS = 80.0;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double HOOD_SHOT_OFFSET_ROTATIONS = -0.005;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double FEEDER_SHOOTER_RATIO = -2.0;
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE
 }
