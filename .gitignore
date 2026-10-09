@@ -185,3 +185,12 @@ compile_commands.json
 
 # Eclipse generated file for annotation processors
 .factorypath
+
+# Power Tool dependencies, compiled output, and machine-specific installation paths
+power-tool/node_modules/
+power-tool/dist-renderer/
+power-tool/dist-electron/
+power-tool/.vite/
+**/.powerlib-source-root
+*.powerlib.bak
+*.powerlib.bak.*
