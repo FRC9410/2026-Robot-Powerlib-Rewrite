@@ -268,48 +268,6 @@
                                                "cruiseVelocity":  0,
                                                "acceleration":  200
                                            }
-                       },
-                       {
-                           "id":  "turret",
-                           "name":  "turret",
-                           "type":  "absolutePosition",
-                           "focEnabled":  true,
-                           "torqueFF":  0,
-                           "motors":  [
-                                          {
-                                              "id":  60,
-                                              "reversed":  true,
-                                              "neutralMode":  "Brake",
-                                              "role":  "leader",
-                                              "motorType":  "X60"
-                                          }
-                                      ],
-                           "pid":  {
-                                       "kP":  57,
-                                       "kI":  0,
-                                       "kD":  0,
-                                       "kG":  0,
-                                       "kS":  0,
-                                       "kV":  0,
-                                       "kA":  0
-                                   },
-                           "ratios":  {
-                                          "sensorToMechanism":  -1,
-                                          "rotorToSensor":  48.166666666666664
-                                      },
-                           "motionMagic":  {
-                                               "cruiseVelocity":  3,
-                                               "acceleration":  60
-                                           },
-                           "cancoder":  {
-                                            "id":  61,
-                                            "magnetOffset":  0.1255,
-                                            "discontinuityPoint":  0.5
-                                        },
-                           "absolutePosition":  {
-                                                    "units":  "degrees",
-                                                    "default":  0
-                                                }
                        }
                    ]
 }

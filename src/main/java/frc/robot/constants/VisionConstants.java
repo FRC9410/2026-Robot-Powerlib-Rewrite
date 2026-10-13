@@ -1,6 +1,7 @@
 package frc.robot.constants;
 
 import frc.powerlib.configs.LimelightVisionConfig;
+import frc.powerlib.configs.LimelightHeadingConfig;
 
 public class VisionConstants {
   public static final String LIMELIGHT_NAME = "limelight-left";
@@ -8,6 +9,7 @@ public class VisionConstants {
   // Example: {"limelight-b", "limelight-l", "limelight-r"}
   public static final String[] LIMELIGHT_NAMES = {"limelight-left", "limelight-right", "limelight-turret"};
   public static final LimelightVisionConfig CONFIG = new LimelightVisionConfig(0.7, 5, 0.5);
+  public static final LimelightHeadingConfig HEADING_CONFIG = LimelightHeadingConfig.DEFAULT;
 
   // POWERLIB CUSTOM CONSTANTS START - DO NOT DELETE
   public static final String CAMERA_NAME = "limelight";
@@ -24,6 +26,7 @@ public class VisionConstants {
   public static final String LEFT_TABLE = "limelight-left";
   public static final String RIGHT_TABLE = "limelight-right";
   public static final String TURRET_TABLE = "limelight-turret";
+  // MegaTag2 supplied yaw stays ignored; independent MT1 heading uses HEADING_CONFIG.
   @frc.powerlib.tuning.TunableConstant
   public static volatile double HEADING_STD_DEV = 9999999;
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE

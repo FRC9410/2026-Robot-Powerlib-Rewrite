@@ -17,6 +17,6 @@ public final class GeneratedTunableConstants {
     TunableConstants.register(ShooterConstants.class);
     TunableConstants.register(ShooterHoodConstants.class);
     TunableConstants.register(SpindexerConstants.class);
-    TunableConstants.register(TurretConstants.class);
+    TunableConstants.register(ShootingConstants.class);
   }
 }

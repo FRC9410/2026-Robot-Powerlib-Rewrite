@@ -21,4 +21,33 @@ public class ShootingConstants {
   public static final double SHOOTER_TOLERANCE_RPS = 2;
   public static final double HEADING_TOLERANCE_DEGREES = 5;
   public static final double MAX_SIGNAL_AGE_SECONDS = 0.5;
+
+  // POWERLIB CUSTOM CONSTANTS START - DO NOT DELETE
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double SHOOT_MAX_DRIVETRAIN_SPEED_MPS = 0.5;
+  public static final double[][] HOOD_ANGLES = {
+            { 4.9, 0.09 },
+            { 4.1, 0.08 },
+            { 3.5, 0.07 },
+            { 3.0, 0.065 },
+            { 2.5, 0.055 }
+    };
+  public static final double[][] SHOOTER_SPEEDS = {
+             { 4.9, 37 },
+             { 4.1, 34 },
+             { 3.5, 32 },
+             { 3.0, 29.5 },
+             { 2.5, 28.5 }
+    };
+  public static final double[][] FEEDER_SPEEDS = {
+        { 4.9, 80 },
+        { 4.1, 85 },
+        { 3.5, 85 },
+        { 3.0, 85 },
+        { 2.5, 85 },
+    };
+  public static final frc.powerlib.math.LinearInterpolator HOOD_ANGLE_INTERPOLATOR = new frc.powerlib.math.LinearInterpolator(HOOD_ANGLES);
+  public static final frc.powerlib.math.LinearInterpolator SHOOTER_VELOCITY_INTERPOLATOR = new frc.powerlib.math.LinearInterpolator(SHOOTER_SPEEDS);
+  public static final frc.powerlib.math.LinearInterpolator FEEDER_VELOCITY_INTERPOLATOR = new frc.powerlib.math.LinearInterpolator(FEEDER_SPEEDS);
+  // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE
 }

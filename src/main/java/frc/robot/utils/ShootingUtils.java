@@ -58,9 +58,9 @@ public final class ShootingUtils {
         && Double.isFinite(Constants.StateMachine.HOOD_TOLERANCE_ROTATIONS) && Constants.StateMachine.HOOD_TOLERANCE_ROTATIONS > 0
         && Double.isFinite(Constants.StateMachine.SPINDEXER_SHOOT_RPS) && Constants.StateMachine.SPINDEXER_SHOOT_RPS > 0;
     if (!valid) return new ShotSolution(false, distance, heading, error, 0, 0, 0, false, false, false, feedbackHealthy);
-    double demand = Constants.Turret.SHOOTER_VELOCITY_INTERPOLATOR.getInterpolatedValue(distance)
+    double demand = Constants.Shooting.SHOOTER_VELOCITY_INTERPOLATOR.getInterpolatedValue(distance)
         + Constants.StateMachine.SHOOTER_EXTRA_RPS;
-    double hood = MathUtil.clamp(Constants.Turret.HOOD_ANGLE_INTERPOLATOR.getInterpolatedValue(distance)
+    double hood = MathUtil.clamp(Constants.Shooting.HOOD_ANGLE_INTERPOLATOR.getInterpolatedValue(distance)
         + Constants.StateMachine.HOOD_SHOT_OFFSET_ROTATIONS,
         Constants.ShooterHood.SHOOTER_HOOD_MIN, Constants.ShooterHood.SHOOTER_HOOD_MAX);
     double feeder = Constants.StateMachine.FEEDER_SHOOTER_RATIO * demand;

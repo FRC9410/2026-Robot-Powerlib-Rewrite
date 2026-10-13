@@ -22,8 +22,8 @@ class ShootingUtilsTest {
   }
 
   @Test void matchesEveryCommittedShotTableRow() {
-    for (double[] row : Constants.Turret.SHOOTER_SPEEDS) {
-      double hood = Constants.Turret.HOOD_ANGLE_INTERPOLATOR.getInterpolatedValue(row[0]) - 0.005;
+    for (double[] row : Constants.Shooting.SHOOTER_SPEEDS) {
+      double hood = Constants.Shooting.HOOD_ANGLE_INTERPOLATOR.getInterpolatedValue(row[0]) - 0.005;
       double shooter = row[1] + Constants.StateMachine.SHOOTER_EXTRA_RPS;
       double xDistance = Math.min(row[0], 4);
       Pose2d location = new Pose2d(4.62 - xDistance, 4 + Math.sqrt(row[0] * row[0] - xDistance * xDistance), new Rotation2d());

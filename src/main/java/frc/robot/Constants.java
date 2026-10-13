@@ -23,6 +23,5 @@ public final class Constants {
   public static final class Shooter extends frc.robot.constants.ShooterConstants {}
   public static final class ShooterHood extends frc.robot.constants.ShooterHoodConstants {}
   public static final class Spindexer extends frc.robot.constants.SpindexerConstants {}
-  public static final class Turret extends frc.robot.constants.TurretConstants {}
   // POWERLIB GENERATED CONSTANTS END - DO NOT DELETE
 }

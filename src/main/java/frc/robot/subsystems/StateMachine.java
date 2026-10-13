@@ -38,7 +38,6 @@ public class StateMachine extends SubsystemBase {
   public final VelocitySubsystem shooter = new VelocitySubsystem(Constants.Shooter.SHOOTER_CONFIG);
   public final AbsolutePositionSubsystem shooterHood = new AbsolutePositionSubsystem(Constants.ShooterHood.SHOOTER_HOOD_CONFIG);
   public final VelocitySubsystem spindexer = new VelocitySubsystem(Constants.Spindexer.SPINDEXER_CONFIG);
-  public final AbsolutePositionSubsystem turret = new AbsolutePositionSubsystem(Constants.Turret.TURRET_CONFIG);
   // POWERLIB GENERATED SUBSYSTEMS END - DO NOT DELETE
 
   private RobotState wantedState = Constants.StateMachine.DEFAULT_STATE;
@@ -74,7 +73,6 @@ public class StateMachine extends SubsystemBase {
     intakeRoller.brake();
     intakeWrist.stopPosition();
     shooterHood.stopPosition();
-    turret.stopPosition();
   }
 
   public RobotState getWantedState() {
