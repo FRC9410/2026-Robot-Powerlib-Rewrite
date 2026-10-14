@@ -21,16 +21,33 @@ tolerances and heading-lock choices. Red headings are converted to blue-field
 coordinates. Auto selection follows the reported alliance, with `None` as the default.
 The rewrite retains 100 ms dashboard updates, 200 ms tuning, 50 Hz logging,
 readiness/freshness checks, disabled-only pose seeding, start-pose guards and auto
-leg timeouts. Shooting uses the original calibrated 2.5-4.9 m interval; the legacy
-code clamped outside that interval. `gradlew build` tests shot outputs, route values,
+leg timeouts. Shooting allows distances from 1.95-4.9 m. A new 1.95 m row extends
+the closest April 4 segment (2.5-3.0 m): 27.4 RPS and 0.044 hood rotations before
+offsets. Shots closer than 1.95 m are rejected. The new values are extrapolated and need
+hardware tuning. `gradlew build` tests shot outputs, route values,
 state transitions, cancellation and timeout behavior.
 
-Motor neutral and reversal declarations match April 4. The legacy leader reversal
-implementation wrote CounterClockwise_Positive for a true reversal flag, and later
-full configuration writes could overwrite output settings. PowerLib retains the
-declared neutral mode and uses Clockwise_Positive for a true reversal flag. Motor
-direction needs hardware verification; matching declarations does not guarantee
-identical historical electrical direction.
+Motor configuration was audited again against April 4 commit `0f75d1b`. Shooter
+leader CAN 51 uses `reversed: false` in PowerLib to preserve the legacy
+CounterClockwise_Positive direction; followers 52 and 53 remain opposed. The other
+active mechanism leaders already use that direction. Feeder, shooter and spindexer
+also restore the legacy 140 A stator current limit on their leaders, explicitly
+saved in the subsystem JSON and emitted by the generator. PowerLib preserves the
+declared neutral modes; legacy full configuration writes could reset those modes.
+RegionalMotorConfigurationTest checks the Phoenix output configuration without
+hardware. Physical direction still needs verification on the robot.
+
+The audit includes feeder, intake roller/wrist, shooter/hood and spindexer CAN IDs,
+follower alignment, PID/feedforward, feedback ratios, encoder offsets, Motion Magic
+settings and position defaults/limits. Shared auto waypoints, Tuner hardware,
+controller, LED and camera constants retain the April 4 values. Field dimensions
+are corrected to 16.541 by 8.069 m and hub centers to red (11.915521, 4.0346376)
+and blue (4.6255178, 4.0346376), derived from the WPILib 2026 welded layout's opposing
+hub-face tags. The red zone ends at the corrected field length. The screenshot pose
+(13.27, 3.18) is about 1.602 m from the corrected red hub, below the retained 1.95 m
+minimum shooting distance; its target heading is about -32.25 degrees. The removed turret
+and legacy sweep feature are not reinstated; their active shooter/hood tables live
+in ShootingConstants. New PowerLib vision/readiness settings remain rewrite-specific.
 
 State handlers implement Idle/Ready, Intaking, Ejecting, Spinning Up, and Shooting.
 Left trigger collects, B requests eject, and right trigger requests shooting.
@@ -39,7 +56,8 @@ heading, shot range, and feedback are ready. Losing readiness immediately stops 
 Releasing B resumes a held shooting or intake trigger; releasing all triggers returns
 to `IDLE`. Intake can run while shooting. Shared geometry, interpolation,
 readiness, and shooter/feeder actions live in `ShootingUtils`. Values and driver behavior
-use the April 4 calibrations described above. Back seeds a fresh vision pose while disabled;
+use the April 4 calibrations described above. Back seeds fresh vision position while disabled
+and uses fresh independent multi-tag heading when available, preserving heading otherwise;
 Start zeros heading while disabled, preserving X/Y. Test mode leaves outputs to SysId.
 
 Each state request has an owner: `requestState(state, owner)` updates only that owner's
@@ -61,6 +79,22 @@ on mode changes. Shooting preparation runs only while a shooting or spin-up requ
 pending; execution rechecks readiness every cycle. PowerDashboard publishes distance
 independently, so it continues updating during idle and intake. Shared shooting utilities
 contain no intake, wrist, or health behavior.
+
+Heading corrections track independent MT1 frame timestamps. When an MT1 frame
+arrives behind an already-applied MT2 position frame, its capture-time heading
+error is carried forward to the latest fusion timestamp, preserving intervening
+rotation and newer position corrections. Cameras remain unthrottled while disabled
+to keep reset frames fresh. SignalLogger records Vision/Heading/Status, Accepted,
+ErrorDegrees, PigeonYawDegrees and EstimatedDegrees. While disabled, fresh multi-tag
+MT1 frames automatically initialize heading once per disabled period after at least
+five distinct frames agree within 2 degrees for 0.25 s. Speed must be at most
+0.05 m/s and yaw rate at most 5 degrees/s, with fresh drivetrain feedback. This
+heading-only reset preserves X/Y and can recover errors larger than 15 degrees.
+Vision/HeadingStatus and Vision/MT1HeadingFresh are also published to Power Tool.
+While enabled, automatic correction still
+requires two reliable tags within 4 m, frame age at most 0.2 s, yaw rate at most
+45 degrees/s, and heading error at most 15 degrees. Back can reseed a larger heading
+error from fresh independent heading while disabled; Start zeros blue-field heading.
 
 The drive command receives live current state for intake/shooting speed scaling and
 hub alignment. Robot tests cover shot-table values, readiness, transitions,

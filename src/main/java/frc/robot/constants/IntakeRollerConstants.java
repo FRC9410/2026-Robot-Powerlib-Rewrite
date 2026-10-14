@@ -26,6 +26,7 @@ public class IntakeRollerConstants {
   public static final double ROTOR_TO_SENSOR_RATIO = 1;
   public static final boolean FOC_ENABLED = true;
   public static final double TORQUE_FF = 15.0;
+  public static final Optional<Double> STATOR_CURRENT_LIMIT_AMPS = Optional.empty();
   public static final double MOTION_MAGIC_CRUISE_VELOCITY = 0;
   public static final double MOTION_MAGIC_ACCELERATION = 200;
   public static final String NAME = "IntakeRoller";
@@ -47,7 +48,8 @@ public class IntakeRollerConstants {
               FOC_ENABLED),
           new MotionMagicConfig(MOTION_MAGIC_CRUISE_VELOCITY, MOTION_MAGIC_ACCELERATION),
           NAME,
-          TORQUE_FF);
+          TORQUE_FF,
+          STATOR_CURRENT_LIMIT_AMPS);
 
   // POWERLIB CUSTOM CONSTANTS START - DO NOT DELETE
   @frc.powerlib.tuning.TunableConstant

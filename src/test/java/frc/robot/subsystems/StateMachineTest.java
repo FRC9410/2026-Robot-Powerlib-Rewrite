@@ -19,6 +19,8 @@ class StateMachineTest {
   private static StateMachine robot;
   private static XboxControllerSim controller;
   private final Object requestOwner = new Object();
+  private static final double TEST_X = Constants.Shooting.BLUE_HUB.getX() - 2.5;
+  private static final double TEST_Y = Constants.Shooting.BLUE_HUB.getY();
 
   @BeforeAll static void initialize() {
     assertTrue(HAL.initialize(500, 0));
@@ -43,7 +45,7 @@ class StateMachineTest {
     // Poll released controls before resetting so each test starts with fresh trigger edges.
     CommandScheduler.getInstance().run();
     container.resetForMode();
-    robot.drivetrain.resetPose(new Pose2d(2.12, 4, Rotation2d.fromDegrees(180)));
+    robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180)));
     robot.shooter.inputs.velocityRotationsPerSecond = 0;
     robot.shooterHood.inputs.positionRotations = 0.09;
   }
@@ -138,7 +140,8 @@ class StateMachineTest {
     robot.execute();
     dashboard.periodic();
     assertEquals(2.5, (double) frc.powerlib.PowerRobotContainer.getData("Shooting/Distance"), 0.001);
-    robot.drivetrain.resetPose(new Pose2d(1.62, 4, new Rotation2d()));
+    robot.drivetrain.resetPose(new Pose2d(Constants.Shooting.BLUE_HUB.getX() - 3,
+        Constants.Shooting.BLUE_HUB.getY(), new Rotation2d()));
     dashboard.periodic();
     assertEquals(3, (double) frc.powerlib.PowerRobotContainer.getData("Shooting/Distance"), 0.001);
     assertFalse(robot.hasRequest(RobotState.SHOOTING));
@@ -266,7 +269,11 @@ class StateMachineTest {
     var field = Vision.class.getDeclaredField("lastMeasurement");
     field.setAccessible(true);
     Object previous = field.get(robot.vision);
+    var headingField = Vision.class.getDeclaredField("lastHeadingMeasurement");
+    headingField.setAccessible(true);
+    Object previousHeading = headingField.get(robot.vision);
     try {
+      headingField.set(robot.vision, null);
       var pose = new Pose2d(1.5, 2.5, Rotation2d.fromDegrees(24));
       field.set(robot.vision, new frc.powerlib.vision.LimelightVision.Measurement(
           "test-camera", pose, edu.wpi.first.wpilibj.Timer.getFPGATimestamp(), 1, 2, 0.1));
@@ -276,8 +283,20 @@ class StateMachineTest {
       assertTrue(robot.vision.seedFromFreshVision());
       assertEquals(pose.getX(), robot.drivetrain.getState().Pose.getX(), 0.001);
       assertEquals(pose.getY(), robot.drivetrain.getState().Pose.getY(), 0.001);
-      assertEquals(24, robot.drivetrain.getState().Pose.getRotation().getDegrees(), 0.001);
-    } finally { field.set(robot.vision, previous); }
+      // MT2 alone must not restore its supplied/drifted yaw during a position seed.
+      assertEquals(180, robot.drivetrain.getState().Pose.getRotation().getDegrees(), 0.001);
+      double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+      headingField.set(robot.vision, new frc.powerlib.vision.LimelightVision.HeadingMeasurement(
+          "test-camera", new Pose2d(9, 9, Rotation2d.fromDegrees(12)), now, 0.1));
+      assertTrue(robot.vision.seedFromFreshVision());
+      assertEquals(12, robot.drivetrain.getState().Pose.getRotation().getDegrees(), 0.001);
+      assertEquals(pose.getTranslation(), robot.drivetrain.getState().Pose.getTranslation());
+      headingField.set(robot.vision, new frc.powerlib.vision.LimelightVision.HeadingMeasurement(
+          "test-camera", new Pose2d(9, 9, Rotation2d.fromDegrees(50)), now - 1, 0.1));
+      assertFalse(robot.vision.hasFreshHeading());
+      assertTrue(robot.vision.seedFromFreshVision());
+      assertEquals(12, robot.drivetrain.getState().Pose.getRotation().getDegrees(), 0.001);
+    } finally { field.set(robot.vision, previous); headingField.set(robot.vision, previousHeading); }
   }
 
   @Test void visionSeedRejectsMissingStaleFutureAndInvalidMeasurements() throws Exception {
@@ -302,8 +321,8 @@ class StateMachineTest {
             "test-camera", invalid, edu.wpi.first.wpilibj.Timer.getFPGATimestamp(), 1, 2, 0.1));
         assertFalse(robot.vision.seedFromFreshVision());
       }
-      assertEquals(2.12, robot.drivetrain.getState().Pose.getX(), 0.001);
-      assertEquals(4, robot.drivetrain.getState().Pose.getY(), 0.001);
+      assertEquals(TEST_X, robot.drivetrain.getState().Pose.getX(), 0.001);
+      assertEquals(TEST_Y, robot.drivetrain.getState().Pose.getY(), 0.001);
     } finally { field.set(robot.vision, previous); }
   }
 
@@ -330,25 +349,95 @@ class StateMachineTest {
     assertEquals(Constants.IntakeWrist.INTAKE_MAX, robot.intakeWrist.getSetpointRotations());
     assertEquals(145, robot.intakeRoller.getVelocitySetpoint());
   }
+
+  @Test void lateHeadingIsEvaluatedDespiteNewerPositionAndCannotReplay() throws Exception {
+    var positionTime = Vision.class.getDeclaredField("lastAppliedTimestamp");
+    var headingTime = Vision.class.getDeclaredField("lastAppliedHeadingTimestamp");
+    positionTime.setAccessible(true);
+    headingTime.setAccessible(true);
+    double previousPositionTime = positionTime.getDouble(robot.vision);
+    double previousHeadingTime = headingTime.getDouble(robot.vision);
+    var apply = Vision.class.getDeclaredMethod("applyHeadingCorrection",
+        frc.powerlib.vision.LimelightVision.HeadingMeasurement.class);
+    apply.setAccessible(true);
+    try {
+      double captureTime = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+      positionTime.setDouble(robot.vision, captureTime + 0.001);
+      headingTime.setDouble(robot.vision, Double.NEGATIVE_INFINITY);
+      var heading = new frc.powerlib.vision.LimelightVision.HeadingMeasurement(
+          "test-camera", new Pose2d(9, 9, Rotation2d.fromDegrees(175)), captureTime, 0.1);
+      // The shared timestamp check previously rejected this heading before attempting fusion.
+      boolean accepted = (boolean) apply.invoke(robot.vision, heading);
+      var status = Vision.class.getDeclaredField("headingStatus");
+      status.setAccessible(true);
+      // This simulator has no Phoenix pose-history samples. Reaching this rejection
+      // proves the older heading passed the timestamp guard and was evaluated.
+      assertFalse(accepted);
+      assertEquals("Capture pose unavailable", status.get(robot.vision));
+      assertEquals(captureTime, headingTime.getDouble(robot.vision));
+      assertEquals(captureTime + 0.001, positionTime.getDouble(robot.vision));
+      assertFalse((boolean) apply.invoke(robot.vision, heading));
+      assertEquals("Repeated or out-of-order heading", status.get(robot.vision));
+      assertEquals(TEST_X, robot.drivetrain.getState().Pose.getX(), 0.001);
+      assertEquals(TEST_Y, robot.drivetrain.getState().Pose.getY(), 0.001);
+    } finally {
+      positionTime.setDouble(robot.vision, previousPositionTime);
+      headingTime.setDouble(robot.vision, previousHeadingTime);
+    }
+  }
   @Test void sharedHealthChecksPreserveConfiguredSimulationBehavior() {
     assertTrue(frc.powerlib.health.HealthChecks.driveHealthy(robot.drivetrain, 0.5));
     assertTrue(frc.powerlib.health.HealthChecks.mechanismHealthy(robot.shooter, robot.shooter.getVelocityMotor(), 0.5));
   }
 
+  @Test void disabledAutomaticMT1InitializationCorrectsLargeErrorAndPreservesPosition() throws Exception {
+    DriverStationSim.setEnabled(false);
+    DriverStationSim.notifyNewData();
+    var initialize = Vision.class.getDeclaredMethod("initializeHeading",
+        frc.powerlib.vision.LimelightVision.HeadingMeasurement.class, double.class);
+    initialize.setAccessible(true);
+    var initializerField = Vision.class.getDeclaredField("headingInitializer");
+    initializerField.setAccessible(true);
+    var initializer = (frc.robot.utils.VisionHeadingInitializer) initializerField.get(robot.vision);
+    initializer.reset();
+    double started = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+    try {
+      for (int i = 0; i <= 13; i++) {
+        double time = started + i * 0.02;
+        var heading = new frc.powerlib.vision.LimelightVision.HeadingMeasurement(
+            "test-camera", new Pose2d(9, 9, Rotation2d.fromDegrees(30)), time, 0.1);
+        assertEquals(i == 13, (boolean) initialize.invoke(robot.vision, heading, time));
+      }
+      assertEquals(30, robot.drivetrain.getState().Pose.getRotation().getDegrees(), 0.001);
+      assertEquals(TEST_X, robot.drivetrain.getState().Pose.getX(), 0.001);
+      assertEquals(TEST_Y, robot.drivetrain.getState().Pose.getY(), 0.001);
+      initializer.reset();
+      DriverStationSim.setEnabled(true);
+      DriverStationSim.notifyNewData();
+      for (int i = 0; i <= 13; i++) {
+        double time = started + 1 + i * 0.02;
+        var heading = new frc.powerlib.vision.LimelightVision.HeadingMeasurement(
+            "test-camera", new Pose2d(9, 9, Rotation2d.fromDegrees(90)), time, 0.1);
+        assertFalse((boolean) initialize.invoke(robot.vision, heading, time));
+      }
+      assertEquals(30, robot.drivetrain.getState().Pose.getRotation().getDegrees(), 0.001);
+    } finally { initializer.reset(); }
+  }
+
   @Test void headingButtonHelperRunsWhileDisabledAndPreservesEnabledHeading() {
     DriverStationSim.setEnabled(false);
     DriverStationSim.notifyNewData();
-    robot.drivetrain.resetPose(new Pose2d(2.12, 4, Rotation2d.fromDegrees(25)));
+    robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(25)));
     controller.setStartButton(true);
     cycleBindings();
     assertEquals(0, robot.drivetrain.getState().Pose.getRotation().getDegrees(), 0.001);
-    assertEquals(2.12, robot.drivetrain.getState().Pose.getX(), 0.001);
-    assertEquals(4, robot.drivetrain.getState().Pose.getY(), 0.001);
+    assertEquals(TEST_X, robot.drivetrain.getState().Pose.getX(), 0.001);
+    assertEquals(TEST_Y, robot.drivetrain.getState().Pose.getY(), 0.001);
     controller.setStartButton(false);
     cycleBindings();
     DriverStationSim.setEnabled(true);
     DriverStationSim.notifyNewData();
-    robot.drivetrain.resetPose(new Pose2d(2.12, 4, Rotation2d.fromDegrees(25)));
+    robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(25)));
     controller.setStartButton(true);
     cycleBindings();
     assertEquals(25, robot.drivetrain.getState().Pose.getRotation().getDegrees(), 0.001);

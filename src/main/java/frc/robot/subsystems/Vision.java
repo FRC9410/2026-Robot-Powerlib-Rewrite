@@ -20,7 +20,12 @@ public class Vision extends SubsystemBase implements AutoCloseable {
   private final LimelightVision limelights;
   private boolean shouldUpdatePose = true;
   private LimelightVision.Measurement lastMeasurement;
+  private LimelightVision.HeadingMeasurement lastHeadingMeasurement;
   private double lastAppliedTimestamp = Double.NEGATIVE_INFINITY;
+  private double lastAppliedHeadingTimestamp = Double.NEGATIVE_INFINITY;
+  private String headingStatus = "Waiting for independent heading";
+  private final frc.robot.utils.VisionHeadingInitializer headingInitializer =
+      new frc.robot.utils.VisionHeadingInitializer();
 
   public Vision(Swerve drivetrain) {
     this.drivetrain = drivetrain;
@@ -41,8 +46,21 @@ public class Vision extends SubsystemBase implements AutoCloseable {
     var pose = lastMeasurement.pose();
     if (!HealthChecks.isFresh(age, Constants.Vision.CONFIG.maxMeasurementAgeSeconds())
         || !HealthChecks.finitePose(pose)) return false;
-    drivetrain.resetPose(pose);
+    // MT2 yaw depends on the orientation sent to the camera and cannot independently fix drift.
+    var rotation = drivetrain.getState().Pose.getRotation();
+    if (hasFreshHeading()) rotation = lastHeadingMeasurement.pose().getRotation();
+    drivetrain.resetPose(new edu.wpi.first.math.geometry.Pose2d(pose.getTranslation(), rotation));
+    // Do not replay camera frames captured before this manual reset.
+    lastAppliedTimestamp = Timer.getFPGATimestamp();
+    lastAppliedHeadingTimestamp = lastAppliedTimestamp;
+    headingInitializer.reset();
     return true;
+  }
+
+  public boolean hasFreshHeading() {
+    return lastHeadingMeasurement != null && HealthChecks.finitePose(lastHeadingMeasurement.pose())
+        && HealthChecks.isFresh(Timer.getFPGATimestamp() - lastHeadingMeasurement.timestampSeconds(),
+            Constants.Vision.HEADING_CONFIG.maxMeasurementAgeSeconds());
   }
 
   /** Enable or disable vision corrections, for example from an autonomous path event. */
@@ -56,7 +74,8 @@ public class Vision extends SubsystemBase implements AutoCloseable {
 
   @Override
   public void periodic() {
-    limelights.setThrottle(DriverStation.isDisabled());
+    // Fresh independent heading is needed for disabled pose seeds too.
+    limelights.setThrottle(false);
     var state = drivetrain.getState();
     var estimate = limelights.update(
         state.Pose.getRotation().getDegrees(),
@@ -64,6 +83,7 @@ public class Vision extends SubsystemBase implements AutoCloseable {
         drivetrain.getPigeon2().getRoll().getValueAsDouble(),
         Math.toDegrees(state.Speeds.omegaRadiansPerSecond));
     estimate.ifPresent(measurement -> lastMeasurement = measurement);
+    limelights.getHeadingMeasurement().ifPresent(measurement -> lastHeadingMeasurement = measurement);
     // Continue reading while disabled so those cached frames are not applied after enabling.
     applyMeasurements(estimate.orElse(null), limelights.getHeadingMeasurement().orElse(null));
   }
@@ -71,6 +91,14 @@ public class Vision extends SubsystemBase implements AutoCloseable {
   private void applyMeasurements(LimelightVision.Measurement position,
       LimelightVision.HeadingMeasurement heading) {
     boolean correctedHeading = false;
+    headingStatus = !shouldUpdatePose ? "Vision corrections disabled"
+        : !DriverStation.isEnabled() ? "Robot disabled"
+        : heading == null ? "No fresh reliable multi-tag heading" : "Heading candidate";
+    if (shouldUpdatePose && DriverStation.isDisabled()) {
+      correctedHeading = initializeHeading(heading, Timer.getFPGATimestamp());
+    } else {
+      headingInitializer.reset();
+    }
     if (shouldUpdatePose && DriverStation.isEnabled()) {
       // Feed delayed measurements in capture order so an older frame cannot undo a newer one.
       boolean headingFirst = heading != null
@@ -80,6 +108,38 @@ public class Vision extends SubsystemBase implements AutoCloseable {
       if (heading != null && !headingFirst) correctedHeading = applyHeadingCorrection(heading);
     }
     SignalLogger.writeBoolean("Vision/Heading/Accepted", correctedHeading);
+    SignalLogger.writeString("Vision/Heading/Status", headingStatus);
+    frc.powerlib.PowerRobotContainer.setSubsystemData("Vision", "HeadingStatus", headingStatus);
+    frc.powerlib.PowerRobotContainer.setSubsystemData("Vision", "MT1HeadingFresh", hasFreshHeading());
+    SignalLogger.writeDouble("Vision/Heading/PigeonYawDegrees",
+        drivetrain.getPigeon2().getYaw().getValueAsDouble(), "degrees");
+    SignalLogger.writeDouble("Vision/Heading/EstimatedDegrees",
+        drivetrain.getState().Pose.getRotation().getDegrees(), "degrees");
+  }
+
+  private boolean initializeHeading(LimelightVision.HeadingMeasurement measurement, double now) {
+    if (!DriverStation.isDisabled() || !shouldUpdatePose) {
+      headingInitializer.reset();
+      headingStatus = "Automatic initialization requires disabled robot and enabled vision";
+      return false;
+    }
+    if (!HealthChecks.driveHealthy(drivetrain, Constants.Shooting.MAX_SIGNAL_AGE_SECONDS)) {
+      headingInitializer.reset();
+      headingStatus = "Waiting for fresh drivetrain feedback";
+      return false;
+    }
+    var speeds = drivetrain.getState().Speeds;
+    var rotation = headingInitializer.update(measurement, now,
+        Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond),
+        Math.toDegrees(speeds.omegaRadiansPerSecond));
+    headingStatus = headingInitializer.status();
+    if (rotation.isEmpty()) return false;
+    // Establish absolute field heading without changing X/Y or resetting raw gyro yaw.
+    drivetrain.resetRotation(rotation.get());
+    lastAppliedTimestamp = now;
+    lastAppliedHeadingTimestamp = now;
+    SignalLogger.writeString("Robot/Control/Action", "MT1 heading initialized automatically");
+    return true;
   }
 
   private void applyPositionCorrection(LimelightVision.Measurement measurement) {
@@ -92,18 +152,28 @@ public class Vision extends SubsystemBase implements AutoCloseable {
   }
 
   private boolean applyHeadingCorrection(LimelightVision.HeadingMeasurement measurement) {
-    if (DriverStation.isTest() || measurement.timestampSeconds() < lastAppliedTimestamp) return false;
+    if (DriverStation.isTest()) { headingStatus = "Test mode"; return false; }
+    if (measurement.timestampSeconds() <= lastAppliedHeadingTimestamp) {
+      headingStatus = "Repeated or out-of-order heading"; return false;
+    }
+    lastAppliedHeadingTimestamp = measurement.timestampSeconds();
     // Swerve's addVisionMeasurement wrapper accepts FPGA time; samplePoseAt needs CTRE time.
     var historicalPose = drivetrain.samplePoseAt(Utils.fpgaToCurrentTime(measurement.timestampSeconds()));
-    if (historicalPose.isEmpty()) return false;
+    if (historicalPose.isEmpty()) { headingStatus = "Capture pose unavailable"; return false; }
     SignalLogger.writeDouble("Vision/Heading/ErrorDegrees",
         measurement.pose().getRotation().minus(historicalPose.get().getRotation()).getDegrees(), "degrees");
-    var correction = measurement.correctionPose(
-        historicalPose.get(), Constants.Vision.HEADING_CONFIG.maxHeadingErrorDegrees());
-    if (correction.isEmpty()) return false;
+    // MT1 can arrive later than MT2. Fuse at the latest applied time, carrying forward
+    // the capture-time error through intervening rotation, so neither stream undoes the other.
+    double fusionTimestamp = Math.max(lastAppliedTimestamp, measurement.timestampSeconds());
+    var fusionPose = drivetrain.samplePoseAt(Utils.fpgaToCurrentTime(fusionTimestamp));
+    if (fusionPose.isEmpty()) { headingStatus = "Fusion pose unavailable"; return false; }
+    var correction = measurement.correctionPose(historicalPose.get(), fusionPose.get(),
+        Constants.Vision.HEADING_CONFIG.maxHeadingErrorDegrees());
+    if (correction.isEmpty()) { headingStatus = "Heading error exceeds limit"; return false; }
     drivetrain.addVisionMeasurement(
-        correction.get(), measurement.timestampSeconds(), measurement.standardDeviations());
-    lastAppliedTimestamp = measurement.timestampSeconds();
+        correction.get(), fusionTimestamp, measurement.standardDeviations());
+    lastAppliedTimestamp = fusionTimestamp;
+    headingStatus = "Independent heading applied";
     return true;
   }
 

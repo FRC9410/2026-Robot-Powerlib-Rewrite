@@ -15,13 +15,25 @@ public record VelocitySubsystemConfig(
     LeadMotorConfig leadConfig,
     MotionMagicConfig motionMagicConfig,
     String subsystemName,
-    double torqueFeedForward) {
+    double torqueFeedForward,
+    java.util.Optional<Double> statorCurrentLimitAmps) {
   public VelocitySubsystemConfig {
     motorConfigs = ConfigValidation.motors(motorConfigs);
     java.util.Objects.requireNonNull(leadConfig, "leadConfig");
     java.util.Objects.requireNonNull(motionMagicConfig, "motionMagicConfig");
     ConfigValidation.subsystemName(subsystemName);
     ConfigValidation.finite(torqueFeedForward, "torqueFeedForward");
+    java.util.Objects.requireNonNull(statorCurrentLimitAmps, "statorCurrentLimitAmps");
+    statorCurrentLimitAmps.ifPresent(value -> {
+      ConfigValidation.finite(value, "statorCurrentLimitAmps");
+      if (value <= 0) throw new IllegalArgumentException("statorCurrentLimitAmps must be positive");
+    });
+  }
+
+  public VelocitySubsystemConfig(List<MotorConfig> motorConfigs, LeadMotorConfig leadConfig,
+      MotionMagicConfig motionMagicConfig, String subsystemName, double torqueFeedForward) {
+    this(motorConfigs, leadConfig, motionMagicConfig, subsystemName, torqueFeedForward,
+        java.util.Optional.empty());
   }
 
   public VelocitySubsystemConfig(

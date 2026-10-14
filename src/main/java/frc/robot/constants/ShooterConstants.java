@@ -14,7 +14,7 @@ import java.util.Optional;
 public class ShooterConstants {
   public static final int LEADER_MOTOR_ID = 51;
   public static final NeutralModeValue LEADER_NEUTRAL_MODE = NeutralModeValue.Coast;
-  public static final boolean LEADER_REVERSED = true;
+  public static final boolean LEADER_REVERSED = false;
   public static final int FOLLOWER_1_MOTOR_ID = 52;
   public static final NeutralModeValue FOLLOWER_1_NEUTRAL_MODE = NeutralModeValue.Coast;
   public static final boolean FOLLOWER_1_REVERSED = true;
@@ -32,6 +32,7 @@ public class ShooterConstants {
   public static final double ROTOR_TO_SENSOR_RATIO = 1;
   public static final boolean FOC_ENABLED = true;
   public static final double TORQUE_FF = 0.0;
+  public static final Optional<Double> STATOR_CURRENT_LIMIT_AMPS = Optional.of(140.0);
   public static final double MOTION_MAGIC_CRUISE_VELOCITY = 0;
   public static final double MOTION_MAGIC_ACCELERATION = 200;
   public static final String NAME = "Shooter";
@@ -55,7 +56,8 @@ public class ShooterConstants {
               FOC_ENABLED),
           new MotionMagicConfig(MOTION_MAGIC_CRUISE_VELOCITY, MOTION_MAGIC_ACCELERATION),
           NAME,
-          TORQUE_FF);
+          TORQUE_FF,
+          STATOR_CURRENT_LIMIT_AMPS);
 
   // POWERLIB CUSTOM CONSTANTS START - DO NOT DELETE
 

@@ -31,6 +31,7 @@
                            "type":  "velocity",
                            "focEnabled":  true,
                            "torqueFF":  0,
+                           "statorCurrentLimitAmps":  140,
                            "motors":  [
                                           {
                                               "id":  40,
@@ -153,10 +154,11 @@
                            "type":  "velocity",
                            "focEnabled":  true,
                            "torqueFF":  0,
+                           "statorCurrentLimitAmps":  140,
                            "motors":  [
                                           {
                                               "id":  51,
-                                              "reversed":  true,
+                                              "reversed":  false,
                                               "neutralMode":  "Coast",
                                               "role":  "leader",
                                               "motorType":  "X60"
@@ -242,6 +244,7 @@
                            "type":  "velocity",
                            "focEnabled":  true,
                            "torqueFF":  0,
+                           "statorCurrentLimitAmps":  140,
                            "motors":  [
                                           {
                                               "id":  30,

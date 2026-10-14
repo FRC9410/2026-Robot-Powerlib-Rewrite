@@ -1,6 +1,6 @@
 package frc.robot.constants;
 
-/** Shot calibration from 2026-Robot's April 4 commit 0f75d1b. */
+/** April 4 calibration, extended to the 1.95 m minimum shooting distance. */
 public class ShootingConstants {
   protected ShootingConstants() {}
 
@@ -13,7 +13,7 @@ public class ShootingConstants {
   public static final double RED_ZONE_END = FieldConstants.RED_END_X;
   public static final double CENTER_ZONE_START = FieldConstants.CENTER_START_X;
   public static final double CENTER_ZONE_END = FieldConstants.CENTER_END_X;
-  public static final double MIN_SHOT_DISTANCE = 2.5;
+  public static final double MIN_SHOT_DISTANCE = 1.95;
   public static final double MAX_SHOT_DISTANCE = 4.9;
   public static final double COLLECT_RPS = 145;
   public static final double EJECT_RPS = -145;
@@ -30,14 +30,16 @@ public class ShootingConstants {
             { 4.1, 0.08 },
             { 3.5, 0.07 },
             { 3.0, 0.065 },
-            { 2.5, 0.055 }
+            { 2.5, 0.055 },
+            { 1.95, 0.044 }
     };
   public static final double[][] SHOOTER_SPEEDS = {
              { 4.9, 37 },
              { 4.1, 34 },
              { 3.5, 32 },
              { 3.0, 29.5 },
-             { 2.5, 28.5 }
+             { 2.5, 28.5 },
+             { 1.95, 27.4 }
     };
   public static final double[][] FEEDER_SPEEDS = {
         { 4.9, 80 },

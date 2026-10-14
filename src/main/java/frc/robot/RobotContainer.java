@@ -40,7 +40,9 @@ public class RobotContainer implements PowerRobotContainer {
 
   private void seedVisionPose() {
     boolean seeded = stateMachine.vision.seedFromFreshVision();
-    SignalLogger.writeString("Robot/Control/Action", seeded ? "Fresh vision pose seeded"
+    SignalLogger.writeString("Robot/Control/Action", seeded
+        ? stateMachine.vision.hasFreshHeading() ? "Vision position and independent heading seeded"
+            : "Vision position seeded; heading preserved (no fresh multi-tag heading)"
         : "Pose seed requires disabled robot and fresh vision");
   }
 
