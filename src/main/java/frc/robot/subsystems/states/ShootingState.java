@@ -12,6 +12,8 @@ import frc.robot.utils.ShootingUtils.ShotSolution;
 
 public final class ShootingState implements State<RobotState, StateMachine> {
   private ShotSolution shot = ShootingUtils.UNAVAILABLE;
+
+  public ShotSolution getShotSolution() { return shot; }
   private double shootingStarted = Double.NaN;
   private double shootingElapsed = Double.NaN;
 

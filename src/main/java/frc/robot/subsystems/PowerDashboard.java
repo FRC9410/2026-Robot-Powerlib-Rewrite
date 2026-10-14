@@ -82,6 +82,7 @@ public class PowerDashboard extends SubsystemBase {
   @Override
   public void periodic() {
     publishShootingDistance();
+    frc.robot.dashboard.Game2026Telemetry.publish(stateMachine);
     driveTelemetry.publish();
     syncTuningMode();
     publishSubsystemData();
@@ -91,8 +92,6 @@ public class PowerDashboard extends SubsystemBase {
   }
 
   private void publishShootingDistance() {
-    if (edu.wpi.first.wpilibj.DriverStation.isDisabled()
-        || edu.wpi.first.wpilibj.DriverStation.isTest()) return;
     double distance = frc.robot.utils.ShootingUtils.distanceMeters(
         stateMachine.drivetrain.getState().Pose,
         edu.wpi.first.wpilibj.DriverStation.getAlliance().orElse(null));

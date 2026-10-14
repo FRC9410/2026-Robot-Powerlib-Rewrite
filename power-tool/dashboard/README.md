@@ -1,0 +1,33 @@
+# 2026 robot dashboard
+
+This project-owned dashboard extends the generic `DrivePanel` with a hub timer
+in the top row and a shooter checklist below the autonomous selector. Components,
+styles and assets here survive Power Tool installs and updates.
+
+The generic field/camera views, autonomous selector, drivetrain card, mechanism
+cards, setpoints and status bar are reused. Its `renderTopCards` and `renderSidebar`
+callbacks share the existing 100 ms display clock and NetworkTables view.
+
+`Game2026Telemetry` publishes the prepared shooting state's readiness flags to
+`Shooting` in the existing `/PowerLib/Data` JSON frame. The checklist includes
+flywheel speed, hood position, alignment, valid calibrated shot, hub activity,
+shooting distance and accepted vision freshness. Overall ready requires the
+robot's mechanical readiness and a known active hub. Disabled/idle readings and
+missing, invalid, stale or disconnected feedback display idle/unknown values.
+
+`HubTimer` uses Driver Station alliance, enabled mode, match time and the FMS
+first-inactive alliance message. It follows 20 seconds of autonomous, 10 seconds
+of transition, four 25-second shifts and 30 seconds of endgame. The countdown is
+remaining time in the current phase. It is an estimate because DS match time is
+approximate. The hub timer background is blue or red for the currently active
+alliance, split blue/red when both hubs are active, and neutral when unknown.
+Missing game data during alternating shifts leaves hub status
+unknown; both hubs are active in autonomous, transition and endgame.
+
+Source: https://docs.wpilib.org/en/stable/docs/yearly-overview/2026-game-data.html
+
+From `power-tool/`, run `node dashboard/game-model-check.mjs` for readiness and
+freshness checks, `npm run build` to rebuild, or `npm run package:app` to package.
+The robot's `HubTimerTest` checks shift boundaries and missing inputs with
+`./gradlew.bat test` from the robot root. Deploy the robot telemetry changes to
+populate the new panels.

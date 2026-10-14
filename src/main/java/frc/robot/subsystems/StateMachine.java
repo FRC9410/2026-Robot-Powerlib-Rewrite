@@ -94,6 +94,8 @@ public class StateMachine extends SubsystemBase {
     return requests.containsValue(requestedState);
   }
 
+  public ShootingUtils.ShotSolution getShotSolution() { return shootingState.getShotSolution(); }
+
   public RobotState getCurrentState() {
     return currentState;
   }

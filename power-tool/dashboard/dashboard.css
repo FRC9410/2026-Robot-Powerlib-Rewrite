@@ -1,0 +1,45 @@
+.game2026-dashboard .drive-sidebar { overflow-y: auto; scrollbar-width: thin; }
+.game2026-hub { gap: 2px; }
+.game2026-hub > b { font-size: 32px; line-height: 1.05; flex-shrink: 0; }
+.game2026-hub.blue-active { border-color: #457ec7; background: #18365b; }
+.game2026-hub.red-active { border-color: #bc5964; background: #54262e; }
+.game2026-hub.both-active { border-color: #788a9d; background: linear-gradient(110deg, #18365b 50%, #54262e 50%); }
+.game2026-hub.blue-active > b { color: #91c5ff; }
+.game2026-hub.red-active > b { color: #ffadb7; }
+.game2026-hub.both-active > b { color: #edf3fb; }
+.game2026-hub > small { font-size: 10px; line-height: 1.1; flex-shrink: 0; color: #c4d2e2; white-space: nowrap; }
+.game2026-shot { border: 1px solid #303b46; border-radius: 8px; background: #141d27; padding: 12px; min-width: 0; }
+.game2026-shot-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 8px; }
+.game2026-shot h2 { font-size: 17px; margin: 0; }
+.game2026-shot-heading > span, .game2026-check > span:last-child { display: inline-flex; align-items: center; justify-content: flex-end; gap: 5px; font-size: 11px; font-weight: 600; text-align: right; }
+.game2026-shot i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.game2026-shot .good { color: #67dfae; }
+.game2026-shot .waiting { color: #facc15; }
+.game2026-shot .unknown { color: #8293a6; }
+.game2026-check { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px solid #293746; padding: 9px 0; font-size: 12px; }
+.game2026-check > span:last-child { max-width: 58%; overflow-wrap: anywhere; }
+.game2026-shot-status { margin: 8px 0 0; color: #a9b6c5; font-size: 11px; line-height: 1.4; }
+@container (max-height: 620px) {
+  .game2026-hub { padding: 6px 12px; }
+  .game2026-hub > b { font-size: 26px; }
+  .game2026-shot { padding: 9px 11px; }
+  .game2026-check { padding: 5px 0; font-size: 11px; }
+  .game2026-shot h2 { font-size: 15px; line-height: 1.2; }
+  .game2026-shot-heading { padding-bottom: 6px; }
+  .game2026-shot-status { font-size: 10px; line-height: 1.25; margin-top: 5px; }
+}
+@container (max-height: 520px) {
+  .game2026-hub { padding: 4px 10px; }
+  .game2026-hub > b { font-size: 24px; }
+  .game2026-hub > small { font-size: 9px; }
+  .game2026-shot { padding: 7px 9px; }
+  .game2026-check { padding: 4px 0; font-size: 10px; }
+  .game2026-shot-heading > span, .game2026-check > span:last-child { font-size: 10px; }
+  .game2026-shot-status { margin-top: 5px; font-size: 10px; }
+}
+@media (max-width: 900px) {
+  .game2026-dashboard .drive-main { grid-template-columns: 76px minmax(0, 1fr) 225px; gap: 8px; }
+  .game2026-dashboard .drive-top-metric, .game2026-dashboard .drive-robot-mode { padding-left: 9px; padding-right: 9px; }
+  .game2026-dashboard .drive-state-row > span { font-size: 8px; }
+  .game2026-dashboard .drive-tools { flex-basis: 70px; }
+}

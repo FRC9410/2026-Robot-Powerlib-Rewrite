@@ -28,6 +28,12 @@ public class Vision extends SubsystemBase implements AutoCloseable {
         Constants.Vision.LIMELIGHT_NAMES);
   }
 
+  public boolean hasFreshMeasurement() {
+    return lastMeasurement != null && HealthChecks.isFresh(
+        Timer.getFPGATimestamp() - lastMeasurement.timestampSeconds(),
+        Constants.Vision.CONFIG.maxMeasurementAgeSeconds());
+  }
+
   /** Seed the pose from the last accepted frame, only while disabled and still fresh. */
   public boolean seedFromFreshVision() {
     if (!DriverStation.isDisabled() || lastMeasurement == null) return false;
