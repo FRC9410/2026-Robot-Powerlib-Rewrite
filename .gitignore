@@ -194,3 +194,7 @@ power-tool/.vite/
 **/.powerlib-source-root
 *.powerlib.bak
 *.powerlib.bak.*
+
+# Locally packaged Power Tool apps
+/PowerTool-local/
+/PowerTool/
