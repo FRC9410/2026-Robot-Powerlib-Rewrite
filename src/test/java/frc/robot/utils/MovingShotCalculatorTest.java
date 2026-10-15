@@ -85,6 +85,12 @@ class MovingShotCalculatorTest {
         Alliance.Blue, 29.5, 0.05, true, true, 0, 0);
     assertFalse(tooFast.valid());
     assertEquals("Above SOTM speed limit", tooFast.status());
+    // Blocked shots never feed but keep the static setpoints so the flywheel stays spun up.
+    var stationary = ShootingUtils.calculate(location, Alliance.Blue, 29.5, 0.05, true);
+    assertTrue(tooFast.hasSetpoints());
+    assertEquals(stationary.shooterRps(), tooFast.shooterRps(), 1e-9);
+    assertEquals(stationary.hoodRotations(), tooFast.hoodRotations(), 1e-9);
+    assertEquals(0, tooFast.feederRps());
     var outsideLeadTable = calculator.calculate(location, new ChassisSpeeds(-2, 0, 0),
         Alliance.Blue, 29.5, 0.05, true, true, 0, 0);
     assertFalse(outsideLeadTable.valid());

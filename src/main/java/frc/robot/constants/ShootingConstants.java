@@ -29,6 +29,9 @@ public class ShootingConstants {
   public static volatile double SOTM_RELEASE_DELAY_SECONDS = 0.02;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double SOTM_DRAG_COEFFICIENT = 0.24;
+  // Once feeding, keep feeding while flywheel, hood and heading stay within this multiple of their start tolerances.
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double FEED_HOLD_TOLERANCE_SCALE = 1.5;
   public static final double SOTM_MIN_SPEED_MPS = 0.1;
   public static final double SOTM_MAX_TILT_DEGREES = 5.0;
   public static final double LAUNCHER_OFFSET_X_METERS = -0.20;
