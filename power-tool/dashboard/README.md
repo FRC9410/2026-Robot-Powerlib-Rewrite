@@ -11,7 +11,11 @@ callbacks share the existing 100 ms display clock and NetworkTables view.
 `Game2026Telemetry` publishes the prepared shooting state's readiness flags to
 `Shooting` in the existing `/PowerLib/Data` JSON frame. The checklist includes
 flywheel speed, hood position, alignment, valid calibrated shot, hub activity,
-shooting distance and accepted vision freshness. Overall ready requires the
+shooting distance and accepted vision freshness. Shoot-on-the-move rows show the
+`SOTM_ENABLED` kill switch (ON, ON · moving, or OFF), solver confidence, the lead
+angle with its flight time, and the compensated aim distance while moving. The
+kill switch stays visible while idle; per-shot values appear only while a shot is
+requested. Overall ready requires the
 robot's mechanical readiness and a known active hub. Disabled/idle readings and
 missing, invalid, stale or disconnected feedback display idle/unknown values.
 

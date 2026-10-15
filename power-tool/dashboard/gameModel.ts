@@ -26,6 +26,13 @@ export function gameReadings({ topics, drive, now }: DrivePanelData) {
     range: requested ? bool("Shooting", "CalibratedRange") : undefined,
     headingError: requested ? number("Shooting", "HeadingErrorDegrees") : undefined,
     distance: number("Shooting", "Distance"),
+    sotmEnabled: bool("Shooting", "SOTMEnabled"),
+    moving: requested ? bool("Shooting", "MotionCompensated") : undefined,
+    sotmValid: requested ? bool("Shooting", "SOTMValid") : undefined,
+    confidence: requested ? number("Shooting", "SOTMConfidence") : undefined,
+    lead: requested ? number("Shooting", "LeadDegrees") : undefined,
+    flightTime: requested ? number("Shooting", "TimeOfFlightSeconds") : undefined,
+    aimDistance: requested ? number("Shooting", "EffectiveDistanceMeters") : undefined,
     vision: bool("Shooting", "VisionAccepted"),
     status: text("Shooting", "Status")
   };

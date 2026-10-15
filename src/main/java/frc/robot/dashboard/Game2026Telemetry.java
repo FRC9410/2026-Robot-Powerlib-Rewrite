@@ -1,9 +1,11 @@
 package frc.robot.dashboard;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.powerlib.PowerRobotContainer;
 import frc.robot.subsystems.StateMachine;
 import frc.robot.subsystems.StateMachine.RobotState;
+import frc.robot.utils.ShootingUtils;
 
 /** Dashboard-only season data; control remains in the existing state handlers. */
 public final class Game2026Telemetry {
@@ -21,8 +23,13 @@ public final class Game2026Telemetry {
     setShot("FeedReady", requested && shot.canFeed());
     setShot("HeadingErrorDegrees", requested ? shot.headingErrorDegrees() : Double.NaN);
     setShot("VisionAccepted", robot.vision.hasFreshMeasurement());
+    setShot("SOTMEnabled", ShootingUtils.sotmEnabled());
     setShot("SOTMValid", requested && shot.solverValid());
     setShot("MotionCompensated", requested && shot.motionCompensated());
+    // How far the moving-shot heading leads a plain aim at the hub.
+    setShot("LeadDegrees", requested && shot.motionCompensated() ? MathUtil.inputModulus(shot.headingDegrees()
+        - ShootingUtils.headingDegrees(robot.drivetrain.getState().Pose, DriverStation.getAlliance().orElse(null)),
+        -180, 180) : Double.NaN);
     setShot("EffectiveDistanceMeters", requested ? shot.effectiveDistanceMeters() : Double.NaN);
     setShot("TimeOfFlightSeconds", requested ? shot.timeOfFlightSeconds() : Double.NaN);
     setShot("HeadingFeedforwardRadiansPerSecond", requested ? shot.headingFeedforwardRadiansPerSecond() : Double.NaN);

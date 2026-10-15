@@ -50,7 +50,17 @@ function shooterChecklist(data: DrivePanelData) {
     <Check label={`Aligned${game.headingError !== undefined ? ` · ${metric(game.headingError)}°` : ""}`} ok={game.aligned} />
     <Check label="Calibrated range" ok={game.range} />
     <Check label="Our hub active" ok={game.hubActive} />
-    <div className="game2026-check"><span>Target</span><span>{game.distance === undefined ? "—" : `HUB · ${metric(game.distance, 2)} m`}</span></div>
+    <div className="game2026-check"><span>Shoot on move</span>
+      <span className={game.sotmEnabled === undefined ? "unknown" : game.sotmEnabled ? "good" : "waiting"}>
+        <i aria-hidden="true" />{game.sotmEnabled === undefined ? "—" : !game.sotmEnabled ? "OFF" : game.moving ? "ON · moving" : "ON"}
+      </span>
+    </div>
+    <div className="game2026-check"><span>SOTM confidence</span>
+      <span>{game.sotmValid && game.confidence !== undefined ? `${Math.round(game.confidence)}%` : "—"}</span></div>
+    <div className="game2026-check"><span>Lead</span>
+      <span>{game.lead === undefined ? "—" : `${metric(game.lead)}°${game.flightTime !== undefined ? ` · ${metric(game.flightTime, 2)} s flight` : ""}`}</span></div>
+    <div className="game2026-check"><span>Target</span><span>{game.distance === undefined ? "—"
+      : `HUB · ${metric(game.distance, 2)} m${game.moving && game.aimDistance !== undefined ? ` · aim ${metric(game.aimDistance, 2)} m` : ""}`}</span></div>
     <div className="game2026-check"><span>Vision</span><span>{game.vision === undefined ? "—" : game.vision ? "Fresh accepted frame" : "No accepted frame"}</span></div>
     <p className="game2026-shot-status" role="status">{status}</p>
   </section>;
