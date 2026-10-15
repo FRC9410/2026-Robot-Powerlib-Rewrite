@@ -31,6 +31,11 @@ public final class ShootingUtils {
       Double.NaN, Double.NaN, 0, 0, 0, false, false, false, false,
       false, false, Double.NaN, 0, 0, 0, "No shot solution");
 
+  /** SOTM_ENABLED kill switch; anything but 1 restores the original stationary shot. */
+  public static boolean sotmEnabled() {
+    return Constants.Shooting.SOTM_ENABLED == 1;
+  }
+
   public static boolean inScoringZone(Pose2d pose, Alliance alliance) {
     if (!HealthChecks.finitePose(pose) || alliance == null || pose.getY() < 0
         || pose.getY() > Constants.Shooting.FIELD_WIDTH) return false;

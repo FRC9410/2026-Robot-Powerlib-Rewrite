@@ -100,6 +100,35 @@ class StateMachineTest {
     command.end(true);
   }
 
+  @Test void killSwitchHoldsTranslationWhileAimingTheStationaryShot() throws Exception {
+    var pad = new edu.wpi.first.wpilibj2.command.button.CommandXboxController(Constants.OI.DRIVER_CONTROLLER_PORT);
+    var command = new frc.robot.commands.SwerveDriveCommand(robot.drivetrain, pad,
+        () -> RobotState.SHOOTING, robot::getShotSolution);
+    controller.setLeftX(-1);
+    controller.setLeftY(-1);
+    controller.notifyNewData();
+    DriverStationSim.notifyNewData();
+    // Ten degrees off target so the stopped robot keeps aiming instead of parking its wheels.
+    robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(170)));
+    int previous = Constants.Shooting.SOTM_ENABLED;
+    try {
+      var requestField = command.getClass().getDeclaredField("aimingRequest");
+      requestField.setAccessible(true);
+      var request = (com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric) requestField.get(command);
+      Constants.Shooting.SOTM_ENABLED = 1;
+      command.execute();
+      assertEquals(Constants.RobotContainer.SHOOTING_MAX_TRANSLATION_SPEED_MPS,
+          Math.hypot(request.VelocityX, request.VelocityY), 1e-9);
+      Constants.Shooting.SOTM_ENABLED = 0;
+      command.execute();
+      assertEquals(0, request.VelocityX);
+      assertEquals(0, request.VelocityY);
+    } finally {
+      Constants.Shooting.SOTM_ENABLED = previous;
+      command.end(true);
+    }
+  }
+
   @Test void intakingAndEjectingHaveSeparateOutputsAndReturnToStandby() {
     robot.requestState(RobotState.INTAKING, requestOwner);
     robot.execute();

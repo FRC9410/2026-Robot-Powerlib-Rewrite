@@ -75,7 +75,7 @@ public final class MovingShotCalculator {
     var fieldVelocity = velocityValid
         ? filter(ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, pose.getRotation())) : null;
     var base = ShootingUtils.calculate(pose, alliance, actualRps, actualHood, feedbackHealthy);
-    if (!base.valid()) { solver.resetWarmStart(); return base; }
+    if (!base.valid() || !ShootingUtils.sotmEnabled()) { solver.resetWarmStart(); return base; }
     if (fieldVelocity == null || !Double.isFinite(pitchDegrees) || !Double.isFinite(rollDegrees)) {
       solver.resetWarmStart(); return ShootingUtils.blocked(base, "Invalid motion or tilt feedback");
     }

@@ -75,7 +75,11 @@ public final class SwerveDriveCommand extends Command {
     double rotatedX = vx * Math.cos(skew) - vy * Math.sin(skew);
     vy = vx * Math.sin(skew) + vy * Math.cos(skew);
     vx = rotatedX;
-    if (aiming) {
+    if (aiming && !ShootingUtils.sotmEnabled()) {
+      // Kill switch off: original stationary shot, so hold translation while aiming.
+      vx = 0;
+      vy = 0;
+    } else if (aiming) {
       double cap = Math.min(Constants.RobotContainer.SHOOTING_MAX_TRANSLATION_SPEED_MPS,
           Constants.Shooting.SOTM_MAX_DRIVETRAIN_SPEED_MPS);
       if (!Double.isFinite(cap) || cap < 0) { stop(); return; }
