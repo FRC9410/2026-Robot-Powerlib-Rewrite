@@ -23,7 +23,7 @@ public class RobotContainer implements PowerRobotContainer {
   public RobotContainer() {
     configureBindings();
     stateMachine.drivetrain.setDefaultCommand(new SwerveDriveCommand(
-        stateMachine.drivetrain, driverController, stateMachine::getCurrentState));
+        stateMachine.drivetrain, driverController, stateMachine::getCurrentState, stateMachine::getShotSolution));
     configureAutos();
   }
 

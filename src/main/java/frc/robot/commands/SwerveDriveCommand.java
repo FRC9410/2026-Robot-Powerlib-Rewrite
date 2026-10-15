@@ -13,6 +13,8 @@ import frc.robot.subsystems.StateMachine.RobotState;
 import frc.robot.subsystems.Swerve;
 import frc.robot.utils.FieldUtils;
 import frc.robot.utils.ShootingUtils;
+import frc.robot.utils.AimingDriveController;
+import edu.wpi.first.math.geometry.Rotation2d;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -21,14 +23,28 @@ public final class SwerveDriveCommand extends Command {
   private final Swerve drivetrain;
   private final CommandXboxController controller;
   private final Supplier<RobotState> currentStateSupplier;
+  private final Supplier<ShootingUtils.ShotSolution> shotSupplier;
   private final SwerveRequest.FieldCentric request = new SwerveRequest.FieldCentric()
       .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
+  private final SwerveRequest.FieldCentric aimingRequest = new SwerveRequest.FieldCentric()
+      .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
+      .withDriveRequestType(com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.Velocity)
+      .withDeadband(0.02).withRotationalDeadband(0);
+  private final SwerveRequest.PointWheelsAt parallelWheels = new SwerveRequest.PointWheelsAt()
+      .withModuleDirection(Rotation2d.kZero);
+  private final AimingDriveController aimingDrive = new AimingDriveController();
 
   public SwerveDriveCommand(Swerve drivetrain, CommandXboxController controller,
       Supplier<RobotState> currentStateSupplier) {
+    this(drivetrain, controller, currentStateSupplier, () -> ShootingUtils.UNAVAILABLE);
+  }
+
+  public SwerveDriveCommand(Swerve drivetrain, CommandXboxController controller,
+      Supplier<RobotState> currentStateSupplier, Supplier<ShootingUtils.ShotSolution> shotSupplier) {
     this.drivetrain = drivetrain;
     this.controller = controller;
     this.currentStateSupplier = Objects.requireNonNull(currentStateSupplier);
+    this.shotSupplier = Objects.requireNonNull(shotSupplier);
     addRequirements(drivetrain);
   }
 
@@ -58,16 +74,36 @@ public final class SwerveDriveCommand extends Command {
     double rotatedX = vx * Math.cos(skew) - vy * Math.sin(skew);
     vy = vx * Math.sin(skew) + vy * Math.cos(skew);
     vx = rotatedX;
+    if (aiming) {
+      double cap = Math.min(Constants.RobotContainer.SHOOTING_MAX_TRANSLATION_SPEED_MPS,
+          Constants.Shooting.SOTM_MAX_DRIVETRAIN_SPEED_MPS);
+      if (!Double.isFinite(cap) || cap < 0) { stop(); return; }
+      var limited = AimingDriveController.limitTranslation(vx, vy, cap);
+      vx = limited.getX();
+      vy = limited.getY();
+    }
     Double heading = null;
     if (aiming && ShootingUtils.inScoringZone(pose, alliance.get())) {
-      heading = ShootingUtils.headingDegrees(pose, alliance.get());
+      var shot = shotSupplier.get();
+      boolean solved = shot != null && shot.solverValid() && shot.valid();
+      heading = solved ? shot.headingDegrees() : ShootingUtils.headingDegrees(pose, alliance.get());
       double error = MathUtil.inputModulus(heading - pose.getRotation().getDegrees(), -180, 180);
       double kp = PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kP", Constants.Swerve.HEADING_KP);
       if (!Double.isFinite(kp) || kp <= 0) { stop(); return; }
-      omega = MathUtil.clamp(Math.toRadians(error) * kp,
+      omega = MathUtil.clamp(Math.toRadians(error) * kp
+          + (solved ? shot.headingFeedforwardRadiansPerSecond() : 0),
           -drivetrain.MAX_DRIVE_TO_POINT_ANGULAR_RATE, drivetrain.MAX_DRIVE_TO_POINT_ANGULAR_RATE);
+      if (aimingDrive.updateParking(vx, vy, drivetrain.getState().Speeds, error)) {
+        PowerRobotContainer.setSubsystemData("Drive", "AimWheelsParked", true);
+        drivetrain.applyRequest(parallelWheels, heading);
+        return;
+      }
+    } else {
+      aimingDrive.reset();
     }
-    drivetrain.applyRequest(request.withVelocityX(vx).withVelocityY(vy).withRotationalRate(omega), heading);
+    PowerRobotContainer.setSubsystemData("Drive", "AimWheelsParked", false);
+    drivetrain.applyRequest((aiming ? aimingRequest : request)
+        .withVelocityX(vx).withVelocityY(vy).withRotationalRate(omega), heading);
   }
 
   private double shaped(double value) {
@@ -75,7 +111,11 @@ public final class SwerveDriveCommand extends Command {
     return adjusted * adjusted * adjusted;
   }
 
-  private void stop() { drivetrain.applyRequest(request.withVelocityX(0).withVelocityY(0).withRotationalRate(0)); }
+  private void stop() {
+    aimingDrive.reset();
+    PowerRobotContainer.setSubsystemData("Drive", "AimWheelsParked", false);
+    drivetrain.applyRequest(request.withVelocityX(0).withVelocityY(0).withRotationalRate(0));
+  }
   @Override public void end(boolean interrupted) { stop(); }
   @Override public boolean isFinished() { return false; }
 }

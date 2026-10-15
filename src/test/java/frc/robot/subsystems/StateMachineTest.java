@@ -41,6 +41,9 @@ class StateMachineTest {
     controller.setBButton(false);
     controller.setBackButton(false);
     controller.setStartButton(false);
+    controller.setLeftX(0);
+    controller.setLeftY(0);
+    controller.setRightX(0);
     DriverStationSim.notifyNewData();
     // Poll released controls before resetting so each test starts with fresh trigger edges.
     CommandScheduler.getInstance().run();
@@ -62,6 +65,35 @@ class StateMachineTest {
     DriverStationSim.notifyNewData();
     CommandScheduler.getInstance().run();
     CommandScheduler.getInstance().run();
+  }
+
+  @Test void driveUsesMovingShotHeadingAndFeedforwardWhileLimitingDiagonalTranslation() throws Exception {
+    var pad = new edu.wpi.first.wpilibj2.command.button.CommandXboxController(Constants.OI.DRIVER_CONTROLLER_PORT);
+    var shot = new frc.robot.utils.MovingShotCalculator().calculate(robot.drivetrain.getState().Pose,
+        new edu.wpi.first.math.kinematics.ChassisSpeeds(0, -0.5, 0),
+        edu.wpi.first.wpilibj.DriverStation.Alliance.Blue, 29.5, 0.05, true, true, 0, 0);
+    assertTrue(shot.valid(), shot.status());
+    var command = new frc.robot.commands.SwerveDriveCommand(robot.drivetrain, pad,
+        () -> RobotState.SHOOTING, () -> shot);
+    controller.setLeftX(-1);
+    controller.setLeftY(-1);
+    controller.notifyNewData();
+    DriverStationSim.notifyNewData();
+    double poseHeading = robot.drivetrain.getState().Pose.getRotation().getDegrees();
+    command.execute();
+    var requestField = command.getClass().getDeclaredField("aimingRequest");
+    requestField.setAccessible(true);
+    var request = (com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric) requestField.get(command);
+    assertEquals(shot.headingDegrees(), robot.drivetrain.getHeadingSetpointDegrees(), 1e-9);
+    assertEquals(Constants.RobotContainer.SHOOTING_MAX_TRANSLATION_SPEED_MPS,
+        Math.hypot(request.VelocityX, request.VelocityY), 1e-9);
+    double error = edu.wpi.first.math.MathUtil.inputModulus(shot.headingDegrees() - poseHeading, -180, 180);
+    double kp = frc.powerlib.PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kP", Constants.Swerve.HEADING_KP);
+    assertEquals(Math.toRadians(error) * kp + shot.headingFeedforwardRadiansPerSecond(), request.RotationalRate, 0.001);
+    assertEquals(0.02, request.Deadband);
+    assertEquals(0, request.RotationalDeadband);
+    assertEquals(com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.Velocity, request.DriveRequestType);
+    command.end(true);
   }
 
   @Test void intakingAndEjectingHaveSeparateOutputsAndReturnToStandby() {

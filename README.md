@@ -1,5 +1,50 @@
 # 2026-Robot-Powerlib-Rewrite
 
+## Shoot on the move (`sotm-testing`)
+
+Holding shoot now keeps driver translation available at 40% of normal speed, capped
+at 1.5 m/s including diagonal input. The runtime firecontrol classes `ShotCalculator`,
+`ShotLUT` and `ShotParameters` were adapted from
+[2026-ROBOT-SIM-TESTING](https://github.com/aydenterranella/2026-ROBOT-SIM-TESTING/tree/e2bfadbd89e17429873ec029ce2a8b123377f4ec/src/main/java/frc/firecontrol).
+Their FRC Team 5962 perSEVERE MIT attribution is retained. No MapleSim, projectile
+simulator, LUT generator, or simulation-only dependencies were added.
+
+The solver converts measured robot-relative velocity into field coordinates, predicts
+the launcher through a 20 ms release delay, includes rotational velocity at the
+rear-mounted launcher, and solves a drag-adjusted virtual target using Newton's
+method. Driving and feeding use the same compensated heading, with angular-rate
+feedforward. Current RPS/hood tables and offsets remain intact: robot-center calibration
+distances are shifted by the 0.20 m rear launcher offset inside the lookup table so
+stationary shots retain their original demands. Phoenix already supplies a current
+pose, so no additional vision latency is applied.
+
+The imported flight-time table is **provisional**: the reference used different RPS
+and hood settings. Measure flight times for this robot's retained calibration before
+relying on moving-shot accuracy. Verify the 0.20 m launcher offset and release delay
+on hardware too. No new on-robot shot calibration is claimed by the software tests.
+
+Both actual center distance and compensated calibration distance must remain within
+1.95-4.9 m in the scoring zone. Feeding still requires the existing 5-degree heading,
+hood, flywheel and feedback checks. Excessive tilt (over 5 degrees), speed (over 3 m/s),
+invalid input, uncalibrated lead distance or solver nonconvergence prevents a moving
+shot. A stationary fallback is allowed only when nearly stopped. Solver confidence
+is diagnostic; feed permission uses the explicit validity and readiness checks.
+
+Once translation and rotation settle within 1 degree of aim, wheels park parallel
+instead of retaining the turn-in-place stance. Driver translation or drift beyond
+2 degrees resumes normal aiming. This applies to teleop and the autonomous final aim.
+The turn-in-place wheel angles remain necessary while the robot is rotating.
+
+Power Tool exposes `Shooting/EffectiveDistanceMeters`, `TimeOfFlightSeconds`,
+`MotionCompensated`, `SOTMValid`, `SOTMConfidence`, `SolutionStatus` and
+`Drive/AimWheelsParked`. Tunable constants include
+`RobotContainer/Custom/SHOOTING_MAX_TRANSLATION_SPEED_MPS`,
+`DRIVE_WHILE_SHOOTING_COEFFICIENT`, and Shooting's
+`SOTM_MAX_DRIVETRAIN_SPEED_MPS`, `SOTM_RELEASE_DELAY_SECONDS`, and
+`SOTM_DRAG_COEFFICIENT`. Source constants and `powerlib-constants.json` are kept in sync.
+Tests cover velocity lead, release latency, rotating-launcher velocity, solver failures,
+retained stationary calibrations, compensated readiness, drive speed caps and parking.
+
 ## PowerLib installation
 
 This branch starts from the fresh `main` robot project at `c37a98f33`.

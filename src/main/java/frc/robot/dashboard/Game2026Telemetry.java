@@ -21,7 +21,15 @@ public final class Game2026Telemetry {
     setShot("FeedReady", requested && shot.canFeed());
     setShot("HeadingErrorDegrees", requested ? shot.headingErrorDegrees() : Double.NaN);
     setShot("VisionAccepted", robot.vision.hasFreshMeasurement());
-    setShot("Status", !requested ? "No shot requested" : !shot.valid() ? "No valid calibrated shot"
+    setShot("SOTMValid", requested && shot.solverValid());
+    setShot("MotionCompensated", requested && shot.motionCompensated());
+    setShot("EffectiveDistanceMeters", requested ? shot.effectiveDistanceMeters() : Double.NaN);
+    setShot("TimeOfFlightSeconds", requested ? shot.timeOfFlightSeconds() : Double.NaN);
+    setShot("HeadingFeedforwardRadiansPerSecond", requested ? shot.headingFeedforwardRadiansPerSecond() : Double.NaN);
+    setShot("SOTMConfidence", requested ? shot.solverConfidence() : Double.NaN);
+    setShot("FlightTimeCalibration", "Provisional reference estimates");
+    setShot("SolutionStatus", requested ? shot.status() : "No shot requested");
+    setShot("Status", !requested ? "No shot requested" : !shot.valid() ? shot.status()
         : !shot.feedbackHealthy() ? "Waiting for fresh control feedback"
         : !shot.velocityReady() ? "Waiting for flywheel"
         : !shot.hoodReady() ? "Waiting for hood"

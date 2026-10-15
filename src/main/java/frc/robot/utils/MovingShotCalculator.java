@@ -1,0 +1,108 @@
+package frc.robot.utils;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import frc.firecontrol.ShotCalculator;
+import frc.firecontrol.ShotLUT;
+import frc.firecontrol.ShotParameters;
+import frc.powerlib.math.LinearInterpolator;
+import frc.robot.Constants;
+import frc.robot.utils.ShootingUtils.ShotSolution;
+
+/** Adapts firecontrol to our center-distance calibrations and rear-mounted shooter. */
+public final class MovingShotCalculator {
+  private final ShotCalculator.Config config = new ShotCalculator.Config();
+  private final ShotCalculator solver = new ShotCalculator(config);
+  private final double calibrationOffset;
+
+  public MovingShotCalculator() {
+    config.launcherOffsetX = Constants.Shooting.LAUNCHER_OFFSET_X_METERS;
+    config.launcherOffsetY = Constants.Shooting.LAUNCHER_OFFSET_Y_METERS;
+    config.shooterAngleOffsetRad = Constants.Shooting.SHOOTER_ANGLE_OFFSET_RADIANS;
+    calibrationOffset = config.launcherOffsetX * Math.cos(config.shooterAngleOffsetRad)
+        + config.launcherOffsetY * Math.sin(config.shooterAngleOffsetRad);
+    config.minScoringDistance = Constants.Shooting.MIN_SHOT_DISTANCE - calibrationOffset;
+    config.maxScoringDistance = Constants.Shooting.MAX_SHOT_DISTANCE - calibrationOffset;
+    config.minSOTMSpeed = Constants.Shooting.SOTM_MIN_SPEED_MPS;
+    config.maxTiltDeg = Constants.Shooting.SOTM_MAX_TILT_DEGREES;
+    // Phoenix pose is already current; avoid compensating the vision latency twice.
+    config.phaseDelayMs = 0;
+    var tof = new LinearInterpolator(Constants.Shooting.SHOOTER_TOF);
+    var lut = new ShotLUT();
+    for (double[] row : Constants.Shooting.SHOOTER_SPEEDS) {
+      // The existing tables use robot-center distance. Shift keys to launcher distance
+      // so an aligned stationary shot retains exactly the same speed and hood demand.
+      lut.put(row[0] - calibrationOffset, new ShotParameters(row[1],
+          Constants.Shooting.HOOD_ANGLE_INTERPOLATOR.getInterpolatedValue(row[0]) * 360,
+          tof.getInterpolatedValue(row[0])));
+    }
+    solver.loadShotLUT(lut);
+  }
+
+  public void reset() { solver.resetWarmStart(); }
+
+  public ShotSolution calculate(Pose2d pose, ChassisSpeeds robotVelocity, Alliance alliance,
+      double actualRps, double actualHood, boolean feedbackHealthy, boolean visionFresh,
+      double pitchDegrees, double rollDegrees) {
+    var base = ShootingUtils.calculate(pose, alliance, actualRps, actualHood, feedbackHealthy);
+    if (!base.valid()) { reset(); return base; }
+    if (robotVelocity == null || !Double.isFinite(robotVelocity.vxMetersPerSecond)
+        || !Double.isFinite(robotVelocity.vyMetersPerSecond)
+        || !Double.isFinite(robotVelocity.omegaRadiansPerSecond)
+        || !Double.isFinite(pitchDegrees) || !Double.isFinite(rollDegrees)) {
+      reset(); return ShootingUtils.blocked(base, "Invalid motion or tilt feedback");
+    }
+    double maxSpeed = Constants.Shooting.SOTM_MAX_DRIVETRAIN_SPEED_MPS;
+    double releaseDelay = Constants.Shooting.SOTM_RELEASE_DELAY_SECONDS;
+    double drag = Constants.Shooting.SOTM_DRAG_COEFFICIENT;
+    if (!Double.isFinite(maxSpeed) || maxSpeed <= config.minSOTMSpeed
+        || !Double.isFinite(releaseDelay) || releaseDelay < 0 || releaseDelay > 0.5
+        || !Double.isFinite(drag) || drag < 0) {
+      reset(); return ShootingUtils.blocked(base, "Invalid SOTM settings");
+    }
+    if (config.maxSOTMSpeed != maxSpeed || config.mechLatencyMs != releaseDelay * 1000
+        || config.sotmDragCoeff != drag) reset();
+    config.maxSOTMSpeed = maxSpeed;
+    config.mechLatencyMs = releaseDelay * 1000;
+    config.sotmDragCoeff = drag;
+    double speed = Math.hypot(robotVelocity.vxMetersPerSecond, robotVelocity.vyMetersPerSecond);
+    if (speed > maxSpeed) {
+      reset(); return ShootingUtils.blocked(base, "Above SOTM speed limit");
+    }
+    if (Math.abs(pitchDegrees) > config.maxTiltDeg || Math.abs(rollDegrees) > config.maxTiltDeg) {
+      reset(); return ShootingUtils.blocked(base, "Robot tilt exceeds shooting limit");
+    }
+    var fieldVelocity = ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, pose.getRotation());
+    var target = alliance == Alliance.Red ? Constants.Shooting.RED_HUB : Constants.Shooting.BLUE_HUB;
+    var result = solver.calculate(new ShotCalculator.ShotInputs(pose, fieldVelocity, robotVelocity,
+        target, new Translation2d(), visionFresh ? 1 : 0.5, pitchDegrees, rollDegrees));
+    if (!result.isValid()) {
+      reset();
+      var offset = new Translation2d(config.launcherOffsetX, config.launcherOffsetY).rotateBy(pose.getRotation());
+      double launcherSpeed = Math.hypot(
+          fieldVelocity.vxMetersPerSecond - robotVelocity.omegaRadiansPerSecond * offset.getY(),
+          fieldVelocity.vyMetersPerSecond + robotVelocity.omegaRadiansPerSecond * offset.getX());
+      boolean nearlyStopped = speed < config.minSOTMSpeed
+          && launcherSpeed < config.minSOTMSpeed;
+      // Moving without a valid lead solution must never fall back to feeding a static shot.
+      return nearlyStopped ? base : ShootingUtils.blocked(base, "No calibrated converged moving shot");
+    }
+    double heading = result.driveAngle().getDegrees();
+    double error = MathUtil.inputModulus(heading - pose.getRotation().getDegrees(), -180, 180);
+    double rps = result.shooterRps() + Constants.StateMachine.SHOOTER_EXTRA_RPS;
+    double hood = MathUtil.clamp(solver.getHoodAngle(result.solvedDistanceM()) / 360
+        + Constants.StateMachine.HOOD_SHOT_OFFSET_ROTATIONS,
+        Constants.ShooterHood.SHOOTER_HOOD_MIN, Constants.ShooterHood.SHOOTER_HOOD_MAX);
+    return new ShotSolution(true, base.distanceMeters(), heading, error, rps, hood,
+        Constants.StateMachine.FEEDER_SHOOTER_RATIO * rps,
+        Double.isFinite(actualRps) && Math.abs(actualRps - rps) <= Constants.Shooting.SHOOTER_TOLERANCE_RPS,
+        Double.isFinite(actualHood) && Math.abs(actualHood - hood) <= Constants.StateMachine.HOOD_TOLERANCE_ROTATIONS,
+        Math.abs(error) <= Constants.Shooting.HEADING_TOLERANCE_DEGREES, feedbackHealthy,
+        true, result.iterationsUsed() > 0, result.solvedDistanceM() + calibrationOffset,
+        result.timeOfFlightSec(), result.driveAngularVelocityRadPerSec(), result.confidence(),
+        result.iterationsUsed() > 0 ? "Compensated moving shot" : "Stationary shot");
+  }
+}

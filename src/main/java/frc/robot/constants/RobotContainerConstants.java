@@ -13,7 +13,9 @@ public class RobotContainerConstants {
   @frc.powerlib.tuning.TunableConstant
   public static volatile double AUTO_TRANSLATION_KD = 0.2;
   @frc.powerlib.tuning.TunableConstant
-  public static volatile double DRIVE_WHILE_SHOOTING_COEFFICIENT = 0.0;
+  public static volatile double DRIVE_WHILE_SHOOTING_COEFFICIENT = 0.4;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double SHOOTING_MAX_TRANSLATION_SPEED_MPS = 1.5;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double DRIVE_WHILE_INTAKING_COEFFICIENT = 0.4;
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE

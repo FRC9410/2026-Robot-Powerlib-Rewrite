@@ -90,22 +90,37 @@ public final class RobotAutos {
   }
 
   private static Command aimAtHub(StateMachine robot, Alliance alliance) {
+    var aimingDrive = new frc.robot.utils.AimingDriveController();
+    var parallelWheels = new SwerveRequest.PointWheelsAt().withModuleDirection(Rotation2d.kZero);
     return Commands.run(() -> {
       var drive = robot.drivetrain;
       if (!HealthChecks.driveHealthy(drive, Constants.Shooting.MAX_SIGNAL_AGE_SECONDS)) {
         drive.applyRequest(new SwerveRequest.SwerveDriveBrake());
         return;
       }
-      double heading = ShootingUtils.headingDegrees(drive.getState().Pose, alliance);
+      var shot = robot.getShotSolution();
+      double heading = shot.valid() && shot.solverValid() ? shot.headingDegrees()
+          : ShootingUtils.headingDegrees(drive.getState().Pose, alliance);
+      double error = Rotation2d.fromDegrees(heading).minus(drive.getState().Pose.getRotation()).getDegrees();
+      if (aimingDrive.updateParking(0, 0, drive.getState().Speeds, error)) {
+        drive.applyRequest(parallelWheels, heading);
+        return;
+      }
       drive.applyRequest(drive.DRIVE_AT_ANGLE.withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
+          .withRotationalDeadband(0)
           .withVelocityX(0).withVelocityY(0).withTargetDirection(Rotation2d.fromDegrees(heading))
+          .withTargetRateFeedforward(shot.valid() && shot.solverValid()
+              ? shot.headingFeedforwardRadiansPerSecond() : 0)
           .withMaxAbsRotationalRate(drive.MAX_DRIVE_TO_POINT_ANGULAR_RATE), heading);
-    }, robot.drivetrain);
+    }, robot.drivetrain).beforeStarting(aimingDrive::reset);
   }
 
   private static boolean aligned(StateMachine robot, Alliance alliance, double tolerance) {
     var pose = robot.drivetrain.getState().Pose;
-    return HealthChecks.finitePose(pose) && Math.abs(Rotation2d.fromDegrees(ShootingUtils.headingDegrees(pose, alliance))
+    var shot = robot.getShotSolution();
+    double heading = shot.valid() && shot.solverValid() ? shot.headingDegrees()
+        : ShootingUtils.headingDegrees(pose, alliance);
+    return HealthChecks.finitePose(pose) && Math.abs(Rotation2d.fromDegrees(heading)
         .minus(pose.getRotation()).getDegrees()) < tolerance;
   }
 

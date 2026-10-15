@@ -24,7 +24,21 @@ public class ShootingConstants {
 
   // POWERLIB CUSTOM CONSTANTS START - DO NOT DELETE
   @frc.powerlib.tuning.TunableConstant
-  public static volatile double SHOOT_MAX_DRIVETRAIN_SPEED_MPS = 0.5;
+  public static volatile double SOTM_MAX_DRIVETRAIN_SPEED_MPS = 3.0;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double SOTM_RELEASE_DELAY_SECONDS = 0.02;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double SOTM_DRAG_COEFFICIENT = 0.24;
+  public static final double SOTM_MIN_SPEED_MPS = 0.1;
+  public static final double SOTM_MAX_TILT_DEGREES = 5.0;
+  public static final double LAUNCHER_OFFSET_X_METERS = -0.20;
+  public static final double LAUNCHER_OFFSET_Y_METERS = 0.0;
+  public static final double SHOOTER_ANGLE_OFFSET_RADIANS = Math.PI;
+  // Provisional flight times from SIM-TESTING e2bfadbd; measure again for our retained RPS/hood table.
+  public static final double[][] SHOOTER_TOF = {
+      {1.68, 0.515}, {1.97, 0.574}, {2.38, 0.658}, {2.75, 0.733}, {3.29, 0.812},
+      {3.75, 0.856}, {4.05, 0.884}, {4.60, 0.947}, {4.85, 0.976}, {5.50, 1.052}
+  };
   public static final double[][] HOOD_ANGLES = {
             { 4.9, 0.09 },
             { 4.1, 0.08 },
