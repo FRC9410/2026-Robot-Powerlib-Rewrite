@@ -92,6 +92,7 @@ public final class RobotAutos {
   private static Command aimAtHub(StateMachine robot, Alliance alliance) {
     var aimingDrive = new frc.robot.utils.AimingDriveController();
     var parallelWheels = new SwerveRequest.PointWheelsAt().withModuleDirection(Rotation2d.kZero);
+    var lockedWheels = new SwerveRequest.SwerveDriveBrake();
     return Commands.run(() -> {
       var drive = robot.drivetrain;
       if (!HealthChecks.driveHealthy(drive, Constants.Shooting.MAX_SIGNAL_AGE_SECONDS)) {
@@ -103,7 +104,8 @@ public final class RobotAutos {
           : ShootingUtils.headingDegrees(drive.getState().Pose, alliance);
       double error = Rotation2d.fromDegrees(heading).minus(drive.getState().Pose.getRotation()).getDegrees();
       if (aimingDrive.updateParking(0, 0, drive.getState().Speeds, error)) {
-        drive.applyRequest(parallelWheels, heading);
+        // Stationary shot (SOTM off): X-lock against pushes; otherwise park parallel.
+        drive.applyRequest(ShootingUtils.sotmEnabled() ? parallelWheels : lockedWheels, heading);
         return;
       }
       drive.applyRequest(drive.DRIVE_AT_ANGLE.withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)

@@ -33,6 +33,7 @@ public final class SwerveDriveCommand extends Command {
       .withDeadband(0.02).withRotationalDeadband(0);
   private final SwerveRequest.PointWheelsAt parallelWheels = new SwerveRequest.PointWheelsAt()
       .withModuleDirection(Rotation2d.kZero);
+  private final SwerveRequest.SwerveDriveBrake lockedWheels = new SwerveRequest.SwerveDriveBrake();
   private final AimingDriveController aimingDrive = new AimingDriveController();
 
   public SwerveDriveCommand(Swerve drivetrain, CommandXboxController controller,
@@ -108,14 +109,18 @@ public final class SwerveDriveCommand extends Command {
       omega = MathUtil.clamp(Math.toRadians(error) * kp + feedforward + damping,
           -drivetrain.MAX_DRIVE_TO_POINT_ANGULAR_RATE, drivetrain.MAX_DRIVE_TO_POINT_ANGULAR_RATE);
       if (aimingDrive.updateParking(vx, vy, drivetrain.getState().Speeds, error)) {
+        // Stationary shot (SOTM off): X-lock so the robot resists pushes; otherwise park parallel.
+        boolean lock = !ShootingUtils.sotmEnabled();
         PowerRobotContainer.setSubsystemData("Drive", "AimWheelsParked", true);
-        drivetrain.applyRequest(parallelWheels, heading);
+        PowerRobotContainer.setSubsystemData("Drive", "AimWheelsLocked", lock);
+        drivetrain.applyRequest(lock ? lockedWheels : parallelWheels, heading);
         return;
       }
     } else {
       aimingDrive.reset();
     }
     PowerRobotContainer.setSubsystemData("Drive", "AimWheelsParked", false);
+    PowerRobotContainer.setSubsystemData("Drive", "AimWheelsLocked", false);
     drivetrain.applyRequest((aiming ? aimingRequest : request)
         .withVelocityX(vx).withVelocityY(vy).withRotationalRate(omega), heading);
   }
@@ -128,6 +133,7 @@ public final class SwerveDriveCommand extends Command {
   private void stop() {
     aimingDrive.reset();
     PowerRobotContainer.setSubsystemData("Drive", "AimWheelsParked", false);
+    PowerRobotContainer.setSubsystemData("Drive", "AimWheelsLocked", false);
     drivetrain.applyRequest(request.withVelocityX(0).withVelocityY(0).withRotationalRate(0));
   }
   @Override public void end(boolean interrupted) { stop(); }

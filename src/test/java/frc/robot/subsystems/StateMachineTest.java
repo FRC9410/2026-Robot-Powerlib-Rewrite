@@ -129,6 +129,28 @@ class StateMachineTest {
     }
   }
 
+  @Test void aimedStoppedRobotXLocksOnlyForTheStationaryShot() {
+    var pad = new edu.wpi.first.wpilibj2.command.button.CommandXboxController(Constants.OI.DRIVER_CONTROLLER_PORT);
+    var command = new frc.robot.commands.SwerveDriveCommand(robot.drivetrain, pad,
+        () -> RobotState.SHOOTING, robot::getShotSolution);
+    boolean previous = frc.robot.utils.ShootingUtils.sotmEnabled();
+    try {
+      // The reset pose faces straight away from the hub, so the rear shooter is aimed.
+      frc.robot.utils.ShootingUtils.setSotmEnabled(true);
+      command.execute();
+      assertEquals(true, frc.powerlib.PowerRobotContainer.getData("Drive/AimWheelsParked"));
+      assertEquals(false, frc.powerlib.PowerRobotContainer.getData("Drive/AimWheelsLocked"));
+      frc.robot.utils.ShootingUtils.setSotmEnabled(false);
+      command.execute();
+      assertEquals(true, frc.powerlib.PowerRobotContainer.getData("Drive/AimWheelsParked"));
+      assertEquals(true, frc.powerlib.PowerRobotContainer.getData("Drive/AimWheelsLocked"));
+    } finally {
+      frc.robot.utils.ShootingUtils.setSotmEnabled(previous);
+      command.end(true);
+    }
+    assertEquals(false, frc.powerlib.PowerRobotContainer.getData("Drive/AimWheelsLocked"));
+  }
+
   @Test void intakingAndEjectingHaveSeparateOutputsAndReturnToStandby() {
     robot.requestState(RobotState.INTAKING, requestOwner);
     robot.execute();

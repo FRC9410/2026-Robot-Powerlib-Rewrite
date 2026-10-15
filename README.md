@@ -41,9 +41,11 @@ Teleop aiming slews the heading target at up to `AIM_HEADING_SLEW_DEGREES_PER_SE
 (90) so lead changes and moving/static fallbacks turn the robot smoothly, and adds the
 configured `Heading/kD` as damping. Lower the slew rate if the wheels still splay while
 aiming. Once translation and rotation settle within 1 degree of aim, wheels park
-parallel instead of retaining the turn-in-place stance. Driver translation or drift
-beyond 2 degrees resumes normal aiming. This applies to teleop and the autonomous final
-aim. The turn-in-place wheel angles remain necessary while the robot is rotating.
+instead of retaining the turn-in-place stance: parallel with SOTM on, or X-locked
+(`SwerveDriveBrake`) with SOTM off so the stationary shot resists pushes. Driver
+translation or drift beyond 2 degrees resumes normal aiming. This applies to teleop and
+the autonomous final aim. The turn-in-place wheel angles remain necessary while the
+robot is rotating.
 
 The **Shoot on move** button on Power Tool's Shot ready card is the kill switch. OFF
 restores the original stationary shot with driver translation held at zero while
@@ -55,8 +57,8 @@ robot's reported `Shooting/SOTMEnabled`. Robot code starts with
 The Shot ready card also shows SOTM confidence, lead angle and flight time, and the
 compensated aim distance. The robot publishes
 `Shooting/SOTMEnabled`, `LeadDegrees`, `EffectiveDistanceMeters`, `TimeOfFlightSeconds`,
-`MotionCompensated`, `SOTMValid`, `SOTMConfidence`, `SolutionStatus` and
-`Drive/AimWheelsParked`. Tunable constants include
+`MotionCompensated`, `SOTMValid`, `SOTMConfidence`, `SolutionStatus`,
+`Drive/AimWheelsParked` and `Drive/AimWheelsLocked`. Tunable constants include
 `RobotContainer/Custom/SHOOTING_MAX_TRANSLATION_SPEED_MPS`,
 `DRIVE_WHILE_SHOOTING_COEFFICIENT`, and Shooting's
 `SOTM_MAX_DRIVETRAIN_SPEED_MPS`, `SOTM_RELEASE_DELAY_SECONDS`, `SOTM_DRAG_COEFFICIENT`,
