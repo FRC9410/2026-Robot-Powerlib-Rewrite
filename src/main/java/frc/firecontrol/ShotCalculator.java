@@ -192,12 +192,6 @@ public class ShotCalculator {
   private double previousTOF = -1;
   private double previousSpeed = 0;
 
-  // Previous-cycle velocities for acceleration estimation
-  private double prevRobotVx = 0;
-  private double prevRobotVy = 0;
-  private double prevRobotOmega = 0;
-  private boolean hasPreviousVelocity;
-
   public ShotCalculator(Config config) {
     this.config = config;
   }
@@ -273,23 +267,14 @@ public class ShotCalculator {
       return LaunchParameters.INVALID;
     }
 
-    // Second-order pose prediction. Instead of just v*dt, we use v*dt + 0.5*a*dt^2
-    // where acceleration is estimated from the velocity delta between this cycle and last.
-    // This tracks better through turns and speed changes because it catches the curvature.
-    // Phoenix supplies a current pose; the adapter sets phaseDelayMs to zero. Predict
-    // through release latency once, and do not invent acceleration on the first sample.
+    // First-order pose prediction through the release latency. Phoenix supplies a current
+    // pose; the adapter sets phaseDelayMs to zero. Acceleration is not estimated: differencing
+    // measured velocity each loop roughly tripled velocity noise in the aim heading.
     double dt = (config.phaseDelayMs + config.mechLatencyMs) / 1000.0;
-    double ax = hasPreviousVelocity ? MathUtil.clamp((fieldVel.vxMetersPerSecond - prevRobotVx) / 0.02, -6, 6) : 0;
-    double ay = hasPreviousVelocity ? MathUtil.clamp((fieldVel.vyMetersPerSecond - prevRobotVy) / 0.02, -6, 6) : 0;
-    double aOmega = hasPreviousVelocity ? MathUtil.clamp((fieldVel.omegaRadiansPerSecond - prevRobotOmega) / 0.02, -20, 20) : 0;
     Pose2d compensatedPose =
-        new Pose2d(poseX + fieldVel.vxMetersPerSecond * dt + 0.5 * ax * dt * dt,
-            poseY + fieldVel.vyMetersPerSecond * dt + 0.5 * ay * dt * dt,
-            rawPose.getRotation().plus(new Rotation2d(fieldVel.omegaRadiansPerSecond * dt + 0.5 * aOmega * dt * dt)));
-    prevRobotVx = fieldVel.vxMetersPerSecond;
-    prevRobotVy = fieldVel.vyMetersPerSecond;
-    prevRobotOmega = fieldVel.omegaRadiansPerSecond;
-    hasPreviousVelocity = true;
+        new Pose2d(poseX + fieldVel.vxMetersPerSecond * dt,
+            poseY + fieldVel.vyMetersPerSecond * dt,
+            rawPose.getRotation().plus(new Rotation2d(fieldVel.omegaRadiansPerSecond * dt)));
 
     double robotX = compensatedPose.getX();
     double robotY = compensatedPose.getY();
@@ -325,9 +310,9 @@ public class ShotCalculator {
     // Launcher velocity includes rotational component: v_launcher = v_robot + omega x r
     double launcherFieldOffX = config.launcherOffsetX * cosH - config.launcherOffsetY * sinH;
     double launcherFieldOffY = config.launcherOffsetX * sinH + config.launcherOffsetY * cosH;
-    double omega = fieldVel.omegaRadiansPerSecond + aOmega * dt;
-    double vx = fieldVel.vxMetersPerSecond + ax * dt + (-launcherFieldOffY) * omega;
-    double vy = fieldVel.vyMetersPerSecond + ay * dt + launcherFieldOffX * omega;
+    double omega = fieldVel.omegaRadiansPerSecond;
+    double vx = fieldVel.vxMetersPerSecond + (-launcherFieldOffY) * omega;
+    double vy = fieldVel.vyMetersPerSecond + launcherFieldOffX * omega;
 
     // Displacement from launcher to hub
     double rx = hubX - launcherX;
@@ -620,10 +605,6 @@ public class ShotCalculator {
   public void resetWarmStart() {
     previousTOF = -1;
     previousSpeed = 0;
-    prevRobotVx = 0;
-    prevRobotVy = 0;
-    prevRobotOmega = 0;
-    hasPreviousVelocity = false;
   }
 
   /**

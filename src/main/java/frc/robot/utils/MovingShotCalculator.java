@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.firecontrol.ShotCalculator;
 import frc.firecontrol.ShotLUT;
 import frc.firecontrol.ShotParameters;
+import frc.powerlib.health.HealthChecks;
 import frc.powerlib.math.LinearInterpolator;
 import frc.robot.Constants;
 import frc.robot.utils.ShootingUtils.ShotSolution;
@@ -17,6 +18,8 @@ public final class MovingShotCalculator {
   private final ShotCalculator.Config config = new ShotCalculator.Config();
   private final ShotCalculator solver = new ShotCalculator(config);
   private final double calibrationOffset;
+  private static final double LOOP_SECONDS = 0.02;
+  private ChassisSpeeds filteredFieldVelocity;
 
   public MovingShotCalculator() {
     config.launcherOffsetX = Constants.Shooting.LAUNCHER_OFFSET_X_METERS;
@@ -42,18 +45,39 @@ public final class MovingShotCalculator {
     solver.loadShotLUT(lut);
   }
 
-  public void reset() { solver.resetWarmStart(); }
+  /** Clears the solver warm start and velocity filter, e.g. when a shot request ends. */
+  public void reset() {
+    solver.resetWarmStart();
+    filteredFieldVelocity = null;
+  }
+
+  /** Single-pole low-pass on field velocity so stick changes and encoder noise move the lead smoothly. */
+  private ChassisSpeeds filter(ChassisSpeeds measured) {
+    double tau = Constants.Shooting.SOTM_VELOCITY_FILTER_SECONDS;
+    double alpha = Double.isFinite(tau) && tau > 0 ? LOOP_SECONDS / (tau + LOOP_SECONDS) : 1;
+    var last = filteredFieldVelocity;
+    filteredFieldVelocity = last == null ? measured : new ChassisSpeeds(
+        last.vxMetersPerSecond + alpha * (measured.vxMetersPerSecond - last.vxMetersPerSecond),
+        last.vyMetersPerSecond + alpha * (measured.vyMetersPerSecond - last.vyMetersPerSecond),
+        last.omegaRadiansPerSecond + alpha * (measured.omegaRadiansPerSecond - last.omegaRadiansPerSecond));
+    return filteredFieldVelocity;
+  }
 
   public ShotSolution calculate(Pose2d pose, ChassisSpeeds robotVelocity, Alliance alliance,
       double actualRps, double actualHood, boolean feedbackHealthy, boolean visionFresh,
       double pitchDegrees, double rollDegrees) {
+    // Filter every cycle, even while the shot is invalid, so the filter never resumes from stale motion.
+    boolean velocityValid = robotVelocity != null && HealthChecks.finitePose(pose)
+        && Double.isFinite(robotVelocity.vxMetersPerSecond)
+        && Double.isFinite(robotVelocity.vyMetersPerSecond)
+        && Double.isFinite(robotVelocity.omegaRadiansPerSecond);
+    if (!velocityValid) filteredFieldVelocity = null;
+    var fieldVelocity = velocityValid
+        ? filter(ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, pose.getRotation())) : null;
     var base = ShootingUtils.calculate(pose, alliance, actualRps, actualHood, feedbackHealthy);
-    if (!base.valid()) { reset(); return base; }
-    if (robotVelocity == null || !Double.isFinite(robotVelocity.vxMetersPerSecond)
-        || !Double.isFinite(robotVelocity.vyMetersPerSecond)
-        || !Double.isFinite(robotVelocity.omegaRadiansPerSecond)
-        || !Double.isFinite(pitchDegrees) || !Double.isFinite(rollDegrees)) {
-      reset(); return ShootingUtils.blocked(base, "Invalid motion or tilt feedback");
+    if (!base.valid()) { solver.resetWarmStart(); return base; }
+    if (fieldVelocity == null || !Double.isFinite(pitchDegrees) || !Double.isFinite(rollDegrees)) {
+      solver.resetWarmStart(); return ShootingUtils.blocked(base, "Invalid motion or tilt feedback");
     }
     double maxSpeed = Constants.Shooting.SOTM_MAX_DRIVETRAIN_SPEED_MPS;
     double releaseDelay = Constants.Shooting.SOTM_RELEASE_DELAY_SECONDS;
@@ -61,30 +85,30 @@ public final class MovingShotCalculator {
     if (!Double.isFinite(maxSpeed) || maxSpeed <= config.minSOTMSpeed
         || !Double.isFinite(releaseDelay) || releaseDelay < 0 || releaseDelay > 0.5
         || !Double.isFinite(drag) || drag < 0) {
-      reset(); return ShootingUtils.blocked(base, "Invalid SOTM settings");
+      solver.resetWarmStart(); return ShootingUtils.blocked(base, "Invalid SOTM settings");
     }
     if (config.maxSOTMSpeed != maxSpeed || config.mechLatencyMs != releaseDelay * 1000
-        || config.sotmDragCoeff != drag) reset();
+        || config.sotmDragCoeff != drag) solver.resetWarmStart();
     config.maxSOTMSpeed = maxSpeed;
     config.mechLatencyMs = releaseDelay * 1000;
     config.sotmDragCoeff = drag;
-    double speed = Math.hypot(robotVelocity.vxMetersPerSecond, robotVelocity.vyMetersPerSecond);
+    double speed = Math.hypot(fieldVelocity.vxMetersPerSecond, fieldVelocity.vyMetersPerSecond);
     if (speed > maxSpeed) {
-      reset(); return ShootingUtils.blocked(base, "Above SOTM speed limit");
+      solver.resetWarmStart(); return ShootingUtils.blocked(base, "Above SOTM speed limit");
     }
     if (Math.abs(pitchDegrees) > config.maxTiltDeg || Math.abs(rollDegrees) > config.maxTiltDeg) {
-      reset(); return ShootingUtils.blocked(base, "Robot tilt exceeds shooting limit");
+      solver.resetWarmStart(); return ShootingUtils.blocked(base, "Robot tilt exceeds shooting limit");
     }
-    var fieldVelocity = ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, pose.getRotation());
+    var filteredRobotVelocity = ChassisSpeeds.fromFieldRelativeSpeeds(fieldVelocity, pose.getRotation());
     var target = alliance == Alliance.Red ? Constants.Shooting.RED_HUB : Constants.Shooting.BLUE_HUB;
-    var result = solver.calculate(new ShotCalculator.ShotInputs(pose, fieldVelocity, robotVelocity,
+    var result = solver.calculate(new ShotCalculator.ShotInputs(pose, fieldVelocity, filteredRobotVelocity,
         target, new Translation2d(), visionFresh ? 1 : 0.5, pitchDegrees, rollDegrees));
     if (!result.isValid()) {
-      reset();
+      solver.resetWarmStart();
       var offset = new Translation2d(config.launcherOffsetX, config.launcherOffsetY).rotateBy(pose.getRotation());
       double launcherSpeed = Math.hypot(
-          fieldVelocity.vxMetersPerSecond - robotVelocity.omegaRadiansPerSecond * offset.getY(),
-          fieldVelocity.vyMetersPerSecond + robotVelocity.omegaRadiansPerSecond * offset.getX());
+          fieldVelocity.vxMetersPerSecond - fieldVelocity.omegaRadiansPerSecond * offset.getY(),
+          fieldVelocity.vyMetersPerSecond + fieldVelocity.omegaRadiansPerSecond * offset.getX());
       boolean nearlyStopped = speed < config.minSOTMSpeed
           && launcherSpeed < config.minSOTMSpeed;
       // Moving without a valid lead solution must never fall back to feeding a static shot.

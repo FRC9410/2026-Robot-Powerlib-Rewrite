@@ -29,6 +29,23 @@ class AimingDriveControllerTest {
     assertFalse(controller.updateParking(0, 0, stopped, 1.5));
   }
 
+  @Test void aimTargetIsTakenDirectlyThenSlewedAcrossTheWrap() {
+    var controller = new AimingDriveController();
+    var first = controller.slewHeading(170, 90, 0.02);
+    assertEquals(170, first.headingDegrees(), 1e-9);
+    assertFalse(first.limited());
+    // A 20-degree jump across +/-180 moves 1.8 degrees per loop the short way round.
+    var jump = controller.slewHeading(-170, 90, 0.02);
+    assertTrue(jump.limited());
+    assertEquals(171.8, jump.headingDegrees(), 1e-9);
+    assertEquals(Math.toRadians(90), jump.rateRadiansPerSecond(), 1e-9);
+    var small = controller.slewHeading(172.5, 90, 0.02);
+    assertFalse(small.limited());
+    assertEquals(172.5, small.headingDegrees(), 1e-9);
+    controller.reset();
+    assertEquals(-170, controller.slewHeading(-170, 90, 0.02).headingDegrees(), 1e-9);
+  }
+
   @Test void driverIntentMotionAndInvalidFeedbackAlwaysUnpark() {
     var controller = new AimingDriveController();
     assertTrue(controller.updateParking(0, 0, new ChassisSpeeds(), 0));

@@ -1,6 +1,7 @@
 package frc.robot.utils;
 
 import static org.junit.jupiter.api.Assertions.*;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -79,9 +80,9 @@ class MovingShotCalculatorTest {
   }
 
   @Test void unsafeMovingSolutionsNeverFallBackToFeedingStaticShots() {
-    var calculator = new MovingShotCalculator();
+    // Fresh calculators: each case must not inherit the previous case's filtered velocity.
     var location = pose(Alliance.Blue, 2.5);
-    var tooFast = calculator.calculate(location, new ChassisSpeeds(3.1, 0, 0),
+    var tooFast = new MovingShotCalculator().calculate(location, new ChassisSpeeds(3.1, 0, 0),
         Alliance.Blue, 29.5, 0.05, true, true, 0, 0);
     assertFalse(tooFast.valid());
     assertEquals("Above SOTM speed limit", tooFast.status());
@@ -91,21 +92,46 @@ class MovingShotCalculatorTest {
     assertEquals(stationary.shooterRps(), tooFast.shooterRps(), 1e-9);
     assertEquals(stationary.hoodRotations(), tooFast.hoodRotations(), 1e-9);
     assertEquals(0, tooFast.feederRps());
-    var outsideLeadTable = calculator.calculate(location, new ChassisSpeeds(-2, 0, 0),
+    var outsideLeadTable = new MovingShotCalculator().calculate(location, new ChassisSpeeds(-2, 0, 0),
         Alliance.Blue, 29.5, 0.05, true, true, 0, 0);
     assertFalse(outsideLeadTable.valid());
     assertFalse(outsideLeadTable.canFeed());
-    assertFalse(calculator.calculate(location, new ChassisSpeeds(), Alliance.Blue,
+    assertFalse(new MovingShotCalculator().calculate(location, new ChassisSpeeds(), Alliance.Blue,
         29.5, 0.05, true, true, 6, 0).valid());
-    assertFalse(calculator.calculate(location, new ChassisSpeeds(Double.NaN, 0, 0), Alliance.Blue,
+    assertFalse(new MovingShotCalculator().calculate(location, new ChassisSpeeds(Double.NaN, 0, 0), Alliance.Blue,
         29.5, 0.05, true, true, 0, 0).valid());
-    assertFalse(calculator.calculate(pose(Alliance.Blue, 1.9), new ChassisSpeeds(), Alliance.Blue,
+    assertFalse(new MovingShotCalculator().calculate(pose(Alliance.Blue, 1.9), new ChassisSpeeds(), Alliance.Blue,
         28.4, 0.039, true, true, 0, 0).valid());
     // Center translation and rotation are each slow, but add to 0.18 m/s at the launcher.
     // At maximum range the necessary lateral lead falls outside calibration.
-    var rotatingAtRangeEdge = calculator.calculate(pose(Alliance.Blue, 4.9),
+    var rotatingAtRangeEdge = new MovingShotCalculator().calculate(pose(Alliance.Blue, 4.9),
         new ChassisSpeeds(0, -0.09, 0.45), Alliance.Blue, 38, 0.085, true, true, 0, 0);
     assertFalse(rotatingAtRangeEdge.valid());
     assertFalse(rotatingAtRangeEdge.canFeed());
+  }
+
+  @Test void leadFollowsFilteredVelocityAfterAStickStep() {
+    var location = pose(Alliance.Blue, 3);
+    var strafe = ChassisSpeeds.fromFieldRelativeSpeeds(new ChassisSpeeds(0, 1, 0), location.getRotation());
+    double settled = new MovingShotCalculator().calculate(location, strafe, Alliance.Blue,
+        30.5, 0.06, true, true, 0, 0).headingDegrees();
+    double stationary = ShootingUtils.headingDegrees(location, Alliance.Blue);
+    var calculator = new MovingShotCalculator();
+    calculator.calculate(location, new ChassisSpeeds(), Alliance.Blue, 30.5, 0.06, true, true, 0, 0);
+    double firstLoop = calculator.calculate(location, strafe, Alliance.Blue,
+        30.5, 0.06, true, true, 0, 0).headingDegrees();
+    double lead = Math.abs(MathUtil.inputModulus(settled - stationary, -180, 180));
+    double partial = Math.abs(MathUtil.inputModulus(firstLoop - stationary, -180, 180));
+    // One loop after the step the lead has only started to build.
+    assertTrue(partial > 0 && partial < 0.3 * lead, partial + " of " + lead);
+    double latest = firstLoop;
+    for (int i = 0; i < 50; i++) {
+      latest = calculator.calculate(location, strafe, Alliance.Blue, 30.5, 0.06, true, true, 0, 0).headingDegrees();
+    }
+    assertEquals(settled, latest, 0.01);
+    calculator.reset();
+    double afterReset = calculator.calculate(location, new ChassisSpeeds(), Alliance.Blue,
+        30.5, 0.06, true, true, 0, 0).headingDegrees();
+    assertEquals(0, MathUtil.inputModulus(afterReset - stationary, -180, 180), 1e-6);
   }
 }

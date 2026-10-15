@@ -75,16 +75,15 @@ class ShotCalculatorTest {
     assertEquals(180 - Math.toDegrees(Math.atan2(0.2, 3.8)), result.driveAngle().getDegrees(), 1e-9);
   }
 
-  @Test void releasePredictionUsesBoundedAccelerationForBothPositionAndInheritedVelocity() {
+  @Test void velocityStepsDoNotAddAnEstimatedAccelerationLead() {
     var c = config();
     c.mechLatencyMs = 100;
     var solver = calculator(c);
     assertTrue(solver.calculate(inputs(0, 0)).isValid());
     var accelerating = solver.calculate(inputs(0, 0.2));
     assertTrue(accelerating.isValid());
-    // Acceleration is bounded at 6 m/s^2: release Y = .2*.1 + .5*6*.1^2,
-    // inherited release speed = .2 + 6*.1, followed by one second of flight.
-    assertEquals(-Math.atan2(0.85, 4), accelerating.driveAngle().getRadians(), 1e-9);
+    // Release Y = .2*.1 and inherited speed .2 over one second of flight; no acceleration term.
+    assertEquals(-Math.atan2(0.22, 4), accelerating.driveAngle().getRadians(), 1e-9);
   }
 
   @Test void invalidMotionEmptyLutTiltAndUncalibratedProjectedRangeAreRejected() {

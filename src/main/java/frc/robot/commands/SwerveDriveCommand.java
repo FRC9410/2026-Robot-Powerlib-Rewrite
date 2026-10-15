@@ -20,6 +20,7 @@ import java.util.function.Supplier;
 
 /** Uses a blue-field frame and live current state for drive scaling and shot alignment. */
 public final class SwerveDriveCommand extends Command {
+  private static final double LOOP_SECONDS = 0.02;
   private final Swerve drivetrain;
   private final CommandXboxController controller;
   private final Supplier<RobotState> currentStateSupplier;
@@ -86,12 +87,21 @@ public final class SwerveDriveCommand extends Command {
     if (aiming && ShootingUtils.inScoringZone(pose, alliance.get())) {
       var shot = shotSupplier.get();
       boolean solved = shot != null && shot.solverValid() && shot.valid();
-      heading = solved ? shot.headingDegrees() : ShootingUtils.headingDegrees(pose, alliance.get());
+      var aim = aimingDrive.slewHeading(
+          solved ? shot.headingDegrees() : ShootingUtils.headingDegrees(pose, alliance.get()),
+          Constants.Shooting.AIM_HEADING_SLEW_DEGREES_PER_SECOND, LOOP_SECONDS);
+      heading = aim.headingDegrees();
       double error = MathUtil.inputModulus(heading - pose.getRotation().getDegrees(), -180, 180);
       double kp = PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kP", Constants.Swerve.HEADING_KP);
-      if (!Double.isFinite(kp) || kp <= 0) { stop(); return; }
-      omega = MathUtil.clamp(Math.toRadians(error) * kp
-          + (solved ? shot.headingFeedforwardRadiansPerSecond() : 0),
+      double kd = PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kD", Constants.Swerve.HEADING_KD);
+      if (!Double.isFinite(kp) || kp <= 0 || !Double.isFinite(kd) || kd < 0) { stop(); return; }
+      // Follow the slewed target's rate while it catches up, otherwise the solver's tracking rate.
+      double feedforward = aim.limited() ? aim.rateRadiansPerSecond()
+          : solved ? shot.headingFeedforwardRadiansPerSecond() : 0;
+      double measuredOmega = drivetrain.getState().Speeds.omegaRadiansPerSecond;
+      // D acts on heading-error rate (target rate minus measured rate) to damp overshoot.
+      double damping = Double.isFinite(measuredOmega) ? kd * (feedforward - measuredOmega) : 0;
+      omega = MathUtil.clamp(Math.toRadians(error) * kp + feedforward + damping,
           -drivetrain.MAX_DRIVE_TO_POINT_ANGULAR_RATE, drivetrain.MAX_DRIVE_TO_POINT_ANGULAR_RATE);
       if (aimingDrive.updateParking(vx, vy, drivetrain.getState().Speeds, error)) {
         PowerRobotContainer.setSubsystemData("Drive", "AimWheelsParked", true);

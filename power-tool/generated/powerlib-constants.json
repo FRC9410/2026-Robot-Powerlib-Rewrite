@@ -533,6 +533,20 @@
       "tunable": true
     },
     {
+      "name": "SOTM_VELOCITY_FILTER_SECONDS",
+      "type": "double",
+      "value": "0.1",
+      "custom": true,
+      "tunable": true
+    },
+    {
+      "name": "AIM_HEADING_SLEW_DEGREES_PER_SECOND",
+      "type": "double",
+      "value": "90",
+      "custom": true,
+      "tunable": true
+    },
+    {
       "name": "SOTM_MIN_SPEED_MPS",
       "type": "double",
       "value": "0.1",

@@ -80,6 +80,7 @@ class StateMachineTest {
     controller.notifyNewData();
     DriverStationSim.notifyNewData();
     double poseHeading = robot.drivetrain.getState().Pose.getRotation().getDegrees();
+    double measuredOmega = robot.drivetrain.getState().Speeds.omegaRadiansPerSecond;
     command.execute();
     var requestField = command.getClass().getDeclaredField("aimingRequest");
     requestField.setAccessible(true);
@@ -89,7 +90,10 @@ class StateMachineTest {
         Math.hypot(request.VelocityX, request.VelocityY), 1e-9);
     double error = edu.wpi.first.math.MathUtil.inputModulus(shot.headingDegrees() - poseHeading, -180, 180);
     double kp = frc.powerlib.PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kP", Constants.Swerve.HEADING_KP);
-    assertEquals(Math.toRadians(error) * kp + shot.headingFeedforwardRadiansPerSecond(), request.RotationalRate, 0.001);
+    double kd = frc.powerlib.PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kD", Constants.Swerve.HEADING_KD);
+    double feedforward = shot.headingFeedforwardRadiansPerSecond();
+    assertEquals(Math.toRadians(error) * kp + feedforward + kd * (feedforward - measuredOmega),
+        request.RotationalRate, 0.001);
     assertEquals(0.02, request.Deadband);
     assertEquals(0, request.RotationalDeadband);
     assertEquals(com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.Velocity, request.DriveRequestType);
