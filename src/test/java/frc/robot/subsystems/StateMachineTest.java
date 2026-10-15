@@ -191,28 +191,6 @@ class StateMachineTest {
     assertEquals(0, robot.spindexer.getVelocitySetpoint());
   }
 
-  @Test void feedingRidesThroughSmallDipsButNeedsFullReadinessToStart() {
-    robot.requestState(RobotState.SHOOTING, requestOwner);
-    robot.shooterHood.inputs.positionRotations = 0.05;
-    // 2.5 rps low is outside the 2 rps start tolerance but inside the 1.5x hold tolerance.
-    robot.shooter.inputs.velocityRotationsPerSecond = 27;
-    robot.execute();
-    robot.execute();
-    assertEquals(RobotState.SPINNING_UP, robot.getCurrentState());
-    assertEquals(0, robot.spindexer.getVelocitySetpoint());
-    robot.shooter.inputs.velocityRotationsPerSecond = 29.5;
-    robot.execute();
-    assertEquals(RobotState.SHOOTING, robot.getCurrentState());
-    robot.shooter.inputs.velocityRotationsPerSecond = 27;
-    robot.execute();
-    assertEquals(RobotState.SHOOTING, robot.getCurrentState());
-    assertEquals(80, robot.spindexer.getVelocitySetpoint());
-    robot.shooter.inputs.velocityRotationsPerSecond = 26;
-    robot.execute();
-    assertEquals(RobotState.SPINNING_UP, robot.getCurrentState());
-    assertEquals(0, robot.spindexer.getVelocitySetpoint());
-  }
-
   @Test void shootingPulseRestartsAfterEjectingAndModeReset() throws Exception {
     var stateField = StateMachine.class.getDeclaredField("shootingState");
     stateField.setAccessible(true);

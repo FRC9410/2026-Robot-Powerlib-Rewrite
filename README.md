@@ -25,17 +25,12 @@ relying on moving-shot accuracy. Verify the 0.20 m launcher offset and release d
 on hardware too. No new on-robot shot calibration is claimed by the software tests.
 
 Both actual center distance and compensated calibration distance must remain within
-1.95-4.9 m in the scoring zone. Excessive tilt (over 5 degrees), speed (over 3 m/s),
-invalid input, uncalibrated lead distance or solver nonconvergence blocks a moving
-shot. A blocked shot never feeds, but keeps the static flywheel and hood setpoints so
-the flywheel stays spun up. A stationary fallback is allowed only when nearly stopped.
-Solver confidence is diagnostic; feed permission uses the explicit validity and
-readiness checks.
-
-Feeding starts on the existing 2 rps flywheel, 0.01 rot hood and 5-degree heading
-tolerances and healthy feedback. Once feeding, it continues while each stays within
-`FEED_HOLD_TOLERANCE_SCALE` (1.5x) of its start tolerance, so one-loop dips do not
-brake the spindexer.
+1.95-4.9 m in the scoring zone. Feeding still requires the existing 5-degree heading,
+hood, flywheel and feedback checks. Excessive tilt (over 5 degrees), speed (over 3 m/s),
+invalid input, uncalibrated lead distance or solver nonconvergence prevents a moving
+shot and stops the shooter until a valid shot returns. A stationary fallback is
+allowed only when nearly stopped. Solver confidence is diagnostic; feed permission uses
+the explicit validity and readiness checks.
 
 Teleop aiming slews the heading target at up to `AIM_HEADING_SLEW_DEGREES_PER_SECOND`
 (90) so lead changes and moving/static fallbacks turn the robot smoothly, and adds the
@@ -62,12 +57,11 @@ compensated aim distance. The robot publishes
 `RobotContainer/Custom/SHOOTING_MAX_TRANSLATION_SPEED_MPS`,
 `DRIVE_WHILE_SHOOTING_COEFFICIENT`, and Shooting's
 `SOTM_MAX_DRIVETRAIN_SPEED_MPS`, `SOTM_RELEASE_DELAY_SECONDS`, `SOTM_DRAG_COEFFICIENT`,
-`FEED_HOLD_TOLERANCE_SCALE`, `SOTM_VELOCITY_FILTER_SECONDS` and
-`AIM_HEADING_SLEW_DEGREES_PER_SECOND`. Source constants and `powerlib-constants.json`
-are kept in sync. Tests cover velocity lead, filtering, release latency,
-rotating-launcher velocity, solver failures, blocked-shot setpoints, feed hold,
-retained stationary calibrations, compensated readiness, the kill switch, drive speed
-caps, aim slewing and parking.
+`SOTM_VELOCITY_FILTER_SECONDS` and `AIM_HEADING_SLEW_DEGREES_PER_SECOND`. Source
+constants and `powerlib-constants.json` are kept in sync. Tests cover velocity lead,
+filtering, release latency, rotating-launcher velocity, solver failures, retained
+stationary calibrations, compensated readiness, the kill switch, drive speed caps, aim
+slewing and parking.
 
 ## PowerLib installation
 

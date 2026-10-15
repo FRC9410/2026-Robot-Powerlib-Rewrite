@@ -533,13 +533,6 @@
       "tunable": true
     },
     {
-      "name": "FEED_HOLD_TOLERANCE_SCALE",
-      "type": "double",
-      "value": "1.5",
-      "custom": true,
-      "tunable": true
-    },
-    {
       "name": "SOTM_VELOCITY_FILTER_SECONDS",
       "type": "double",
       "value": "0.1",

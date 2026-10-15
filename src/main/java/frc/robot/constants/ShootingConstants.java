@@ -31,9 +31,6 @@ public class ShootingConstants {
   public static volatile double SOTM_RELEASE_DELAY_SECONDS = 0.02;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double SOTM_DRAG_COEFFICIENT = 0.24;
-  // Once feeding, keep feeding while flywheel, hood and heading stay within this multiple of their start tolerances.
-  @frc.powerlib.tuning.TunableConstant
-  public static volatile double FEED_HOLD_TOLERANCE_SCALE = 1.5;
   // Low-pass time constant on the robot velocity used for the moving-shot lead.
   @frc.powerlib.tuning.TunableConstant
   public static volatile double SOTM_VELOCITY_FILTER_SECONDS = 0.1;

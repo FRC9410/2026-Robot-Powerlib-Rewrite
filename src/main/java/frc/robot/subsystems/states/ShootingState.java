@@ -17,7 +17,6 @@ public final class ShootingState implements State<RobotState, StateMachine> {
   public ShotSolution getShotSolution() { return shot; }
   private double shootingStarted = Double.NaN;
   private double shootingElapsed = Double.NaN;
-  private boolean feedAllowed;
 
   @Override
   public void prepare(StateMachine robot) {
@@ -34,25 +33,11 @@ public final class ShootingState implements State<RobotState, StateMachine> {
         robot.drivetrain.getPigeon2().getPitch().getValueAsDouble(),
         robot.drivetrain.getPigeon2().getRoll().getValueAsDouble());
     if (!shot.valid()) resetTimer();
-    // Start on the normal readiness checks; once feeding, ride through small dips so
-    // moving-shot jitter or a ball passing the flywheel does not brake the spindexer.
-    feedAllowed = shot.canFeed()
-        || (robot.getCurrentState() == RobotState.SHOOTING && withinHoldTolerances(robot));
   }
 
   @Override
   public boolean match(RobotState requestedState, StateMachine robot) {
-    return requestedState == RobotState.SHOOTING && feedAllowed;
-  }
-
-  private boolean withinHoldTolerances(StateMachine robot) {
-    double scale = Constants.Shooting.FEED_HOLD_TOLERANCE_SCALE;
-    if (!shot.valid() || !shot.feedbackHealthy() || !Double.isFinite(scale) || scale < 1) return false;
-    return Math.abs(robot.shooter.inputs.velocityRotationsPerSecond - shot.shooterRps())
-            <= Constants.Shooting.SHOOTER_TOLERANCE_RPS * scale
-        && Math.abs(robot.shooterHood.inputs.positionRotations - shot.hoodRotations())
-            <= Constants.StateMachine.HOOD_TOLERANCE_ROTATIONS * scale
-        && Math.abs(shot.headingErrorDegrees()) <= Constants.Shooting.HEADING_TOLERANCE_DEGREES * scale;
+    return requestedState == RobotState.SHOOTING && shot.canFeed();
   }
 
   @Override
@@ -85,7 +70,6 @@ public final class ShootingState implements State<RobotState, StateMachine> {
   @Override
   public void reset() {
     shot = ShootingUtils.UNAVAILABLE;
-    feedAllowed = false;
     fireControl.reset();
     resetTimer();
   }

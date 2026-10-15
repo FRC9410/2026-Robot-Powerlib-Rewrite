@@ -20,11 +20,6 @@ public final class ShootingUtils {
     public boolean canFeed() {
       return valid && velocityReady && hoodReady && aligned && feedbackHealthy;
     }
-
-    /** Blocked moving shots keep static setpoints so the flywheel stays spun while feeding waits. */
-    public boolean hasSetpoints() {
-      return Double.isFinite(shooterRps) && shooterRps > 0 && Double.isFinite(hoodRotations);
-    }
   }
 
   public static final ShotSolution UNAVAILABLE = new ShotSolution(false, Double.NaN,
@@ -93,10 +88,9 @@ public final class ShootingUtils {
         false, false, distance, 0, 0, 0, "Stationary shot");
   }
 
-  /** Never feeds, but keeps the static shooter and hood setpoints so the flywheel does not spin down. */
   static ShotSolution blocked(ShotSolution base, String status) {
     return new ShotSolution(false, base.distanceMeters(), base.headingDegrees(), base.headingErrorDegrees(),
-        base.shooterRps(), base.hoodRotations(), 0, false, false, false, base.feedbackHealthy(), false, false,
+        0, 0, 0, false, false, false, base.feedbackHealthy(), false, false,
         Double.NaN, 0, 0, 0, status);
   }
 
@@ -113,7 +107,7 @@ public final class ShootingUtils {
   }
 
   public static void applyShooter(StateMachine robot, ShotSolution shot) {
-    if (!shot.hasSetpoints()) { stopShooter(robot); return; }
+    if (!shot.valid()) { stopShooter(robot); return; }
     robot.shooter.setVelocity(shot.shooterRps());
     robot.shooterHood.setPositionRotations(shot.hoodRotations());
   }
