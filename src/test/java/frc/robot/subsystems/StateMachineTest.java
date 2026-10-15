@@ -110,21 +110,21 @@ class StateMachineTest {
     DriverStationSim.notifyNewData();
     // Ten degrees off target so the stopped robot keeps aiming instead of parking its wheels.
     robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(170)));
-    int previous = Constants.Shooting.SOTM_ENABLED;
+    boolean previous = frc.robot.utils.ShootingUtils.sotmEnabled();
     try {
       var requestField = command.getClass().getDeclaredField("aimingRequest");
       requestField.setAccessible(true);
       var request = (com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric) requestField.get(command);
-      Constants.Shooting.SOTM_ENABLED = 1;
+      frc.robot.utils.ShootingUtils.setSotmEnabled(true);
       command.execute();
       assertEquals(Constants.RobotContainer.SHOOTING_MAX_TRANSLATION_SPEED_MPS,
           Math.hypot(request.VelocityX, request.VelocityY), 1e-9);
-      Constants.Shooting.SOTM_ENABLED = 0;
+      frc.robot.utils.ShootingUtils.setSotmEnabled(false);
       command.execute();
       assertEquals(0, request.VelocityX);
       assertEquals(0, request.VelocityY);
     } finally {
-      Constants.Shooting.SOTM_ENABLED = previous;
+      frc.robot.utils.ShootingUtils.setSotmEnabled(previous);
       command.end(true);
     }
   }

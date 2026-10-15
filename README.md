@@ -45,17 +45,20 @@ parallel instead of retaining the turn-in-place stance. Driver translation or dr
 beyond 2 degrees resumes normal aiming. This applies to teleop and the autonomous final
 aim. The turn-in-place wheel angles remain necessary while the robot is rotating.
 
-`Shooting/Custom/SOTM_ENABLED` is the kill switch: 1 = shoot on the move, any other
-value = the original stationary shot with driver translation held at zero while
-aiming. Change it from Power Tool with tuning enabled.
+The **Shoot on move** button on Power Tool's Shot ready card is the kill switch. OFF
+restores the original stationary shot with driver translation held at zero while
+aiming. The button writes `/PowerLib/Shooting/SOTMRequestedEnabled`; `SotmSwitch`
+applies each new request every loop, with or without tuning, and the button shows the
+robot's reported `Shooting/SOTMEnabled`. Robot code starts with
+`SOTM_ENABLED_DEFAULT` (on).
 
-Power Tool's Shot ready card shows the kill switch, SOTM confidence, lead angle and
-flight time, and the compensated aim distance. The robot publishes
+The Shot ready card also shows SOTM confidence, lead angle and flight time, and the
+compensated aim distance. The robot publishes
 `Shooting/SOTMEnabled`, `LeadDegrees`, `EffectiveDistanceMeters`, `TimeOfFlightSeconds`,
 `MotionCompensated`, `SOTMValid`, `SOTMConfidence`, `SolutionStatus` and
 `Drive/AimWheelsParked`. Tunable constants include
 `RobotContainer/Custom/SHOOTING_MAX_TRANSLATION_SPEED_MPS`,
-`DRIVE_WHILE_SHOOTING_COEFFICIENT`, and Shooting's `SOTM_ENABLED`,
+`DRIVE_WHILE_SHOOTING_COEFFICIENT`, and Shooting's
 `SOTM_MAX_DRIVETRAIN_SPEED_MPS`, `SOTM_RELEASE_DELAY_SECONDS`, `SOTM_DRAG_COEFFICIENT`,
 `FEED_HOLD_TOLERANCE_SCALE`, `SOTM_VELOCITY_FILTER_SECONDS` and
 `AIM_HEADING_SLEW_DEGREES_PER_SECOND`. Source constants and `powerlib-constants.json`

@@ -31,9 +31,16 @@ public final class ShootingUtils {
       Double.NaN, Double.NaN, 0, 0, 0, false, false, false, false,
       false, false, Double.NaN, 0, 0, 0, "No shot solution");
 
-  /** SOTM_ENABLED kill switch; anything but 1 restores the original stationary shot. */
+  private static volatile boolean sotmEnabled = Constants.Shooting.SOTM_ENABLED_DEFAULT;
+
+  /** Shoot-on-the-move kill switch; off restores the original stationary shot. */
   public static boolean sotmEnabled() {
-    return Constants.Shooting.SOTM_ENABLED == 1;
+    return sotmEnabled;
+  }
+
+  /** Set by the Drive tab's Shoot on move button through SotmSwitch. */
+  public static void setSotmEnabled(boolean enabled) {
+    sotmEnabled = enabled;
   }
 
   public static boolean inScoringZone(Pose2d pose, Alliance alliance) {

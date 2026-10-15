@@ -138,16 +138,16 @@ class MovingShotCalculatorTest {
   @Test void killSwitchRestoresTheStationaryShotWhileMoving() {
     var location = pose(Alliance.Blue, 3);
     var strafe = ChassisSpeeds.fromFieldRelativeSpeeds(new ChassisSpeeds(0, 1, 0), location.getRotation());
-    int previous = Constants.Shooting.SOTM_ENABLED;
+    boolean previous = ShootingUtils.sotmEnabled();
     try {
-      Constants.Shooting.SOTM_ENABLED = 0;
+      ShootingUtils.setSotmEnabled(false);
       var shot = new MovingShotCalculator().calculate(location, strafe, Alliance.Blue,
           30.5, 0.06, true, true, 0, 0);
       assertEquals(ShootingUtils.calculate(location, Alliance.Blue, 30.5, 0.06, true), shot);
       assertFalse(shot.solverValid());
       assertFalse(shot.motionCompensated());
     } finally {
-      Constants.Shooting.SOTM_ENABLED = previous;
+      ShootingUtils.setSotmEnabled(previous);
     }
   }
 }

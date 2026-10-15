@@ -505,11 +505,11 @@
       "tunable": false
     },
     {
-      "name": "SOTM_ENABLED",
-      "type": "int",
-      "value": "1",
+      "name": "SOTM_ENABLED_DEFAULT",
+      "type": "boolean",
+      "value": "true",
       "custom": true,
-      "tunable": true
+      "tunable": false
     },
     {
       "name": "SOTM_MAX_DRIVETRAIN_SPEED_MPS",

@@ -23,9 +23,8 @@ public class ShootingConstants {
   public static final double MAX_SIGNAL_AGE_SECONDS = 0.5;
 
   // POWERLIB CUSTOM CONSTANTS START - DO NOT DELETE
-  // Kill switch: 1 = shoot on the move; any other value = original stationary shot with no driving while aiming.
-  @frc.powerlib.tuning.TunableConstant
-  public static volatile int SOTM_ENABLED = 1;
+  // Startup state of the Drive tab's Shoot on move button; off = original stationary shot, no driving while aiming.
+  public static final boolean SOTM_ENABLED_DEFAULT = true;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double SOTM_MAX_DRIVETRAIN_SPEED_MPS = 3.0;
   @frc.powerlib.tuning.TunableConstant
