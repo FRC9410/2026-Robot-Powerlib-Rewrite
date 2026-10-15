@@ -9,14 +9,15 @@ at 1.5 m/s including diagonal input. The runtime firecontrol classes `ShotCalcul
 Their FRC Team 5962 perSEVERE MIT attribution is retained. No MapleSim, projectile
 simulator, LUT generator, or simulation-only dependencies were added.
 
-The solver converts measured robot-relative velocity into field coordinates, predicts
-the launcher through a 20 ms release delay, includes rotational velocity at the
-rear-mounted launcher, and solves a drag-adjusted virtual target using Newton's
-method. Driving and feeding use the same compensated heading, with angular-rate
-feedforward. Current RPS/hood tables and offsets remain intact: robot-center calibration
-distances are shifted by the 0.20 m rear launcher offset inside the lookup table so
-stationary shots retain their original demands. Phoenix already supplies a current
-pose, so no additional vision latency is applied.
+The solver converts measured robot-relative velocity into field coordinates, low-pass
+filters it (`SOTM_VELOCITY_FILTER_SECONDS`, 0.1 s), predicts the launcher through a
+20 ms release delay, includes rotational velocity at the rear-mounted launcher, and
+solves a drag-adjusted virtual target using Newton's method. Acceleration is not
+estimated: differencing measured velocity roughly tripled noise in the aim heading.
+Current RPS/hood tables and offsets remain intact: robot-center calibration distances
+are shifted by the 0.20 m rear launcher offset inside the lookup table so stationary
+shots retain their original demands. Phoenix already supplies a current pose, so no
+additional vision latency is applied.
 
 The imported flight-time table is **provisional**: the reference used different RPS
 and hood settings. Measure flight times for this robot's retained calibration before
@@ -24,26 +25,44 @@ relying on moving-shot accuracy. Verify the 0.20 m launcher offset and release d
 on hardware too. No new on-robot shot calibration is claimed by the software tests.
 
 Both actual center distance and compensated calibration distance must remain within
-1.95-4.9 m in the scoring zone. Feeding still requires the existing 5-degree heading,
-hood, flywheel and feedback checks. Excessive tilt (over 5 degrees), speed (over 3 m/s),
-invalid input, uncalibrated lead distance or solver nonconvergence prevents a moving
-shot. A stationary fallback is allowed only when nearly stopped. Solver confidence
-is diagnostic; feed permission uses the explicit validity and readiness checks.
+1.95-4.9 m in the scoring zone. Excessive tilt (over 5 degrees), speed (over 3 m/s),
+invalid input, uncalibrated lead distance or solver nonconvergence blocks a moving
+shot. A blocked shot never feeds, but keeps the static flywheel and hood setpoints so
+the flywheel stays spun up. A stationary fallback is allowed only when nearly stopped.
+Solver confidence is diagnostic; feed permission uses the explicit validity and
+readiness checks.
 
-Once translation and rotation settle within 1 degree of aim, wheels park parallel
-instead of retaining the turn-in-place stance. Driver translation or drift beyond
-2 degrees resumes normal aiming. This applies to teleop and the autonomous final aim.
-The turn-in-place wheel angles remain necessary while the robot is rotating.
+Feeding starts on the existing 2 rps flywheel, 0.01 rot hood and 5-degree heading
+tolerances and healthy feedback. Once feeding, it continues while each stays within
+`FEED_HOLD_TOLERANCE_SCALE` (1.5x) of its start tolerance, so one-loop dips do not
+brake the spindexer.
 
-Power Tool exposes `Shooting/EffectiveDistanceMeters`, `TimeOfFlightSeconds`,
+Teleop aiming slews the heading target at up to `AIM_HEADING_SLEW_DEGREES_PER_SECOND`
+(90) so lead changes and moving/static fallbacks turn the robot smoothly, and adds the
+configured `Heading/kD` as damping. Lower the slew rate if the wheels still splay while
+aiming. Once translation and rotation settle within 1 degree of aim, wheels park
+parallel instead of retaining the turn-in-place stance. Driver translation or drift
+beyond 2 degrees resumes normal aiming. This applies to teleop and the autonomous final
+aim. The turn-in-place wheel angles remain necessary while the robot is rotating.
+
+`Shooting/Custom/SOTM_ENABLED` is the kill switch: 1 = shoot on the move, any other
+value = the original stationary shot with driver translation held at zero while
+aiming. Change it from Power Tool with tuning enabled.
+
+Power Tool's Shot ready card shows the kill switch, SOTM confidence, lead angle and
+flight time, and the compensated aim distance. The robot publishes
+`Shooting/SOTMEnabled`, `LeadDegrees`, `EffectiveDistanceMeters`, `TimeOfFlightSeconds`,
 `MotionCompensated`, `SOTMValid`, `SOTMConfidence`, `SolutionStatus` and
 `Drive/AimWheelsParked`. Tunable constants include
 `RobotContainer/Custom/SHOOTING_MAX_TRANSLATION_SPEED_MPS`,
-`DRIVE_WHILE_SHOOTING_COEFFICIENT`, and Shooting's
-`SOTM_MAX_DRIVETRAIN_SPEED_MPS`, `SOTM_RELEASE_DELAY_SECONDS`, and
-`SOTM_DRAG_COEFFICIENT`. Source constants and `powerlib-constants.json` are kept in sync.
-Tests cover velocity lead, release latency, rotating-launcher velocity, solver failures,
-retained stationary calibrations, compensated readiness, drive speed caps and parking.
+`DRIVE_WHILE_SHOOTING_COEFFICIENT`, and Shooting's `SOTM_ENABLED`,
+`SOTM_MAX_DRIVETRAIN_SPEED_MPS`, `SOTM_RELEASE_DELAY_SECONDS`, `SOTM_DRAG_COEFFICIENT`,
+`FEED_HOLD_TOLERANCE_SCALE`, `SOTM_VELOCITY_FILTER_SECONDS` and
+`AIM_HEADING_SLEW_DEGREES_PER_SECOND`. Source constants and `powerlib-constants.json`
+are kept in sync. Tests cover velocity lead, filtering, release latency,
+rotating-launcher velocity, solver failures, blocked-shot setpoints, feed hold,
+retained stationary calibrations, compensated readiness, the kill switch, drive speed
+caps, aim slewing and parking.
 
 ## PowerLib installation
 
