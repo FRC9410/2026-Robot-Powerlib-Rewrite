@@ -10,10 +10,13 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.powerlib.auto.ChassisMotionLimiter;
+import frc.powerlib.auto.DistanceSpeedController;
+import frc.powerlib.auto.PathDistance;
 import frc.powerlib.configs.MotionConstraints;
 import frc.powerlib.health.HealthChecks;
 import frc.robot.Constants;
 import frc.robot.subsystems.Swerve;
+import java.util.List;
 import java.util.function.Consumer;
 
 /** April 4 distance control with constrained field-relative translation and rotation requests. */
@@ -25,8 +28,10 @@ public final class DriveToPointCommand extends Command {
   private final Consumer<String> abort;
   private final ChassisMotionLimiter limiter;
   private final ChassisSpeeds desiredSpeeds = new ChassisSpeeds();
-  private final PIDController distanceController = new PIDController(
-      Constants.RobotContainer.AUTO_TRANSLATION_KP, 0, Constants.RobotContainer.AUTO_TRANSLATION_KD);
+  private final PathDistance pathDistance;
+  private final DistanceSpeedController distanceController = new DistanceSpeedController(
+      new PIDController(Constants.RobotContainer.AUTO_TRANSLATION_KP, 0, Constants.RobotContainer.AUTO_TRANSLATION_KD),
+      Units.inchesToMeters(Constants.Auto.STATIC_FEEDFORWARD_THRESHOLD_INCHES));
   private final Timer timer = new Timer();
   private final SwerveRequest.FieldCentric driveRequest = new SwerveRequest.FieldCentric()
       .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
@@ -41,6 +46,7 @@ public final class DriveToPointCommand extends Command {
     this.lockHeading = lockHeading;
     this.abort = abort;
     limiter = new ChassisMotionLimiter(constraints);
+    pathDistance = new PathDistance(List.of(destination.getTranslation()));
     driveRequest.withDriveRequestType(lockHeading ? DriveRequestType.Velocity : DriveRequestType.OpenLoopVoltage);
     addRequirements(drivetrain);
   }
@@ -79,15 +85,14 @@ public final class DriveToPointCommand extends Command {
     lastTimestamp = now;
     var pose = drivetrain.getState().Pose;
     var delta = destination.getTranslation().minus(pose.getTranslation());
-    double distance = delta.getNorm();
-    double feedforward = distance >= Units.inchesToMeters(Constants.Auto.STATIC_FEEDFORWARD_THRESHOLD_INCHES)
-        ? Constants.Swerve.DRIVE_TO_POINT_STATIC_FRICTION_CONSTANT * drivetrain.MAX_SPEED : 0;
-    double speed = Math.abs(distanceController.calculate(distance, 0)) + feedforward;
-    desiredSpeeds.vxMetersPerSecond = distance > 0 ? speed * delta.getX() / distance : 0;
-    desiredSpeeds.vyMetersPerSecond = distance > 0 ? speed * delta.getY() / distance : 0;
-    desiredSpeeds.omegaRadiansPerSecond = lockHeading
-        ? drivetrain.calculateAutonomousHeadingRate(pose.getRotation(), destination.getRotation()) : 0;
     try {
+      double distance = pathDistance.remainingDistance(pose.getTranslation(), 0);
+      double speed = distanceController.calculate(distance,
+          Constants.Swerve.DRIVE_TO_POINT_STATIC_FRICTION_CONSTANT * drivetrain.MAX_SPEED);
+      desiredSpeeds.vxMetersPerSecond = distance > 0 ? speed * delta.getX() / distance : 0;
+      desiredSpeeds.vyMetersPerSecond = distance > 0 ? speed * delta.getY() / distance : 0;
+      desiredSpeeds.omegaRadiansPerSecond = lockHeading
+          ? drivetrain.calculateAutonomousHeadingRate(pose.getRotation(), destination.getRotation()) : 0;
       var constrained = limiter.calculate(desiredSpeeds, elapsed);
       drivetrain.applyRequest(driveRequest.withVelocityX(constrained.vxMetersPerSecond)
           .withVelocityY(constrained.vyMetersPerSecond).withRotationalRate(constrained.omegaRadiansPerSecond),

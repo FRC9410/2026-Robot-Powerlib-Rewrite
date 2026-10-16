@@ -30,7 +30,7 @@ class StateMachineTest {
     controller = new XboxControllerSim(Constants.OI.DRIVER_CONTROLLER_PORT);
   }
 
-  @BeforeEach void reset() {
+  @BeforeEach void reset() throws InterruptedException {
     CommandScheduler.getInstance().cancelAll();
     DriverStationSim.setEnabled(true);
     DriverStationSim.setAutonomous(false);
@@ -45,6 +45,17 @@ class StateMachineTest {
     // Poll released controls before resetting so each test starts with fresh trigger edges.
     CommandScheduler.getInstance().run();
     container.resetForMode();
+    // Stopping requests do not instantaneously remove simulated chassis momentum.
+    // Establish a stationary fixture before tests that reset pose or initialize heading.
+    robot.drivetrain.applyRequest(new com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake());
+    int stationarySamples = 0;
+    for (int i = 0; i < 100 && stationarySamples < 3; i++) {
+      Thread.sleep(10);
+      var speeds = robot.drivetrain.getState().Speeds;
+      stationarySamples = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 1e-4
+          && Math.abs(speeds.omegaRadiansPerSecond) < 1e-4 ? stationarySamples + 1 : 0;
+    }
+    assertEquals(3, stationarySamples, "Simulated drivetrain did not settle between tests");
     robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180)));
     robot.shooter.inputs.velocityRotationsPerSecond = 0;
     robot.shooterHood.inputs.positionRotations = 0.09;
@@ -126,6 +137,17 @@ class StateMachineTest {
 
     started.setDouble(shooting, edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - 1.1);
     container.resetForMode();
+    // Stopping requests do not instantaneously remove simulated chassis momentum.
+    // Establish a stationary fixture before tests that reset pose or initialize heading.
+    robot.drivetrain.applyRequest(new com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake());
+    int stationarySamples = 0;
+    for (int i = 0; i < 100 && stationarySamples < 3; i++) {
+      Thread.sleep(10);
+      var speeds = robot.drivetrain.getState().Speeds;
+      stationarySamples = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 1e-4
+          && Math.abs(speeds.omegaRadiansPerSecond) < 1e-4 ? stationarySamples + 1 : 0;
+    }
+    assertEquals(3, stationarySamples, "Simulated drivetrain did not settle between tests");
     assertTrue(Double.isNaN(started.getDouble(shooting)));
     robot.requestState(RobotState.SHOOTING, requestOwner);
     robot.execute();
@@ -370,10 +392,10 @@ class StateMachineTest {
       boolean accepted = (boolean) apply.invoke(robot.vision, heading);
       var status = Vision.class.getDeclaredField("headingStatus");
       status.setAccessible(true);
-      // This simulator has no Phoenix pose-history samples. Reaching this rejection
-      // proves the older heading passed the timestamp guard and was evaluated.
-      assertFalse(accepted);
-      assertEquals("Capture pose unavailable", status.get(robot.vision));
+      // Native pose history becomes available asynchronously as simulation starts.
+      // Both outcomes prove this older heading reached evaluation instead of being
+      // discarded merely because a newer position measurement was already applied.
+      assertEquals(accepted ? "Independent heading applied" : "Capture pose unavailable", status.get(robot.vision));
       assertEquals(captureTime, headingTime.getDouble(robot.vision));
       assertEquals(captureTime + 0.001, positionTime.getDouble(robot.vision));
       assertFalse((boolean) apply.invoke(robot.vision, heading));
@@ -531,6 +553,42 @@ class StateMachineTest {
     }
   }
 
+  @Test void pointCommandRetainsSinglePointSpeedRequestsAndResetsTheirHistory() throws Exception {
+    var destination = new Pose2d(TEST_X + 2, TEST_Y, new Rotation2d());
+    var command = new frc.robot.commands.DriveToPointCommand(robot.drivetrain, destination, 3,
+        new frc.powerlib.configs.MotionConstraints(1, 1, 1, 1), false, reason -> fail(reason));
+    var desiredField = command.getClass().getDeclaredField("desiredSpeeds");
+    desiredField.setAccessible(true);
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try (var baseline = new edu.wpi.first.math.controller.PIDController(
+        Constants.RobotContainer.AUTO_TRANSLATION_KP, 0, Constants.RobotContainer.AUTO_TRANSLATION_KD)) {
+      for (int run = 0; run < 2; run++) {
+        robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, new Rotation2d()));
+        command.initialize();
+        baseline.reset();
+        for (double offset : new double[] {0, 1.8, 1.95}) {
+          robot.drivetrain.resetPose(new Pose2d(TEST_X + offset, TEST_Y, new Rotation2d()));
+          edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+          var pose = robot.drivetrain.getState().Pose;
+          double distance = destination.getTranslation().minus(pose.getTranslation()).getNorm();
+          double expected = Math.abs(baseline.calculate(distance, 0))
+              + (distance >= edu.wpi.first.math.util.Units.inchesToMeters(Constants.Auto.STATIC_FEEDFORWARD_THRESHOLD_INCHES)
+                  ? Constants.Swerve.DRIVE_TO_POINT_STATIC_FRICTION_CONSTANT * robot.drivetrain.MAX_SPEED : 0);
+          command.execute();
+          var desired = (edu.wpi.first.math.kinematics.ChassisSpeeds) desiredField.get(command);
+          assertEquals(expected, Math.hypot(desired.vxMetersPerSecond, desired.vyMetersPerSecond), 1e-6);
+        }
+        assertTrue(command.isFinished());
+        command.end(false);
+        assertEquals(0, pointRequest(command).VelocityX);
+        assertEquals(0, pointRequest(command).VelocityY);
+      }
+    } finally {
+      command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
   @Test void autonomousHeadingWrapsWithoutChangingManualControllerHistory() {
     var drive = robot.drivetrain;
     double manualOutput = drive.DRIVE_AT_ANGLE.HeadingController.getLastAppliedOutput();
@@ -550,13 +608,15 @@ class StateMachineTest {
         reason -> fail(reason));
     edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
     try {
+      double initialOmega = Math.max(-1, Math.min(1, robot.drivetrain.getState().Speeds.omegaRadiansPerSecond));
       command.initialize();
       edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.1);
       command.execute();
       assertNull(robot.drivetrain.getHeadingSetpointDegrees());
       assertEquals(com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.OpenLoopVoltage,
           pointRequest(command).DriveRequestType);
-      assertEquals(0, pointRequest(command).RotationalRate, 1e-6);
+      double expectedOmega = Math.copySign(Math.max(0, Math.abs(initialOmega) - 0.1), initialOmega);
+      assertEquals(expectedOmega, pointRequest(command).RotationalRate, 1e-6);
     } finally {
       command.end(true);
       edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
