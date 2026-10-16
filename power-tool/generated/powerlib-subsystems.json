@@ -144,7 +144,7 @@
                                             "discontinuityPoint":  0.5
                                         },
                            "absolutePosition":  {
-                                                    "units":  "degrees",
+                                                    "units":  "rotations",
                                                     "default":  -0.41
                                                 }
                        },
@@ -234,7 +234,7 @@
                                             "discontinuityPoint":  0.5
                                         },
                            "absolutePosition":  {
-                                                    "units":  "degrees",
+                                                    "units":  "rotations",
                                                     "default":  0
                                                 }
                        },

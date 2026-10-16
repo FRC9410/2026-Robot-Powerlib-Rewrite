@@ -35,7 +35,7 @@ public class IntakeWristConstants {
   public static final double MOTION_MAGIC_CRUISE_VELOCITY = 1;
   public static final double MOTION_MAGIC_ACCELERATION = 20;
   public static final String NAME = "IntakeWrist";
-  public static final String POSITION_UNITS = "degrees";
+  public static final String POSITION_UNITS = "rotations";
   public static final Optional<Double> DEFAULT_POSITION = Optional.of(-0.41);
 
   public static final AbsolutePositionSubsystemConfig INTAKE_WRIST_CONFIG =
