@@ -101,7 +101,7 @@ hub alignment. Robot tests cover shot-table values, readiness, transitions,
 and button priority. PowerLib feedback-ratio validation also accepts signed CTRE
 ratios, retaining the rewrite's negative sensor-to-mechanism ratios.
 
-Autonomous point commands now request braking before the tolerance boundary and require
+Autonomous stopping moves request braking before the tolerance boundary and require
 position, optional heading, and low measured translation/angular speed to hold continuously.
 The provisional arrival limits are 0.05 m/s, 5 degrees/s and 0.1 s, configured in AutoConstants;
 validate them and route timing on hardware. The April 4 waypoints, per-leg tolerances and
@@ -110,6 +110,18 @@ cancellation and faults stop immediately. Leg deadlines remain 3 s, final aiming
 the overall routine 20 s. Final aiming uses the same completion check with a live hub heading
 and the last waypoint's position tolerance; a timeout aborts before requesting SHOOTING.
 The command caches completion during execute(), so isFinished() has no control side effects.
+
+Each regional auto now uses three continuous driving sections: points 1-2 before INTAKING,
+points 3-5 before READY, and points 6-7 before final aiming. DrivePathCommand retains its
+distance controller, heading history and chassis limiter across intermediate waypoints;
+DriveToPointCommand is the single-point wrapper around that same implementation. Intermediate
+points advance on position tolerance, while section endpoints require measured-speed settling.
+PathProgress caches braking bounds for lower future speed targets and the final stop. Per-leg
+settings use ordered indices, so duplicate coordinates retain their own policies. The active
+waypoint's 3 s deadline restarts only on advancement; timeout is checked before advancement.
+Velocity transitions stay acceleration-limited. Intermediate handoffs currently require entering
+the target radius; crossing detection, corner smoothing and cross-track correction are later work.
+Physical corners, speed transitions and route timing still need validation on the robot.
 
 Build and simulate with the WPILib 2026 JDK:
 
