@@ -15,6 +15,7 @@ import frc.powerlib.auto.CompletionChecker;
 import frc.powerlib.auto.DistanceSpeedController;
 import frc.powerlib.auto.PathProgress;
 import frc.powerlib.configs.PathWaypoint;
+import frc.powerlib.configs.WaypointHandoffConfig;
 import frc.powerlib.health.HealthChecks;
 import frc.robot.Constants;
 import frc.robot.subsystems.Swerve;
@@ -43,9 +44,14 @@ public class DrivePathCommand extends Command {
   private boolean finished;
 
   public DrivePathCommand(Swerve drivetrain, List<PathWaypoint> waypoints, Consumer<String> abort) {
+    this(drivetrain, waypoints, WaypointHandoffConfig.RADIUS_ONLY, abort);
+  }
+
+  public DrivePathCommand(Swerve drivetrain, List<PathWaypoint> waypoints, WaypointHandoffConfig handoff,
+      Consumer<String> abort) {
     this.drivetrain = Objects.requireNonNull(drivetrain, "drivetrain");
     this.abort = Objects.requireNonNull(abort, "abort");
-    progress = new PathProgress(waypoints);
+    progress = new PathProgress(waypoints, handoff);
     completion = new CompletionChecker(progress.endpoint().completion());
     limiter = new ChassisMotionLimiter(progress.constraints());
     addRequirements(drivetrain);
@@ -72,6 +78,7 @@ public class DrivePathCommand extends Command {
     }
     var state = drivetrain.getState();
     try {
+      progress.reset(state.Pose.getTranslation());
       limiter.reset(ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, state.Pose.getRotation()));
     } catch (IllegalArgumentException exception) {
       fail("Drivetrain velocity unavailable");

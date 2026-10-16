@@ -119,9 +119,20 @@ points advance on position tolerance, while section endpoints require measured-s
 PathProgress caches braking bounds for lower future speed targets and the final stop. Per-leg
 settings use ordered indices, so duplicate coordinates retain their own policies. The active
 waypoint's 3 s deadline restarts only on advancement; timeout is checked before advancement.
-Velocity transitions stay acceleration-limited. Intermediate handoffs currently require entering
-the target radius; crossing detection, corner smoothing and cross-track correction are later work.
+Velocity transitions stay acceleration-limited. Intermediate handoffs accept radius arrival
+or bounded forward plane crossings;
+corner smoothing and cross-track correction are later work.
 Physical corners, speed transitions and route timing still need validation on the robot.
+
+The regional paths explicitly enable bounded intermediate crossing. AutoConstants sets provisional
+limits of 0.25 m past the arrival plane and 0.5 m travel between position samples. The crossing and
+current pose must also be inside the waypoint's lateral tolerance. Each section seeds its first
+incoming leg from measured starting pose, processes multiple crossings in observed order, and
+retains controller history when it changes targets. Rejected crossings do not restart deadlines.
+Large sample jumps cannot prove crossing, while ordinary radius arrival still trusts current pose;
+small vision corrections remain indistinguishable from movement. Braking bounds account for the
+expanded handoff region. Crossing never completes an endpoint or bypasses an action boundary.
+Validate the crossing bounds with real autonomous speeds, loop timing and vision corrections.
 
 Build and simulate with the WPILib 2026 JDK:
 

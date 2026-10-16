@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import frc.powerlib.configs.CompletionCriteria;
+import frc.powerlib.configs.WaypointHandoffConfig;
 
 public class AutoConstants {
   // Provisional command limits; validate on the robot before increasing.
@@ -14,6 +15,14 @@ public class AutoConstants {
   public static final double MAX_ARRIVAL_TRANSLATION_SPEED_METERS_PER_SECOND = 0.05;
   public static final double MAX_ARRIVAL_ANGULAR_SPEED_RADIANS_PER_SECOND = Math.toRadians(5);
   public static final double ARRIVAL_SETTLE_TIME_SECONDS = 0.1;
+
+  // Provisional crossing bounds; validate at real autonomous speeds and with vision corrections.
+  public static final double HANDOFF_MAX_OVERSHOOT_METERS = 0.25;
+  public static final double HANDOFF_MAX_SAMPLE_TRAVEL_METERS = 0.5;
+
+  public static WaypointHandoffConfig waypointHandoff() {
+    return new WaypointHandoffConfig(true, HANDOFF_MAX_OVERSHOOT_METERS, HANDOFF_MAX_SAMPLE_TRAVEL_METERS);
+  }
 
   public static CompletionCriteria completionCriteria(double translationToleranceInches, double headingToleranceDegrees) {
     return new CompletionCriteria(Units.inchesToMeters(translationToleranceInches), Math.toRadians(headingToleranceDegrees),

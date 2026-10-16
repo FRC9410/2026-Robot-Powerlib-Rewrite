@@ -282,7 +282,8 @@ class StateMachineTest {
           new frc.robot.subsystems.states.IdleState()));
       robot.execute();
       assertEquals(RobotState.SHOOTING, robot.getCurrentState());
-      assertEquals(-59, robot.feeder.getVelocitySetpoint());
+      // Native simulation may move slightly after reset; verify the selected handler applies its prepared shot.
+      assertEquals(shooting.getShotSolution().feederRps(), robot.feeder.getVelocitySetpoint());
       assertEquals(0, robot.intakeRoller.getVelocitySetpoint());
     } finally { field.set(robot, original); }
   }
@@ -921,6 +922,147 @@ class StateMachineTest {
       assertTrue(command.isFinished());
     } finally {
       command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void crossingHandoffKeepsControllerHistoryWhenTheRadiusIsSkipped() throws Exception {
+    var command = new frc.robot.commands.DrivePathCommand(robot.drivetrain,
+        java.util.List.of(pathPoint(TEST_X + 1, 90, true, 3), pathPoint(TEST_X + 3, 180, false, 3)),
+        Constants.Auto.waypointHandoff(), reason -> fail(reason));
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      command.initialize();
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 0.8, TEST_Y, Rotation2d.fromDegrees(180)));
+      for (int i = 0; i < 4; i++) {
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+        command.execute();
+      }
+      assertEquals(0, pathProgress(command).index());
+      double previousX = pointRequest(command).VelocityX;
+      double previousOmega = pointRequest(command).RotationalRate;
+      assertTrue(previousX > 0.05);
+      assertTrue(previousOmega < -0.05);
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 1.2, TEST_Y, Rotation2d.fromDegrees(180)));
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      command.execute();
+      assertEquals(1, pathProgress(command).index());
+      assertEquals(previousX + 0.02, pointRequest(command).VelocityX, 1e-6);
+      assertEquals(previousOmega + 0.02, pointRequest(command).RotationalRate, 1e-6);
+      assertFalse(command.isFinished());
+      assertNull(robot.drivetrain.getHeadingSetpointDegrees());
+    } finally {
+      command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void endpointCrossingCannotStartTheNextActionWithoutSettling() throws Exception {
+    var actionStarted = new java.util.concurrent.atomic.AtomicBoolean();
+    var paths = new java.util.ArrayList<frc.robot.commands.DrivePathCommand>();
+    var auto = new frc.powerlib.auto.Auto("Endpoint crossing")
+        .addDriveToPoint(new Pose2d(TEST_X + 1, TEST_Y, Rotation2d.fromDegrees(180)))
+        .addDriveToPoint(new Pose2d(TEST_X + 2, TEST_Y, Rotation2d.fromDegrees(180)))
+        .addCommand(() -> edu.wpi.first.wpilibj2.command.Commands.runOnce(() -> actionStarted.set(true)))
+        .buildContinuous(section -> {
+          var command = new frc.robot.commands.DrivePathCommand(robot.drivetrain,
+              java.util.List.of(pathPoint(TEST_X + 1, 180, true, 3), pathPoint(TEST_X + 2, 180, true, 3)),
+              Constants.Auto.waypointHandoff(), reason -> fail(reason));
+          paths.add(command);
+          return command;
+        });
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      auto.initialize();
+      for (double offset : new double[] {0.8, 1.2, 1.8, 2.2}) {
+        robot.drivetrain.resetPose(new Pose2d(TEST_X + offset, TEST_Y, Rotation2d.fromDegrees(180)));
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+        auto.execute();
+      }
+      assertEquals(1, pathProgress(paths.get(0)).index());
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.12);
+      auto.execute();
+      assertFalse(paths.get(0).isFinished());
+      assertFalse(actionStarted.get());
+      assertFalse(auto.isFinished());
+    } finally {
+      auto.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void crossingRestartsTheDeadlineButCannotRescueAnExpiredWaypoint() throws Exception {
+    var reasons = new java.util.ArrayList<String>();
+    var command = new frc.robot.commands.DrivePathCommand(robot.drivetrain,
+        java.util.List.of(pathPoint(TEST_X + 1, 180, true, 0.2), pathPoint(TEST_X + 3, 180, true, 0.2)),
+        Constants.Auto.waypointHandoff(), reasons::add);
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      command.initialize();
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 0.8, TEST_Y, Rotation2d.fromDegrees(180)));
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.1);
+      command.execute();
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 1.2, TEST_Y, Rotation2d.fromDegrees(180)));
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.05);
+      command.execute();
+      assertEquals(1, pathProgress(command).index());
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.1);
+      command.execute();
+      assertFalse(command.isFinished());
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.11);
+      command.execute();
+      assertTrue(command.isFinished());
+      assertEquals(java.util.List.of("Autonomous waypoint timed out"), reasons);
+      assertEquals(0, pointRequest(command).VelocityX);
+      command.end(true);
+
+      robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180)));
+      command.initialize();
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 0.8, TEST_Y, Rotation2d.fromDegrees(180)));
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.1);
+      command.execute();
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 1.2, TEST_Y, Rotation2d.fromDegrees(180)));
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.11);
+      command.execute();
+      assertTrue(command.isFinished());
+      assertEquals(0, pathProgress(command).index());
+      assertEquals(2, reasons.size());
+      assertEquals(0, pointRequest(command).VelocityX);
+    } finally {
+      command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void rejectedCrossingsDoNotResetTheWaypointDeadline() throws Exception {
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      for (boolean largeJump : new boolean[] {false, true}) {
+        robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180)));
+        var reasons = new java.util.ArrayList<String>();
+        var command = new frc.robot.commands.DrivePathCommand(robot.drivetrain,
+            java.util.List.of(pathPoint(TEST_X + 1, 180, true, 0.2), pathPoint(TEST_X + 3, 180, true, 0.2)),
+            Constants.Auto.waypointHandoff(), reasons::add);
+        try {
+          command.initialize();
+          double y = largeJump ? TEST_Y : TEST_Y + 0.2;
+          robot.drivetrain.resetPose(new Pose2d(TEST_X + (largeJump ? 0.2 : 0.8), y, Rotation2d.fromDegrees(180)));
+          edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.05);
+          command.execute();
+          robot.drivetrain.resetPose(new Pose2d(TEST_X + 1.2, y, Rotation2d.fromDegrees(180)));
+          edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.05);
+          command.execute();
+          assertEquals(0, pathProgress(command).index());
+          edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.11);
+          command.execute();
+          assertTrue(command.isFinished());
+          assertEquals(java.util.List.of("Autonomous waypoint timed out"), reasons);
+          assertEquals(0, pointRequest(command).VelocityX);
+        } finally {
+          command.end(true);
+        }
+      }
+    } finally {
       edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
     }
   }
