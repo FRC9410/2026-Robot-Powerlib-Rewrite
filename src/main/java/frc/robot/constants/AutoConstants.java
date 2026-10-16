@@ -4,6 +4,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
 public class AutoConstants {
+  // Provisional command limits; validate on the robot before increasing.
+  public static final double MAX_TRANSLATION_ACCELERATION_METERS_PER_SECOND_SQUARED = 3.0;
+  public static final double MAX_ANGULAR_ACCELERATION_RADIANS_PER_SECOND_SQUARED = 2 * Math.PI;
+
   public static final double TRANSLATION_TOLERANCE = 0.05;
   public static final double ROTATION_TOLERANCE = 1.0;
 

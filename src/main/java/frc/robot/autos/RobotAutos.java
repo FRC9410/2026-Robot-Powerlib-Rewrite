@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.powerlib.auto.Auto;
 import frc.powerlib.auto.AutoBuilder;
+import frc.powerlib.configs.MotionConstraints;
 import frc.powerlib.health.HealthChecks;
 import frc.robot.Constants;
 import frc.robot.commands.DriveToPointCommand;
@@ -62,7 +63,13 @@ public final class RobotAutos {
         .build(point -> {
           int leg = points.indexOf(point);
           return new DriveToPointCommand(robot.drivetrain, point, Constants.Auto.LEG_TOLERANCE_INCHES[leg],
-              Constants.Auto.LEG_SPEED_COEFFICIENTS[leg], Constants.Auto.LEG_LOCK_HEADING[leg], run::abort);
+              new MotionConstraints(
+                  robot.drivetrain.MAX_SPEED * Constants.Swerve.DRIVE_TO_POINT_MAX_SPEED_COEFFICIENT
+                      * Constants.Auto.LEG_SPEED_COEFFICIENTS[leg],
+                  Constants.Auto.MAX_TRANSLATION_ACCELERATION_METERS_PER_SECOND_SQUARED,
+                  robot.drivetrain.MAX_DRIVE_TO_POINT_ANGULAR_RATE,
+                  Constants.Auto.MAX_ANGULAR_ACCELERATION_RADIANS_PER_SECOND_SQUARED),
+              Constants.Auto.LEG_LOCK_HEADING[leg], run::abort);
         });
     Command guarded = Commands.either(sequence, Commands.none(), () -> run.start(route, robot));
     return guarded.until(() -> run.aborted || run.timer.hasElapsed(Constants.Field.AUTO_LENGTH_IN_TIME)

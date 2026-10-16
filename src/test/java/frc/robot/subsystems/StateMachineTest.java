@@ -476,6 +476,93 @@ class StateMachineTest {
     assertFalse(robot.hasRequest(RobotState.SHOOTING));
   }
 
+  private static com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric pointRequest(
+      frc.robot.commands.DriveToPointCommand command) throws ReflectiveOperationException {
+    var field = command.getClass().getDeclaredField("driveRequest");
+    field.setAccessible(true);
+    return (com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric) field.get(command);
+  }
+
+  @Test void pointCommandConstrainsCombinedMotionAndStopsImmediately() throws Exception {
+    var limits = new frc.powerlib.configs.MotionConstraints(0.6, 0.5, 0.8, 1);
+    var reasons = new java.util.ArrayList<String>();
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    var command = new frc.robot.commands.DriveToPointCommand(robot.drivetrain,
+        new Pose2d(TEST_X + 10, TEST_Y + 10, Rotation2d.fromDegrees(90)), 3, limits, true, reasons::add);
+    try {
+      var state = robot.drivetrain.getState();
+      var previous = edu.wpi.first.math.kinematics.ChassisSpeeds.fromRobotRelativeSpeeds(
+          state.Speeds, state.Pose.getRotation());
+      var initial = new frc.powerlib.auto.ChassisMotionLimiter(limits);
+      initial.reset(previous);
+      previous = initial.calculate(new edu.wpi.first.math.kinematics.ChassisSpeeds(), 0);
+      command.initialize();
+      for (double dt : new double[] {0.02, 0.01, 0.03, 0.06, 0.02}) {
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(dt);
+        command.execute();
+        var request = pointRequest(command);
+        assertTrue(Math.hypot(request.VelocityX, request.VelocityY) <= 0.6 + 1e-6);
+        assertTrue(Math.hypot(request.VelocityX - previous.vxMetersPerSecond,
+            request.VelocityY - previous.vyMetersPerSecond) <= 0.5 * dt + 1e-6);
+        assertTrue(Math.abs(request.RotationalRate) <= 0.8 + 1e-6);
+        assertTrue(Math.abs(request.RotationalRate - previous.omegaRadiansPerSecond) <= dt + 1e-6);
+        assertEquals(0, request.Deadband);
+        assertEquals(0, request.RotationalDeadband);
+        previous = new edu.wpi.first.math.kinematics.ChassisSpeeds(
+            request.VelocityX, request.VelocityY, request.RotationalRate);
+      }
+      assertTrue(Math.hypot(previous.vxMetersPerSecond, previous.vyMetersPerSecond) > 0);
+      assertEquals(90, robot.drivetrain.getHeadingSetpointDegrees(), 1e-9);
+      assertTrue(reasons.isEmpty());
+      command.end(true);
+      assertEquals(0, pointRequest(command).VelocityX);
+      assertEquals(0, pointRequest(command).VelocityY);
+      assertEquals(0, pointRequest(command).RotationalRate);
+      assertNull(robot.drivetrain.getHeadingSetpointDegrees());
+      command.initialize();
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(Constants.RobotContainer.AUTO_LEG_TIMEOUT_SECONDS + 0.1);
+      assertTrue(command.isFinished());
+      assertEquals(java.util.List.of("Drive-to-point leg timed out"), reasons);
+      assertEquals(0, pointRequest(command).VelocityX);
+      assertEquals(0, pointRequest(command).RotationalRate);
+    } finally {
+      command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void autonomousHeadingWrapsWithoutChangingManualControllerHistory() {
+    var drive = robot.drivetrain;
+    double manualOutput = drive.DRIVE_AT_ANGLE.HeadingController.getLastAppliedOutput();
+    drive.resetAutonomousHeadingController();
+    double positive = drive.calculateAutonomousHeadingRate(Rotation2d.fromDegrees(179), Rotation2d.fromDegrees(-179));
+    assertTrue(positive > 0 && positive < 2);
+    drive.resetAutonomousHeadingController();
+    double negative = drive.calculateAutonomousHeadingRate(Rotation2d.fromDegrees(-179), Rotation2d.fromDegrees(179));
+    assertEquals(-positive, negative, 1e-9);
+    assertEquals(manualOutput, drive.DRIVE_AT_ANGLE.HeadingController.getLastAppliedOutput());
+  }
+
+  @Test void unlockedPointCommandDoesNotActivateHeadingControl() throws Exception {
+    var command = new frc.robot.commands.DriveToPointCommand(robot.drivetrain,
+        new Pose2d(TEST_X + 10, TEST_Y, Rotation2d.fromDegrees(45)), 3,
+        new frc.powerlib.configs.MotionConstraints(1, 1, 1, 1), false,
+        reason -> fail(reason));
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      command.initialize();
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.1);
+      command.execute();
+      assertNull(robot.drivetrain.getHeadingSetpointDegrees());
+      assertEquals(com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.OpenLoopVoltage,
+          pointRequest(command).DriveRequestType);
+      assertEquals(0, pointRequest(command).RotationalRate, 1e-6);
+    } finally {
+      command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
   @Test void timedOutAutoLegAbortsWithoutStartingIntake() {
     DriverStationSim.setAutonomous(true);
     DriverStationSim.notifyNewData();
