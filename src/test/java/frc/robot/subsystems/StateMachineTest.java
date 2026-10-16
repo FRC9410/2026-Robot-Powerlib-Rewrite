@@ -471,17 +471,30 @@ class StateMachineTest {
     var route = frc.robot.autos.RobotAutos.ROUTES.get(3);
     robot.drivetrain.resetPose(route.fieldPoints().get(0));
     var auto = frc.robot.autos.RobotAutos.build(route, robot);
-    auto.initialize();
-    auto.execute();
-    robot.drivetrain.resetPose(route.fieldPoints().get(1));
-    auto.execute();
-    auto.execute();
-    assertTrue(robot.hasRequest(RobotState.INTAKING));
-    auto.end(true);
-    assertFalse(robot.hasRequest(RobotState.INTAKING));
-    assertEquals(0, robot.intakeRoller.getVelocitySetpoint());
-    assertEquals(0, robot.feeder.getVelocitySetpoint());
-    assertEquals(0, robot.shooter.getVelocitySetpoint());
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      auto.initialize();
+      auto.execute();
+      assertFalse(robot.hasRequest(RobotState.INTAKING));
+      for (int i = 0; i < 7; i++) {
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+        auto.execute();
+      }
+      robot.drivetrain.resetPose(route.fieldPoints().get(1));
+      for (int i = 0; i < 12 && !robot.hasRequest(RobotState.INTAKING); i++) {
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+        auto.execute();
+      }
+      assertTrue(robot.hasRequest(RobotState.INTAKING));
+      auto.end(true);
+      assertFalse(robot.hasRequest(RobotState.INTAKING));
+      assertEquals(0, robot.intakeRoller.getVelocitySetpoint());
+      assertEquals(0, robot.feeder.getVelocitySetpoint());
+      assertEquals(0, robot.shooter.getVelocitySetpoint());
+    } finally {
+      if (!auto.isFinished()) auto.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
   }
 
   @Test void autoRejectsWrongStartingPoseWithoutResettingOdometry() {
@@ -543,6 +556,8 @@ class StateMachineTest {
       assertNull(robot.drivetrain.getHeadingSetpointDegrees());
       command.initialize();
       edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(Constants.RobotContainer.AUTO_LEG_TIMEOUT_SECONDS + 0.1);
+      assertFalse(command.isFinished()); // Reading completion does not process a timeout.
+      command.execute();
       assertTrue(command.isFinished());
       assertEquals(java.util.List.of("Drive-to-point leg timed out"), reasons);
       assertEquals(0, pointRequest(command).VelocityX);
@@ -553,10 +568,12 @@ class StateMachineTest {
     }
   }
 
-  @Test void pointCommandRetainsSinglePointSpeedRequestsAndResetsTheirHistory() throws Exception {
+  @Test void pointCommandBrakesBeforeArrivalAndResetsItsHistory() throws Exception {
     var destination = new Pose2d(TEST_X + 2, TEST_Y, new Rotation2d());
+    var limits = new frc.powerlib.configs.MotionConstraints(1, 1, 1, 1);
+    double tolerance = edu.wpi.first.math.util.Units.inchesToMeters(3);
     var command = new frc.robot.commands.DriveToPointCommand(robot.drivetrain, destination, 3,
-        new frc.powerlib.configs.MotionConstraints(1, 1, 1, 1), false, reason -> fail(reason));
+        limits, false, reason -> fail(reason));
     var desiredField = command.getClass().getDeclaredField("desiredSpeeds");
     desiredField.setAccessible(true);
     edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
@@ -571,18 +588,51 @@ class StateMachineTest {
           edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
           var pose = robot.drivetrain.getState().Pose;
           double distance = destination.getTranslation().minus(pose.getTranslation()).getNorm();
-          double expected = Math.abs(baseline.calculate(distance, 0))
-              + (distance >= edu.wpi.first.math.util.Units.inchesToMeters(Constants.Auto.STATIC_FEEDFORWARD_THRESHOLD_INCHES)
-                  ? Constants.Swerve.DRIVE_TO_POINT_STATIC_FRICTION_CONSTANT * robot.drivetrain.MAX_SPEED : 0);
+          double expected = distance <= tolerance ? 0 : Math.min(limits.maxTranslationSpeedToStop(distance - tolerance),
+              Math.abs(baseline.calculate(distance, 0))
+                  + Constants.Swerve.DRIVE_TO_POINT_STATIC_FRICTION_CONSTANT * robot.drivetrain.MAX_SPEED);
           command.execute();
           var desired = (edu.wpi.first.math.kinematics.ChassisSpeeds) desiredField.get(command);
           assertEquals(expected, Math.hypot(desired.vxMetersPerSecond, desired.vyMetersPerSecond), 1e-6);
+          assertFalse(command.isFinished());
         }
+        for (int query = 0; query < 10; query++) assertFalse(command.isFinished());
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(Constants.Auto.ARRIVAL_SETTLE_TIME_SECONDS + 0.02);
+        command.execute();
         assertTrue(command.isFinished());
         command.end(false);
         assertEquals(0, pointRequest(command).VelocityX);
         assertEquals(0, pointRequest(command).VelocityY);
       }
+    } finally {
+      command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void headingRequestBrakesOutsideToleranceAndStopsInsideIt() throws Exception {
+    var limits = new frc.powerlib.configs.MotionConstraints(1, 1, 2, 1);
+    var goal = new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180));
+    var command = new frc.robot.commands.DriveToPointCommand(robot.drivetrain, goal, 3,
+        limits, true, reason -> fail(reason));
+    var desiredField = command.getClass().getDeclaredField("desiredSpeeds");
+    desiredField.setAccessible(true);
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(169)));
+      command.initialize();
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      command.execute();
+      var desired = (edu.wpi.first.math.kinematics.ChassisSpeeds) desiredField.get(command);
+      assertEquals(limits.maxAngularSpeedToStop(Math.toRadians(1)), desired.omegaRadiansPerSecond, 1e-6);
+      robot.drivetrain.resetPose(goal);
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      command.execute();
+      assertEquals(0, desired.omegaRadiansPerSecond);
+      assertFalse(command.isFinished());
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.12);
+      command.execute();
+      assertTrue(command.isFinished());
     } finally {
       command.end(true);
       edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
@@ -632,7 +682,7 @@ class StateMachineTest {
     edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
     try {
       auto.initialize();
-      auto.execute(); // Reach leg 1; leg 2 is now active.
+      auto.execute(); // A sample at the goal does not complete the first leg before settling.
       edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(Constants.RobotContainer.AUTO_LEG_TIMEOUT_SECONDS + 0.1);
       auto.execute();
       assertTrue(auto.isFinished());
@@ -641,5 +691,64 @@ class StateMachineTest {
       assertFalse(robot.hasRequest(RobotState.SHOOTING));
       assertEquals(0, robot.shooter.getVelocitySetpoint());
     } finally { edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming(); }
+  }
+
+  @Test void finalAimTimeoutAbortsWithoutRequestingShooting() {
+    DriverStationSim.setAutonomous(true);
+    DriverStationSim.notifyNewData();
+    var point = new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(90));
+    var route = new frc.robot.autos.RobotAutos.Route("Final aim timeout", edu.wpi.first.wpilibj.DriverStation.Alliance.Blue,
+        java.util.Collections.nCopies(7, point));
+    robot.drivetrain.resetPose(point);
+    var auto = frc.robot.autos.RobotAutos.build(route, robot);
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      auto.initialize();
+      boolean aiming = false;
+      for (int i = 0; i < 120 && !aiming && !auto.isFinished(); i++) {
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+        auto.execute();
+        var heading = robot.drivetrain.getHeadingSetpointDegrees();
+        aiming = heading != null && Math.abs(heading - 90) > 1;
+        assertFalse(robot.hasRequest(RobotState.SHOOTING));
+      }
+      assertTrue(aiming, "Route must reach the final aiming command");
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(Constants.Auto.TURN_TIMEOUT_SECONDS + 0.1);
+      auto.execute();
+      assertTrue(auto.isFinished());
+      // Check before cleanup: sequential command initialization must not request shooting on failure.
+      assertFalse(robot.hasRequest(RobotState.SHOOTING));
+      assertEquals(0, robot.shooter.getVelocitySetpoint());
+    } finally {
+      auto.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void settledFinalAimAllowsShooting() {
+    DriverStationSim.setAutonomous(true);
+    DriverStationSim.notifyNewData();
+    var point = new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180));
+    var route = new frc.robot.autos.RobotAutos.Route("Settled final aim", edu.wpi.first.wpilibj.DriverStation.Alliance.Blue,
+        java.util.Collections.nCopies(7, point));
+    robot.drivetrain.resetPose(point);
+    var auto = frc.robot.autos.RobotAutos.build(route, robot);
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      auto.initialize();
+      int ticks = 0;
+      while (ticks < 120 && !robot.hasRequest(RobotState.SHOOTING) && !auto.isFinished()) {
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+        auto.execute();
+        ticks++;
+      }
+      assertTrue(robot.hasRequest(RobotState.SHOOTING));
+      assertTrue(ticks * 0.02 >= 8 * Constants.Auto.ARRIVAL_SETTLE_TIME_SECONDS,
+          "All seven legs and the final aim require their own settle window");
+      assertFalse(auto.isFinished());
+    } finally {
+      auto.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
   }
 }

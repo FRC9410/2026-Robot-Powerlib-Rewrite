@@ -101,6 +101,16 @@ hub alignment. Robot tests cover shot-table values, readiness, transitions,
 and button priority. PowerLib feedback-ratio validation also accepts signed CTRE
 ratios, retaining the rewrite's negative sensor-to-mechanism ratios.
 
+Autonomous point commands now request braking before the tolerance boundary and require
+position, optional heading, and low measured translation/angular speed to hold continuously.
+The provisional arrival limits are 0.05 m/s, 5 degrees/s and 0.1 s, configured in AutoConstants;
+validate them and route timing on hardware. The April 4 waypoints, per-leg tolerances and
+heading locks are unchanged. Normal braking uses the shared chassis motion limiter;
+cancellation and faults stop immediately. Leg deadlines remain 3 s, final aiming 1 s and
+the overall routine 20 s. Final aiming uses the same completion check with a live hub heading
+and the last waypoint's position tolerance; a timeout aborts before requesting SHOOTING.
+The command caches completion during execute(), so isFinished() has no control side effects.
+
 Build and simulate with the WPILib 2026 JDK:
 
 ```powershell
