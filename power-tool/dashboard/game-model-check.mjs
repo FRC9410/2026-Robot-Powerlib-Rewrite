@@ -44,7 +44,11 @@ assert.equal(read(topics.map(t => t.name.endsWith("/LeadDegrees") ? { ...t, valu
 assert.equal(read([], true).ready, undefined);
 assert.equal(read(topics, false).distance, undefined);
 assert.equal(read(topics, true, now + 1200).ready, undefined);
-assert.equal(read(topics, true, now - 1).ready, undefined);
+// A frame that arrived just after the 100 ms display clock ticked is still fresh.
+assert.equal(read(topics, true, now - 1).ready, true);
+assert.equal(read(topics, true, now - 100).sotmEnabled, true);
+// Timestamps well ahead of the clock are still rejected.
+assert.equal(read(topics, true, now - 300).ready, undefined);
 assert.equal(read(topics.map(t => t.name.endsWith("/Distance") ? { ...t, value: NaN } : t)).distance, undefined);
 assert.equal(read(topics.map(t => t.name.endsWith("/HubActive") ? { ...t, value: "true" } : t)).hubActive, undefined);
 console.log("PASS: readiness, SOTM status, inactive/unknown hub, idle, missing/stale/future data and invalid values.");
