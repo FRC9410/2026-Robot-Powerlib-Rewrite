@@ -94,6 +94,15 @@ class MovingShotCalculatorTest {
         Alliance.Blue, 29.5, 0.05, true, true, 6, 0);
     assertFalse(tiltedWhileDriving.valid());
     assertEquals("Robot tilt exceeds shooting limit", tiltedWhileDriving.status());
+    double tiltLimit = Constants.Shooting.SOTM_MAX_TILT_DEGREES;
+    try {
+      // The limit is tunable, e.g. for a Pigeon mounted a few degrees off level.
+      Constants.Shooting.SOTM_MAX_TILT_DEGREES = 10;
+      assertTrue(new MovingShotCalculator().calculate(location, new ChassisSpeeds(0, 0.5, 0),
+          Alliance.Blue, 29.5, 0.05, true, true, 6, 0).valid());
+    } finally {
+      Constants.Shooting.SOTM_MAX_TILT_DEGREES = tiltLimit;
+    }
     assertFalse(new MovingShotCalculator().calculate(location, new ChassisSpeeds(Double.NaN, 0, 0), Alliance.Blue,
         29.5, 0.05, true, true, 0, 0).valid());
     assertFalse(new MovingShotCalculator().calculate(pose(Alliance.Blue, 1.9), new ChassisSpeeds(), Alliance.Blue,

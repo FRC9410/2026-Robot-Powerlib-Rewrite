@@ -89,9 +89,10 @@ public final class MovingShotCalculator {
     double maxSpeed = Constants.Shooting.SOTM_MAX_DRIVETRAIN_SPEED_MPS;
     double releaseDelay = Constants.Shooting.SOTM_RELEASE_DELAY_SECONDS;
     double drag = Constants.Shooting.SOTM_DRAG_COEFFICIENT;
+    double maxTilt = Constants.Shooting.SOTM_MAX_TILT_DEGREES;
     if (!Double.isFinite(maxSpeed) || maxSpeed <= config.minSOTMSpeed
         || !Double.isFinite(releaseDelay) || releaseDelay < 0 || releaseDelay > 0.5
-        || !Double.isFinite(drag) || drag < 0) {
+        || !Double.isFinite(drag) || drag < 0 || !Double.isFinite(maxTilt) || maxTilt <= 0) {
       solver.resetWarmStart(); return ShootingUtils.blocked(base, "Invalid SOTM settings");
     }
     if (config.maxSOTMSpeed != maxSpeed || config.mechLatencyMs != releaseDelay * 1000
@@ -99,6 +100,7 @@ public final class MovingShotCalculator {
     config.maxSOTMSpeed = maxSpeed;
     config.mechLatencyMs = releaseDelay * 1000;
     config.sotmDragCoeff = drag;
+    config.maxTiltDeg = maxTilt;
     if (speed > maxSpeed) {
       solver.resetWarmStart(); return ShootingUtils.blocked(base, "Above SOTM speed limit");
     }

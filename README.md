@@ -28,9 +28,9 @@ When the robot isn't driving (filtered translation under 0.1 m/s, including turn
 place to aim), it uses the original standing shot unchanged, and tilt is not checked.
 While driving, both actual center distance and compensated calibration distance must
 remain within 1.95-4.9 m in the scoring zone. Feeding still requires the existing
-5-degree heading, hood, flywheel and feedback checks. Excessive tilt (over 5 degrees),
-speed (over 3 m/s), invalid input, uncalibrated lead distance or solver nonconvergence
-prevents a moving shot and stops the shooter until a valid shot returns. Solver
+5-degree heading, hood, flywheel and feedback checks. Excessive tilt (over the tunable
+`SOTM_MAX_TILT_DEGREES`, 5 degrees), speed (over 3 m/s), invalid input, uncalibrated lead
+distance or solver nonconvergence prevents a moving shot and stops the shooter until a valid shot returns. Solver
 confidence is diagnostic; feed permission uses the explicit validity and readiness checks.
 
 Teleop aiming slews the heading target at up to `AIM_HEADING_SLEW_DEGREES_PER_SECOND`
@@ -57,7 +57,8 @@ compensated aim distance. The robot publishes
 `Drive/AimWheelsParked` and `Drive/AimWheelsLocked`. Tunable constants include
 `RobotContainer/Custom/DRIVE_WHILE_INTAKING_COEFFICIENT` (intake and shooting drive speed)
 and Shooting's `SOTM_MAX_DRIVETRAIN_SPEED_MPS`, `SOTM_RELEASE_DELAY_SECONDS`, `SOTM_DRAG_COEFFICIENT`,
-`SOTM_VELOCITY_FILTER_SECONDS` and `AIM_HEADING_SLEW_DEGREES_PER_SECOND`. Source
+`SOTM_MAX_TILT_DEGREES`, `SOTM_VELOCITY_FILTER_SECONDS` and
+`AIM_HEADING_SLEW_DEGREES_PER_SECOND`. Source
 constants and `powerlib-constants.json` are kept in sync. Tests cover velocity lead,
 filtering, release latency, rotating-launcher velocity, solver failures, retained
 stationary calibrations, compensated readiness, the kill switch, intake-speed driving, aim

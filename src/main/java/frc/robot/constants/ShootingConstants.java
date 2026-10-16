@@ -38,7 +38,9 @@ public class ShootingConstants {
   @frc.powerlib.tuning.TunableConstant
   public static volatile double AIM_HEADING_SLEW_DEGREES_PER_SECOND = 90;
   public static final double SOTM_MIN_SPEED_MPS = 0.1;
-  public static final double SOTM_MAX_TILT_DEGREES = 5.0;
+  // Moving shots are blocked when Pigeon pitch or roll exceeds this; standing shots ignore tilt.
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double SOTM_MAX_TILT_DEGREES = 5.0;
   public static final double LAUNCHER_OFFSET_X_METERS = -0.20;
   public static final double LAUNCHER_OFFSET_Y_METERS = 0.0;
   public static final double SHOOTER_ANGLE_OFFSET_RADIANS = Math.PI;

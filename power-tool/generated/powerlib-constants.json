@@ -544,7 +544,7 @@
       "type": "double",
       "value": "5.0",
       "custom": true,
-      "tunable": false
+      "tunable": true
     },
     {
       "name": "LAUNCHER_OFFSET_X_METERS",
