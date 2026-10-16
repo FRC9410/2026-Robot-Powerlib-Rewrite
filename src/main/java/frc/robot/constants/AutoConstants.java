@@ -2,8 +2,43 @@ package frc.robot.constants;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
+import frc.powerlib.configs.CompletionCriteria;
+import frc.powerlib.configs.CrossTrackConfig;
+import frc.powerlib.configs.WaypointHandoffConfig;
 
 public class AutoConstants {
+  // Provisional command limits; validate on the robot before increasing.
+  public static final double MAX_TRANSLATION_ACCELERATION_METERS_PER_SECOND_SQUARED = 3.0;
+  public static final double MAX_ANGULAR_ACCELERATION_RADIANS_PER_SECOND_SQUARED = 2 * Math.PI;
+
+  // Provisional measured arrival thresholds; validate settling and route timing on the robot.
+  public static final double MAX_ARRIVAL_TRANSLATION_SPEED_METERS_PER_SECOND = 0.05;
+  public static final double MAX_ARRIVAL_ANGULAR_SPEED_RADIANS_PER_SECOND = Math.toRadians(5);
+  public static final double ARRIVAL_SETTLE_TIME_SECONDS = 0.1;
+
+  // Provisional crossing bounds; validate at real autonomous speeds and with vision corrections.
+  public static final double HANDOFF_MAX_OVERSHOOT_METERS = 0.25;
+  public static final double HANDOFF_MAX_SAMPLE_TRAVEL_METERS = 0.5;
+
+  public static WaypointHandoffConfig waypointHandoff() {
+    return new WaypointHandoffConfig(true, HANDOFF_MAX_OVERSHOOT_METERS, HANDOFF_MAX_SAMPLE_TRAVEL_METERS);
+  }
+
+  // Provisional lateral correction settings; tune recovery and corner behavior on the robot.
+  public static final double CROSS_TRACK_GAIN_PER_SECOND = 1.5;
+  public static final double CROSS_TRACK_MAX_CORRECTION_SPEED_METERS_PER_SECOND = 0.75;
+
+  public static CrossTrackConfig crossTrack() {
+    return new CrossTrackConfig(CROSS_TRACK_GAIN_PER_SECOND, CROSS_TRACK_MAX_CORRECTION_SPEED_METERS_PER_SECOND);
+  }
+
+  public static CompletionCriteria completionCriteria(double translationToleranceInches, double headingToleranceDegrees) {
+    return new CompletionCriteria(Units.inchesToMeters(translationToleranceInches), Math.toRadians(headingToleranceDegrees),
+        MAX_ARRIVAL_TRANSLATION_SPEED_METERS_PER_SECOND, MAX_ARRIVAL_ANGULAR_SPEED_RADIANS_PER_SECOND,
+        ARRIVAL_SETTLE_TIME_SECONDS);
+  }
+
   public static final double TRANSLATION_TOLERANCE = 0.05;
   public static final double ROTATION_TOLERANCE = 1.0;
 
