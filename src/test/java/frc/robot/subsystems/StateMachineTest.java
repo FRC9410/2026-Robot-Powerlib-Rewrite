@@ -48,9 +48,31 @@ class StateMachineTest {
     // Poll released controls before resetting so each test starts with fresh trigger edges.
     CommandScheduler.getInstance().run();
     container.resetForMode();
+    settleDrivetrain();
     robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180)));
     robot.shooter.inputs.velocityRotationsPerSecond = 0;
     robot.shooterHood.inputs.positionRotations = 0.09;
+  }
+
+  /**
+   * Drive tests command real motion in the Phoenix drivetrain sim. Brake and wait for it to stop,
+   * so later tests see a stationary robot instead of a moving shot or a drifting pose.
+   */
+  private static void settleDrivetrain() {
+    robot.drivetrain.applyRequest(new com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric());
+    long deadline = System.nanoTime() + 1_000_000_000L;
+    while (System.nanoTime() < deadline) {
+      var speeds = robot.drivetrain.getState().Speeds;
+      if (speeds.vxMetersPerSecond == 0 && speeds.vyMetersPerSecond == 0
+          && speeds.omegaRadiansPerSecond == 0) return;
+      try {
+        Thread.sleep(5);
+      } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
+        return;
+      }
+    }
+    fail("Simulated drivetrain did not stop within 1 s");
   }
 
   @AfterAll static void close() {
