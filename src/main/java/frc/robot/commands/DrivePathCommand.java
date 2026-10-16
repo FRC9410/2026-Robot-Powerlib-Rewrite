@@ -12,8 +12,10 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.powerlib.auto.ChassisMotionLimiter;
 import frc.powerlib.auto.CompletionChecker;
+import frc.powerlib.auto.CrossTrackController;
 import frc.powerlib.auto.DistanceSpeedController;
 import frc.powerlib.auto.PathProgress;
+import frc.powerlib.configs.CrossTrackConfig;
 import frc.powerlib.configs.PathWaypoint;
 import frc.powerlib.configs.WaypointHandoffConfig;
 import frc.powerlib.health.HealthChecks;
@@ -31,6 +33,7 @@ public class DrivePathCommand extends Command {
   private final CompletionChecker completion;
   private final Consumer<String> abort;
   private final ChassisMotionLimiter limiter;
+  private final CrossTrackController steering;
   private final ChassisSpeeds desiredSpeeds = new ChassisSpeeds();
   private final DistanceSpeedController distanceController = new DistanceSpeedController(
       new PIDController(Constants.RobotContainer.AUTO_TRANSLATION_KP, 0, Constants.RobotContainer.AUTO_TRANSLATION_KD),
@@ -49,11 +52,17 @@ public class DrivePathCommand extends Command {
 
   public DrivePathCommand(Swerve drivetrain, List<PathWaypoint> waypoints, WaypointHandoffConfig handoff,
       Consumer<String> abort) {
+    this(drivetrain, waypoints, handoff, CrossTrackConfig.DISABLED, abort);
+  }
+
+  public DrivePathCommand(Swerve drivetrain, List<PathWaypoint> waypoints, WaypointHandoffConfig handoff,
+      CrossTrackConfig crossTrack, Consumer<String> abort) {
     this.drivetrain = Objects.requireNonNull(drivetrain, "drivetrain");
     this.abort = Objects.requireNonNull(abort, "abort");
     progress = new PathProgress(waypoints, handoff);
     completion = new CompletionChecker(progress.endpoint().completion());
     limiter = new ChassisMotionLimiter(progress.constraints());
+    steering = new CrossTrackController(crossTrack);
     addRequirements(drivetrain);
   }
 
@@ -119,10 +128,7 @@ public class DrivePathCommand extends Command {
             distanceController.calculateStopping(progress.remainingDistance(pose.getTranslation()),
                 Constants.Swerve.DRIVE_TO_POINT_STATIC_FRICTION_CONSTANT * drivetrain.MAX_SPEED,
                 progress.atEndpoint() ? waypoint.completion().translationToleranceMeters() : 0, progress.constraints()));
-        var delta = waypoint.pose().getTranslation().minus(pose.getTranslation());
-        double targetDistance = delta.getNorm();
-        desiredSpeeds.vxMetersPerSecond = targetDistance > 0 ? speed * delta.getX() / targetDistance : 0;
-        desiredSpeeds.vyMetersPerSecond = targetDistance > 0 ? speed * delta.getY() / targetDistance : 0;
+        steering.calculate(progress.currentSegment(), pose.getTranslation(), speed, desiredSpeeds);
         desiredSpeeds.omegaRadiansPerSecond = headingRate(pose.getRotation(), heading, waypoint);
         var constrained = limiter.calculate(desiredSpeeds, elapsed);
         drivetrain.applyRequest(driveRequest

@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import frc.powerlib.configs.CompletionCriteria;
+import frc.powerlib.configs.CrossTrackConfig;
 import frc.powerlib.configs.WaypointHandoffConfig;
 
 public class AutoConstants {
@@ -22,6 +23,14 @@ public class AutoConstants {
 
   public static WaypointHandoffConfig waypointHandoff() {
     return new WaypointHandoffConfig(true, HANDOFF_MAX_OVERSHOOT_METERS, HANDOFF_MAX_SAMPLE_TRAVEL_METERS);
+  }
+
+  // Provisional lateral correction settings; tune recovery and corner behavior on the robot.
+  public static final double CROSS_TRACK_GAIN_PER_SECOND = 1.5;
+  public static final double CROSS_TRACK_MAX_CORRECTION_SPEED_METERS_PER_SECOND = 0.75;
+
+  public static CrossTrackConfig crossTrack() {
+    return new CrossTrackConfig(CROSS_TRACK_GAIN_PER_SECOND, CROSS_TRACK_MAX_CORRECTION_SPEED_METERS_PER_SECOND);
   }
 
   public static CompletionCriteria completionCriteria(double translationToleranceInches, double headingToleranceDegrees) {

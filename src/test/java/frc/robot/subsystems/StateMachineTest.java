@@ -1066,4 +1066,175 @@ class StateMachineTest {
       edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
     }
   }
+
+  private static edu.wpi.first.math.kinematics.ChassisSpeeds desiredPathSpeeds(
+      frc.robot.commands.DrivePathCommand command) throws ReflectiveOperationException {
+    var field = frc.robot.commands.DrivePathCommand.class.getDeclaredField("desiredSpeeds");
+    field.setAccessible(true);
+    return (edu.wpi.first.math.kinematics.ChassisSpeeds) field.get(command);
+  }
+
+  @Test void crossTrackCorrectionUsesTheExistingSpeedBudgetAndVectorAccelerationLimits() throws Exception {
+    var command = new frc.robot.commands.DrivePathCommand(robot.drivetrain,
+        java.util.List.of(pathPoint(TEST_X + 2, 180, true, 3), pathPoint(TEST_X + 4, 180, true, 3)),
+        Constants.Auto.waypointHandoff(), Constants.Auto.crossTrack(), reason -> fail(reason));
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      var state = robot.drivetrain.getState();
+      var initial = new frc.powerlib.auto.ChassisMotionLimiter(new frc.powerlib.configs.MotionConstraints(2, 1, 1, 1));
+      initial.reset(edu.wpi.first.math.kinematics.ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, state.Pose.getRotation()));
+      var previous = initial.calculate(new edu.wpi.first.math.kinematics.ChassisSpeeds(), 0);
+      command.initialize();
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 0.5, TEST_Y + 0.5, Rotation2d.fromDegrees(180)));
+      for (double dt : new double[] {0.02, 0.01, 0.03, 0.04}) {
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(dt);
+        command.execute();
+        var desired = desiredPathSpeeds(command);
+        var position = robot.drivetrain.getState().Pose.getTranslation();
+        assertTrue(desired.vyMetersPerSecond < 0);
+        assertTrue(Math.abs(desired.vyMetersPerSecond)
+            <= Constants.Auto.CROSS_TRACK_MAX_CORRECTION_SPEED_METERS_PER_SECOND + 1e-6);
+        assertTrue(Math.hypot(desired.vxMetersPerSecond, desired.vyMetersPerSecond)
+            <= pathProgress(command).maxTranslationSpeed(position) + 1e-6);
+        var request = pointRequest(command);
+        assertTrue(Math.hypot(request.VelocityX, request.VelocityY) <= 2 + 1e-6);
+        assertTrue(Math.hypot(request.VelocityX - previous.vxMetersPerSecond,
+            request.VelocityY - previous.vyMetersPerSecond) <= dt + 1e-6);
+        previous = new edu.wpi.first.math.kinematics.ChassisSpeeds(request.VelocityX, request.VelocityY, request.RotationalRate);
+      }
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 0.5, TEST_Y - 0.5, Rotation2d.fromDegrees(180)));
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      command.execute();
+      assertTrue(desiredPathSpeeds(command).vyMetersPerSecond > 0);
+      assertTrue(Math.hypot(pointRequest(command).VelocityX - previous.vxMetersPerSecond,
+          pointRequest(command).VelocityY - previous.vyMetersPerSecond) <= 0.02 + 1e-6);
+      assertEquals(180, robot.drivetrain.getHeadingSetpointDegrees(), 1e-9);
+    } finally {
+      command.end(true);
+      assertEquals(0, pointRequest(command).VelocityX);
+      assertEquals(0, pointRequest(command).VelocityY);
+      assertNull(robot.drivetrain.getHeadingSetpointDegrees());
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void correctedCornerHandoffTracksTheNextPlannedSegmentWithoutResettingTheLimiter() throws Exception {
+    var next = new frc.powerlib.configs.PathWaypoint(
+        new Pose2d(TEST_X + 1, TEST_Y + 3, Rotation2d.fromDegrees(180)),
+        new frc.powerlib.configs.MotionConstraints(2, 1, 1, 1), Constants.Auto.completionCriteria(3, 10), false, 3);
+    var command = new frc.robot.commands.DrivePathCommand(robot.drivetrain,
+        java.util.List.of(pathPoint(TEST_X + 1, 180, true, 3), next),
+        Constants.Auto.waypointHandoff(), Constants.Auto.crossTrack(), reason -> fail(reason));
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      command.initialize();
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 0.8, TEST_Y, Rotation2d.fromDegrees(180)));
+      for (int i = 0; i < 4; i++) {
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+        command.execute();
+      }
+      double previousX = pointRequest(command).VelocityX;
+      double previousY = pointRequest(command).VelocityY;
+      assertTrue(previousX > 0.05);
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 1.2, TEST_Y, Rotation2d.fromDegrees(180)));
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      command.execute();
+      assertEquals(1, pathProgress(command).index());
+      assertEquals(new edu.wpi.first.math.geometry.Translation2d(TEST_X + 1, TEST_Y),
+          pathProgress(command).currentSegment().start());
+      assertTrue(desiredPathSpeeds(command).vxMetersPerSecond < 0);
+      assertTrue(desiredPathSpeeds(command).vyMetersPerSecond > 0);
+      assertTrue(pointRequest(command).VelocityX > 0); // Retained motion decelerates toward the new request.
+      assertTrue(Math.hypot(pointRequest(command).VelocityX - previousX,
+          pointRequest(command).VelocityY - previousY) <= 0.02 + 1e-6);
+      assertFalse(command.isFinished());
+      assertNull(robot.drivetrain.getHeadingSetpointDegrees());
+    } finally {
+      command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void correctedEndpointRecoveryStillSettlesBeforeTheNextAction() throws Exception {
+    var actionStarted = new java.util.concurrent.atomic.AtomicBoolean();
+    var paths = new java.util.ArrayList<frc.robot.commands.DrivePathCommand>();
+    var goal = new Pose2d(TEST_X + 1, TEST_Y, Rotation2d.fromDegrees(180));
+    var auto = new frc.powerlib.auto.Auto("Corrected endpoint")
+        .addDriveToPoint(goal)
+        .addCommand(() -> edu.wpi.first.wpilibj2.command.Commands.runOnce(() -> actionStarted.set(true)))
+        .buildContinuous(section -> {
+          var command = new frc.robot.commands.DrivePathCommand(robot.drivetrain,
+              java.util.List.of(pathPoint(TEST_X + 1, 180, true, 3)),
+              Constants.Auto.waypointHandoff(), Constants.Auto.crossTrack(), reason -> fail(reason));
+          paths.add(command);
+          return command;
+        });
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      auto.initialize();
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 1.2, TEST_Y + 0.2, Rotation2d.fromDegrees(180)));
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      auto.execute();
+      assertTrue(desiredPathSpeeds(paths.get(0)).vxMetersPerSecond < 0);
+      assertTrue(desiredPathSpeeds(paths.get(0)).vyMetersPerSecond < 0);
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.12);
+      auto.execute();
+      assertFalse(actionStarted.get());
+      assertFalse(auto.isFinished());
+      for (int tick = 0; tick < 60 && !actionStarted.get(); tick++) {
+        robot.drivetrain.resetPose(goal);
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+        auto.execute();
+        if (tick < 4) assertFalse(actionStarted.get());
+        Thread.sleep(5); // Let native CTRE feedback reflect the stopping request.
+      }
+      assertTrue(actionStarted.get());
+      assertEquals(0, pointRequest(paths.get(0)).VelocityX);
+      assertEquals(0, pointRequest(paths.get(0)).VelocityY);
+    } finally {
+      auto.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void crossTrackCorrectionPreservesTimeoutsAndImmediateFaultStops() throws Exception {
+    var reasons = new java.util.ArrayList<String>();
+    var headingAvailable = new java.util.concurrent.atomic.AtomicBoolean(true);
+    var command = new frc.robot.commands.DrivePathCommand(robot.drivetrain,
+        java.util.List.of(pathPoint(TEST_X + 2, 180, true, 0.2), pathPoint(TEST_X + 4, 180, true, 0.2)),
+        Constants.Auto.waypointHandoff(), Constants.Auto.crossTrack(), reasons::add)
+        .withHeadingTarget(pose -> headingAvailable.get() ? Rotation2d.fromDegrees(180) : null);
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      command.initialize();
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 0.5, TEST_Y + 0.5, Rotation2d.fromDegrees(180)));
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.05);
+      command.execute();
+      assertTrue(pointRequest(command).VelocityY < 0);
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.16);
+      command.execute();
+      assertTrue(command.isFinished());
+      assertEquals(java.util.List.of("Autonomous waypoint timed out"), reasons);
+      assertEquals(0, pointRequest(command).VelocityX);
+      assertEquals(0, pointRequest(command).VelocityY);
+      command.end(true);
+
+      robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180)));
+      command.initialize();
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 0.5, TEST_Y + 0.5, Rotation2d.fromDegrees(180)));
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      command.execute();
+      assertTrue(pointRequest(command).VelocityY < 0);
+      headingAvailable.set(false);
+      command.execute();
+      assertTrue(command.isFinished());
+      assertEquals("Autonomous heading target unavailable", reasons.get(1));
+      assertEquals(0, pointRequest(command).VelocityX);
+      assertEquals(0, pointRequest(command).VelocityY);
+      assertNull(robot.drivetrain.getHeadingSetpointDegrees());
+    } finally {
+      command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
 }

@@ -121,7 +121,7 @@ settings use ordered indices, so duplicate coordinates retain their own policies
 waypoint's 3 s deadline restarts only on advancement; timeout is checked before advancement.
 Velocity transitions stay acceleration-limited. Intermediate handoffs accept radius arrival
 or bounded forward plane crossings;
-corner smoothing and cross-track correction are later work.
+corner smoothing remains later work.
 Physical corners, speed transitions and route timing still need validation on the robot.
 
 The regional paths explicitly enable bounded intermediate crossing. AutoConstants sets provisional
@@ -133,6 +133,16 @@ Large sample jumps cannot prove crossing, while ordinary radius arrival still tr
 small vision corrections remain indistinguishable from movement. Braking bounds account for the
 expanded handoff region. Crossing never completes an endpoint or bypasses an action boundary.
 Validate the crossing bounds with real autonomous speeds, loop timing and vision corrections.
+
+Regional driving sections also opt into CrossTrackController, using provisional AutoConstants
+settings of 1.5/s lateral P gain and a 0.75 m/s correction cap. The active segment remains anchored
+to its measured starting pose or preceding waypoint as the robot drifts and hands off targets.
+Within that segment, lateral correction returns toward its line and forward motion eases near
+the arrival plane. The combined translation request stays inside the existing braking speed
+budget before passing through ChassisMotionLimiter. Outside the segment or on zero-length legs,
+steering recovers directly toward the waypoint. Single-point commands and final aiming keep
+correction disabled by default. Endpoint settling, deadlines and immediate fault stops still apply.
+Validate the gain, correction cap, corner recovery and auto timing on hardware.
 
 Build and simulate with the WPILib 2026 JDK:
 

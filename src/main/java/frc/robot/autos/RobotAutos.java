@@ -118,7 +118,8 @@ public final class RobotAutos {
               Constants.Auto.LEG_HEADING_TOLERANCE_DEGREES),
           Constants.Auto.LEG_LOCK_HEADING[leg], Constants.RobotContainer.AUTO_LEG_TIMEOUT_SECONDS));
     }
-    return new DrivePathCommand(robot.drivetrain, waypoints, Constants.Auto.waypointHandoff(), abort);
+    return new DrivePathCommand(robot.drivetrain, waypoints, Constants.Auto.waypointHandoff(),
+        Constants.Auto.crossTrack(), abort);
   }
 
   private static MotionConstraints constraintsForLeg(StateMachine robot, int leg) {
