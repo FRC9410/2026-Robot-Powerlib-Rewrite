@@ -24,13 +24,14 @@ and hood settings. Measure flight times for this robot's retained calibration be
 relying on moving-shot accuracy. Verify the 0.20 m launcher offset and release delay
 on hardware too. No new on-robot shot calibration is claimed by the software tests.
 
-Both actual center distance and compensated calibration distance must remain within
-1.95-4.9 m in the scoring zone. Feeding still requires the existing 5-degree heading,
-hood, flywheel and feedback checks. Excessive tilt (over 5 degrees), speed (over 3 m/s),
-invalid input, uncalibrated lead distance or solver nonconvergence prevents a moving
-shot and stops the shooter until a valid shot returns. A stationary fallback is
-allowed only when nearly stopped. Solver confidence is diagnostic; feed permission uses
-the explicit validity and readiness checks.
+When the robot isn't driving (filtered translation under 0.1 m/s, including turning in
+place to aim), it uses the original standing shot unchanged, and tilt is not checked.
+While driving, both actual center distance and compensated calibration distance must
+remain within 1.95-4.9 m in the scoring zone. Feeding still requires the existing
+5-degree heading, hood, flywheel and feedback checks. Excessive tilt (over 5 degrees),
+speed (over 3 m/s), invalid input, uncalibrated lead distance or solver nonconvergence
+prevents a moving shot and stops the shooter until a valid shot returns. Solver
+confidence is diagnostic; feed permission uses the explicit validity and readiness checks.
 
 Teleop aiming slews the heading target at up to `AIM_HEADING_SLEW_DEGREES_PER_SECOND`
 (90) so lead changes and moving/static fallbacks turn the robot smoothly, and adds the

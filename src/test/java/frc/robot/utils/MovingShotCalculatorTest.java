@@ -25,7 +25,7 @@ class MovingShotCalculatorTest {
       var shot = new MovingShotCalculator().calculate(pose(alliance, row[0]), new ChassisSpeeds(), alliance,
           row[1] + 1, hood, true, true, 0, 0);
       assertTrue(shot.valid(), shot.status());
-      assertTrue(shot.solverValid(), shot.status());
+      assertEquals(ShootingUtils.calculate(pose(alliance, row[0]), alliance, row[1] + 1, hood, true), shot);
       assertFalse(shot.motionCompensated());
       assertTrue(shot.canFeed());
       assertEquals(row[1] + 1, shot.shooterRps(), 1e-8);
@@ -90,18 +90,36 @@ class MovingShotCalculatorTest {
         Alliance.Blue, 29.5, 0.05, true, true, 0, 0);
     assertFalse(outsideLeadTable.valid());
     assertFalse(outsideLeadTable.canFeed());
-    assertFalse(new MovingShotCalculator().calculate(location, new ChassisSpeeds(), Alliance.Blue,
-        29.5, 0.05, true, true, 6, 0).valid());
+    var tiltedWhileDriving = new MovingShotCalculator().calculate(location, new ChassisSpeeds(0, 0.5, 0),
+        Alliance.Blue, 29.5, 0.05, true, true, 6, 0);
+    assertFalse(tiltedWhileDriving.valid());
+    assertEquals("Robot tilt exceeds shooting limit", tiltedWhileDriving.status());
     assertFalse(new MovingShotCalculator().calculate(location, new ChassisSpeeds(Double.NaN, 0, 0), Alliance.Blue,
         29.5, 0.05, true, true, 0, 0).valid());
     assertFalse(new MovingShotCalculator().calculate(pose(Alliance.Blue, 1.9), new ChassisSpeeds(), Alliance.Blue,
         28.4, 0.039, true, true, 0, 0).valid());
-    // Center translation and rotation are each slow, but add to 0.18 m/s at the launcher.
-    // At maximum range the necessary lateral lead falls outside calibration.
-    var rotatingAtRangeEdge = new MovingShotCalculator().calculate(pose(Alliance.Blue, 4.9),
-        new ChassisSpeeds(0, -0.09, 0.45), Alliance.Blue, 38, 0.085, true, true, 0, 0);
-    assertFalse(rotatingAtRangeEdge.valid());
-    assertFalse(rotatingAtRangeEdge.canFeed());
+  }
+
+  @Test void notDrivingAlwaysUsesTheOriginalStandingShot() {
+    // Turning in place to aim at long range: the rear launcher swings out past the calibrated range,
+    // which used to block the shot and stop the shooter mid-turn.
+    var far = pose(Alliance.Blue, 4.6);
+    var turning = new Pose2d(far.getTranslation(), far.getRotation().plus(Rotation2d.fromDegrees(150)));
+    var turningShot = new MovingShotCalculator().calculate(turning, new ChassisSpeeds(0, 0, 2), Alliance.Blue,
+        36, 0.08, true, true, 0, 0);
+    assertTrue(turningShot.valid(), turningShot.status());
+    assertEquals(ShootingUtils.calculate(turning, Alliance.Blue, 36, 0.08, true), turningShot);
+    // Slow creep plus rotation at the edge of the range is still treated as standing still.
+    var edge = pose(Alliance.Blue, 4.9);
+    assertEquals(ShootingUtils.calculate(edge, Alliance.Blue, 38, 0.085, true),
+        new MovingShotCalculator().calculate(edge, new ChassisSpeeds(0, -0.09, 0.45), Alliance.Blue,
+            38, 0.085, true, true, 0, 0));
+    // A tilted Pigeon never blocks a standing shot.
+    var location = pose(Alliance.Blue, 2.5);
+    var tilted = new MovingShotCalculator().calculate(location, new ChassisSpeeds(), Alliance.Blue,
+        29.5, 0.05, true, true, 8, -7);
+    assertEquals(ShootingUtils.calculate(location, Alliance.Blue, 29.5, 0.05, true), tilted);
+    assertTrue(tilted.canFeed());
   }
 
   @Test void leadFollowsFilteredVelocityAfterAStickStep() {

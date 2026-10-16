@@ -76,7 +76,14 @@ public final class MovingShotCalculator {
         ? filter(ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, pose.getRotation())) : null;
     var base = ShootingUtils.calculate(pose, alliance, actualRps, actualHood, feedbackHealthy);
     if (!base.valid() || !ShootingUtils.sotmEnabled()) { solver.resetWarmStart(); return base; }
-    if (fieldVelocity == null || !Double.isFinite(pitchDegrees) || !Double.isFinite(rollDegrees)) {
+    if (fieldVelocity == null) {
+      solver.resetWarmStart(); return ShootingUtils.blocked(base, "Invalid motion or tilt feedback");
+    }
+    double speed = Math.hypot(fieldVelocity.vxMetersPerSecond, fieldVelocity.vyMetersPerSecond);
+    // Not driving, including turning in place to aim: use the original standing shot unchanged.
+    // Turning alone used to count as moving and could block long shots mid-turn.
+    if (speed < config.minSOTMSpeed) { solver.resetWarmStart(); return base; }
+    if (!Double.isFinite(pitchDegrees) || !Double.isFinite(rollDegrees)) {
       solver.resetWarmStart(); return ShootingUtils.blocked(base, "Invalid motion or tilt feedback");
     }
     double maxSpeed = Constants.Shooting.SOTM_MAX_DRIVETRAIN_SPEED_MPS;
@@ -92,7 +99,6 @@ public final class MovingShotCalculator {
     config.maxSOTMSpeed = maxSpeed;
     config.mechLatencyMs = releaseDelay * 1000;
     config.sotmDragCoeff = drag;
-    double speed = Math.hypot(fieldVelocity.vxMetersPerSecond, fieldVelocity.vyMetersPerSecond);
     if (speed > maxSpeed) {
       solver.resetWarmStart(); return ShootingUtils.blocked(base, "Above SOTM speed limit");
     }
@@ -105,14 +111,8 @@ public final class MovingShotCalculator {
         target, new Translation2d(), visionFresh ? 1 : 0.5, pitchDegrees, rollDegrees));
     if (!result.isValid()) {
       solver.resetWarmStart();
-      var offset = new Translation2d(config.launcherOffsetX, config.launcherOffsetY).rotateBy(pose.getRotation());
-      double launcherSpeed = Math.hypot(
-          fieldVelocity.vxMetersPerSecond - fieldVelocity.omegaRadiansPerSecond * offset.getY(),
-          fieldVelocity.vyMetersPerSecond + fieldVelocity.omegaRadiansPerSecond * offset.getX());
-      boolean nearlyStopped = speed < config.minSOTMSpeed
-          && launcherSpeed < config.minSOTMSpeed;
-      // Moving without a valid lead solution must never fall back to feeding a static shot.
-      return nearlyStopped ? base : ShootingUtils.blocked(base, "No calibrated converged moving shot");
+      // Driving without a valid lead solution must never fall back to feeding a static shot.
+      return ShootingUtils.blocked(base, "No calibrated converged moving shot");
     }
     double heading = result.driveAngle().getDegrees();
     double error = MathUtil.inputModulus(heading - pose.getRotation().getDegrees(), -180, 180);
