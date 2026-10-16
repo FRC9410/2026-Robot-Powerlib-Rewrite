@@ -1426,4 +1426,112 @@ class StateMachineTest {
       }
     } finally { edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming(); }
   }
+
+  private static frc.powerlib.configs.BumpCrossingConfig bumpConfig() {
+    return new frc.powerlib.configs.BumpCrossingConfig(new frc.powerlib.configs.MotionConstraints(1, 1, 1, 2),
+        0.6, 8, 3, 0.06, 0.15, 0.25, 6, 0.1, 0.05, Math.toRadians(5), false);
+  }
+
+  private static com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric bumpRequest(
+      frc.robot.commands.CrossBumpCommand command) throws ReflectiveOperationException {
+    var field = frc.powerlib.auto.BumpCrossingCommand.class.getDeclaredField("drive");
+    field.setAccessible(true);
+    var adapter = field.get(command);
+    var request = adapter.getClass().getDeclaredField("request");
+    request.setAccessible(true);
+    return (com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric) request.get(adapter);
+  }
+
+  @Test void bumpCommandKeepsDrivingDespiteAnOdometryJumpAndCancellationBrakes() throws Exception {
+    var reasons = new java.util.ArrayList<String>();
+    var command = new frc.robot.commands.CrossBumpCommand(robot.drivetrain, null, bumpConfig(), false, reasons::add);
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      command.initialize();
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      command.execute();
+      double previous = bumpRequest(command).VelocityX;
+      assertTrue(previous > 0);
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 50, TEST_Y + 50, Rotation2d.fromDegrees(180)));
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      command.execute();
+      assertEquals(frc.powerlib.auto.BumpCrossingCommand.Phase.APPROACH, command.phase());
+      assertEquals(previous + 0.02, bumpRequest(command).VelocityX, 1e-6);
+      assertFalse(command.isFinished());
+      assertNotNull(robot.drivetrain.getHeadingSetpointDegrees());
+      assertEquals(com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.Velocity,
+          bumpRequest(command).DriveRequestType);
+      command.end(true);
+      assertEquals(frc.powerlib.auto.BumpCrossingCommand.Phase.INTERRUPTED, command.phase());
+      assertEquals(java.util.List.of("Bump crossing interrupted"), reasons);
+      assertNull(robot.drivetrain.getHeadingSetpointDegrees());
+    } finally {
+      command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void bumpAdapterNormalizesPigeonPitchForForwardAndReverseCrossings() throws Exception {
+    var pigeon = robot.drivetrain.getPigeon2();
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      for (boolean reversed : new boolean[] {false, true}) {
+        assertTrue(pigeon.getSimState().setPitch(0).isOK());
+        for (int i = 0; i < 30 && Math.abs(pigeon.getPitch().refresh().getValueAsDouble()) > 0.01; i++) Thread.sleep(5);
+        assertEquals(0, pigeon.getPitch().refresh().getValueAsDouble(), 0.01);
+        var reasons = new java.util.ArrayList<String>();
+        var command = new frc.robot.commands.CrossBumpCommand(robot.drivetrain, null, bumpConfig(), reversed, reasons::add);
+        try {
+          command.initialize();
+          double rawPitch = reversed ? 11.25 : -11.25; // Exactly representable by the Pigeon pitch signal.
+          assertTrue(pigeon.getSimState().setPitch(rawPitch).isOK());
+          for (int i = 0; i < 30 && Math.abs(pigeon.getPitch().refresh().getValueAsDouble() - rawPitch) > 0.01; i++) Thread.sleep(5);
+          assertEquals(rawPitch, pigeon.getPitch().refresh().getValueAsDouble(), 0.01);
+          for (int i = 0; i < 8; i++) {
+            edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+            command.execute();
+          }
+          assertEquals(frc.powerlib.auto.BumpCrossingCommand.Phase.CLIMBING, command.phase());
+          assertTrue(reversed ? bumpRequest(command).VelocityX < 0 : bumpRequest(command).VelocityX > 0);
+          assertTrue(reasons.isEmpty());
+        } finally { command.end(true); }
+      }
+    } finally {
+      pigeon.getSimState().setPitch(0);
+      for (int i = 0; i < 30 && Math.abs(pigeon.getPitch().refresh().getValueAsDouble()) > 0.01; i++) Thread.sleep(5);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void visionCheckpointAdvancesOnlyWhenPositionFusionRuns() throws Exception {
+    var fusedField = Vision.class.getDeclaredField("lastFusedPositionTimestamp");
+    fusedField.setAccessible(true);
+    var barrierField = Vision.class.getDeclaredField("lastAppliedTimestamp");
+    barrierField.setAccessible(true);
+    double previousFused = fusedField.getDouble(robot.vision);
+    double previousBarrier = barrierField.getDouble(robot.vision);
+    boolean previousEnabled = robot.vision.shouldUpdatePose();
+    var apply = Vision.class.getDeclaredMethod("applyMeasurements", frc.powerlib.vision.LimelightVision.Measurement.class,
+        frc.powerlib.vision.LimelightVision.HeadingMeasurement.class);
+    apply.setAccessible(true);
+    try {
+      fusedField.setDouble(robot.vision, Double.NEGATIVE_INFINITY);
+      barrierField.setDouble(robot.vision, Double.NEGATIVE_INFINITY);
+      double capture = edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - 0.01;
+      var measurement = new frc.powerlib.vision.LimelightVision.Measurement("test-camera",
+          robot.drivetrain.getState().Pose, capture, 1, 2, 0.1);
+      robot.vision.setShouldUpdatePose(false);
+      apply.invoke(robot.vision, measurement, null);
+      assertEquals(Double.NEGATIVE_INFINITY, robot.vision.getLastAppliedPositionTimestampSeconds());
+      robot.vision.setShouldUpdatePose(true);
+      apply.invoke(robot.vision, measurement, null);
+      assertEquals(capture, robot.vision.getLastAppliedPositionTimestampSeconds());
+      barrierField.setDouble(robot.vision, capture + 0.005); // A reset/heading timestamp barrier is not position fusion.
+      assertEquals(capture, robot.vision.getLastAppliedPositionTimestampSeconds());
+    } finally {
+      fusedField.setDouble(robot.vision, previousFused);
+      barrierField.setDouble(robot.vision, previousBarrier);
+      robot.vision.setShouldUpdatePose(previousEnabled);
+    }
+  }
 }
