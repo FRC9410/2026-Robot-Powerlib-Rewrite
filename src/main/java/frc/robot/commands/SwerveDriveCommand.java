@@ -64,8 +64,8 @@ public final class SwerveDriveCommand extends Command {
     boolean aiming = state == RobotState.SPINNING_UP || state == RobotState.SHOOTING;
     double coefficient = FieldUtils.getZone(pose) == FieldUtils.GameZone.INTERCHANGE
         ? Constants.OI.INTERCHANGE_SPEED_COEFFICIENT : drivetrain.getDriverMaxSpeedCoefficient();
-    if (aiming) coefficient *= Constants.RobotContainer.DRIVE_WHILE_SHOOTING_COEFFICIENT;
-    else if (state == RobotState.INTAKING || state == RobotState.EJECTING) coefficient *= Constants.RobotContainer.DRIVE_WHILE_INTAKING_COEFFICIENT;
+    // Shooting on the move drives at the same speed as intaking.
+    if (aiming || state == RobotState.INTAKING || state == RobotState.EJECTING) coefficient *= Constants.RobotContainer.DRIVE_WHILE_INTAKING_COEFFICIENT;
     double direction = alliance.get() == DriverStation.Alliance.Red ? 1 : -1;
     double scale = drivetrain.MAX_SPEED * drivetrain.getDriverVelocityScale() * coefficient;
     double vx = shaped(controller.getLeftY()) * direction * scale;
@@ -80,13 +80,6 @@ public final class SwerveDriveCommand extends Command {
       // Kill switch off: original stationary shot, so hold translation while aiming.
       vx = 0;
       vy = 0;
-    } else if (aiming) {
-      double cap = Math.min(Constants.RobotContainer.SHOOTING_MAX_TRANSLATION_SPEED_MPS,
-          Constants.Shooting.SOTM_MAX_DRIVETRAIN_SPEED_MPS);
-      if (!Double.isFinite(cap) || cap < 0) { stop(); return; }
-      var limited = AimingDriveController.limitTranslation(vx, vy, cap);
-      vx = limited.getX();
-      vy = limited.getY();
     }
     Double heading = null;
     if (aiming && ShootingUtils.inScoringZone(pose, alliance.get())) {

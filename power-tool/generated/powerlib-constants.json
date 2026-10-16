@@ -226,20 +226,6 @@
       "tunable": true
     },
     {
-      "name": "DRIVE_WHILE_SHOOTING_COEFFICIENT",
-      "type": "double",
-      "value": "0.4",
-      "custom": true,
-      "tunable": true
-    },
-    {
-      "name": "SHOOTING_MAX_TRANSLATION_SPEED_MPS",
-      "type": "double",
-      "value": "1.5",
-      "custom": true,
-      "tunable": true
-    },
-    {
       "name": "DRIVE_WHILE_INTAKING_COEFFICIENT",
       "type": "double",
       "value": "0.4",

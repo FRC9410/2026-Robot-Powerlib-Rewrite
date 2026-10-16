@@ -1,26 +1,15 @@
 package frc.robot.utils;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
-/** Translation limiting, aim-target slewing and parallel-wheel parking for aiming. */
+/** Aim-target slewing and wheel parking for aiming. */
 public final class AimingDriveController {
   /** Slewed aim heading; when limited, the robot should turn at {@code rateRadiansPerSecond}. */
   public record AimTarget(double headingDegrees, boolean limited, double rateRadiansPerSecond) {}
 
   private boolean parked;
   private double slewedHeadingDegrees = Double.NaN;
-
-  public static Translation2d limitTranslation(double vx, double vy, double maximumSpeed) {
-    if (!Double.isFinite(vx) || !Double.isFinite(vy)
-        || !Double.isFinite(maximumSpeed) || maximumSpeed < 0) {
-      throw new IllegalArgumentException("Aiming speed limit must be nonnegative and finite");
-    }
-    double speed = Math.hypot(vx, vy);
-    double scale = speed > maximumSpeed ? maximumSpeed / speed : 1;
-    return new Translation2d(vx * scale, vy * scale);
-  }
 
   public boolean updateParking(double requestedVx, double requestedVy,
       ChassisSpeeds measured, double headingErrorDegrees) {

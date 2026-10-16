@@ -5,17 +5,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import org.junit.jupiter.api.Test;
 
 class AimingDriveControllerTest {
-  @Test void speedCapPreservesDirectionAndLimitsDiagonalCommands() {
-    var limited = AimingDriveController.limitTranslation(3, 4, 1.5);
-    assertEquals(1.5, limited.getNorm(), 1e-9);
-    assertEquals(0.9, limited.getX(), 1e-9);
-    assertEquals(1.2, limited.getY(), 1e-9);
-    assertEquals(0.01, AimingDriveController.limitTranslation(0.01, 0, 1.5).getX());
-    assertEquals(0, AimingDriveController.limitTranslation(1, 1, 0).getNorm());
-    assertThrows(IllegalArgumentException.class,
-        () -> AimingDriveController.limitTranslation(1, 0, Double.NaN));
-  }
-
   @Test void stationaryAlignedWheelsParkWithHysteresisAndResumeToCorrectDrift() {
     var controller = new AimingDriveController();
     var stopped = new ChassisSpeeds();

@@ -67,7 +67,19 @@ class StateMachineTest {
     CommandScheduler.getInstance().run();
   }
 
-  @Test void driveUsesMovingShotHeadingAndFeedforwardWhileLimitingDiagonalTranslation() throws Exception {
+  /** Field velocity commanded for the current stick input while intaking, for comparison. */
+  private double[] intakeVelocity(edu.wpi.first.wpilibj2.command.button.CommandXboxController pad) throws Exception {
+    var intake = new frc.robot.commands.SwerveDriveCommand(robot.drivetrain, pad, () -> RobotState.INTAKING);
+    intake.execute();
+    var field = intake.getClass().getDeclaredField("request");
+    field.setAccessible(true);
+    var request = (com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric) field.get(intake);
+    double[] velocity = { request.VelocityX, request.VelocityY };
+    intake.end(true);
+    return velocity;
+  }
+
+  @Test void driveUsesMovingShotHeadingAndFeedforwardAtIntakeSpeed() throws Exception {
     var pad = new edu.wpi.first.wpilibj2.command.button.CommandXboxController(Constants.OI.DRIVER_CONTROLLER_PORT);
     var shot = new frc.robot.utils.MovingShotCalculator().calculate(robot.drivetrain.getState().Pose,
         new edu.wpi.first.math.kinematics.ChassisSpeeds(0, -0.5, 0),
@@ -79,6 +91,8 @@ class StateMachineTest {
     controller.setLeftY(-1);
     controller.notifyNewData();
     DriverStationSim.notifyNewData();
+    double[] intake = intakeVelocity(pad);
+    assertTrue(Math.hypot(intake[0], intake[1]) > 1.5, "full diagonal intake speed should exceed the old 1.5 m/s cap");
     double poseHeading = robot.drivetrain.getState().Pose.getRotation().getDegrees();
     double measuredOmega = robot.drivetrain.getState().Speeds.omegaRadiansPerSecond;
     command.execute();
@@ -86,8 +100,9 @@ class StateMachineTest {
     requestField.setAccessible(true);
     var request = (com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric) requestField.get(command);
     assertEquals(shot.headingDegrees(), robot.drivetrain.getHeadingSetpointDegrees(), 1e-9);
-    assertEquals(Constants.RobotContainer.SHOOTING_MAX_TRANSLATION_SPEED_MPS,
-        Math.hypot(request.VelocityX, request.VelocityY), 1e-9);
+    // Shooting on the move drives at exactly the intake speed for the same stick input.
+    assertEquals(intake[0], request.VelocityX, 1e-3);
+    assertEquals(intake[1], request.VelocityY, 1e-3);
     double error = edu.wpi.first.math.MathUtil.inputModulus(shot.headingDegrees() - poseHeading, -180, 180);
     double kp = frc.powerlib.PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kP", Constants.Swerve.HEADING_KP);
     double kd = frc.powerlib.PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kD", Constants.Swerve.HEADING_KD);
@@ -115,10 +130,11 @@ class StateMachineTest {
       var requestField = command.getClass().getDeclaredField("aimingRequest");
       requestField.setAccessible(true);
       var request = (com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric) requestField.get(command);
+      double[] intake = intakeVelocity(pad);
       frc.robot.utils.ShootingUtils.setSotmEnabled(true);
       command.execute();
-      assertEquals(Constants.RobotContainer.SHOOTING_MAX_TRANSLATION_SPEED_MPS,
-          Math.hypot(request.VelocityX, request.VelocityY), 1e-9);
+      assertEquals(intake[0], request.VelocityX, 1e-3);
+      assertEquals(intake[1], request.VelocityY, 1e-3);
       frc.robot.utils.ShootingUtils.setSotmEnabled(false);
       command.execute();
       assertEquals(0, request.VelocityX);
