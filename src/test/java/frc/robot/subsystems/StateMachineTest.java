@@ -1237,4 +1237,193 @@ class StateMachineTest {
       edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
     }
   }
+
+  @Test void explicitRotationIsIndependentOfTheDestinationPoseAndUsesTheShortWrappedTurn() throws Exception {
+    var limits = new frc.powerlib.configs.MotionConstraints(2, 1, 2, 1);
+    var destination = new Pose2d(TEST_X + 10, TEST_Y, Rotation2d.fromDegrees(90));
+    var command = new frc.robot.commands.DriveToPointCommand(robot.drivetrain, destination,
+        Constants.Auto.completionCriteria(3, 0.5), limits,
+        frc.powerlib.auto.RotationTarget.fixed(Rotation2d.fromDegrees(-179)), 3, reason -> fail(reason));
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(179)));
+      command.initialize();
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      command.execute();
+      var desired = desiredPathSpeeds(command);
+      assertTrue(desired.vxMetersPerSecond > 0);
+      assertEquals(0, desired.vyMetersPerSecond, 1e-6);
+      assertTrue(desired.omegaRadiansPerSecond > 0); // +2 degrees across the wrap, not -358.
+      assertTrue(desired.omegaRadiansPerSecond <= limits.maxAngularSpeedToStop(Math.toRadians(1.5)) + 1e-6);
+      assertEquals(-179, robot.drivetrain.getHeadingSetpointDegrees(), 1e-9);
+      assertEquals(com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.Velocity,
+          pointRequest(command).DriveRequestType);
+      assertTrue(Math.abs(pointRequest(command).RotationalRate) <= 0.02 + 1e-6);
+    } finally {
+      command.end(true);
+      assertNull(robot.drivetrain.getHeadingSetpointDegrees());
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void liveHeadingOverridesAnUnlockedLegOncePerUpdateAndTargetLossStopsImmediately() throws Exception {
+    var calls = new java.util.concurrent.atomic.AtomicInteger();
+    var target = new java.util.concurrent.atomic.AtomicReference<Rotation2d>(Rotation2d.fromDegrees(160));
+    var reasons = new java.util.ArrayList<String>();
+    var command = new frc.robot.commands.DriveToPointCommand(robot.drivetrain,
+        new Pose2d(TEST_X + 10, TEST_Y, Rotation2d.kZero), 3,
+        new frc.powerlib.configs.MotionConstraints(2, 1, 2, 1), false, reasons::add)
+        .withHeadingTarget(pose -> { calls.incrementAndGet(); return target.get(); });
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      command.initialize();
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      command.execute();
+      assertEquals(1, calls.get());
+      assertEquals(160, robot.drivetrain.getHeadingSetpointDegrees(), 1e-9);
+      assertTrue(desiredPathSpeeds(command).omegaRadiansPerSecond < 0);
+      double previousOmega = pointRequest(command).RotationalRate;
+      target.set(Rotation2d.fromDegrees(-160));
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      command.execute();
+      assertEquals(2, calls.get());
+      assertEquals(-160, robot.drivetrain.getHeadingSetpointDegrees(), 1e-9);
+      assertTrue(desiredPathSpeeds(command).omegaRadiansPerSecond > 0);
+      assertTrue(Math.abs(pointRequest(command).RotationalRate - previousOmega) <= 0.02 + 1e-6);
+      for (int i = 0; i < 5; i++) assertFalse(command.isFinished());
+      assertEquals(2, calls.get());
+      target.set(null);
+      command.execute(); // Target validity is checked even without a new control timestamp.
+      assertEquals(3, calls.get());
+      assertTrue(command.isFinished());
+      assertEquals(java.util.List.of("Autonomous heading target unavailable"), reasons);
+      assertEquals(0, pointRequest(command).VelocityX);
+      assertEquals(0, pointRequest(command).VelocityY);
+      assertEquals(0, pointRequest(command).RotationalRate);
+      assertNull(robot.drivetrain.getHeadingSetpointDegrees());
+    } finally {
+      command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void disabledOverrideSkipsWaypointCallbacksAndClearsTheHeadingSetpoint() throws Exception {
+    var calls = new java.util.concurrent.atomic.AtomicInteger();
+    var waypoint = new frc.powerlib.configs.PathWaypoint(
+        new Pose2d(TEST_X + 10, TEST_Y, Rotation2d.fromDegrees(90)),
+        new frc.powerlib.configs.MotionConstraints(2, 1, 2, 1), Constants.Auto.completionCriteria(3, 3),
+        frc.powerlib.auto.RotationTarget.live(pose -> { calls.incrementAndGet(); throw new IllegalStateException(); }), 3);
+    var command = new frc.robot.commands.DrivePathCommand(robot.drivetrain, java.util.List.of(waypoint), reason -> fail(reason))
+        .withRotationTarget(frc.powerlib.auto.RotationTarget.NONE);
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      robot.drivetrain.applyRequest(new com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric(), 90.0);
+      command.initialize();
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      command.execute();
+      assertEquals(0, calls.get());
+      assertNull(robot.drivetrain.getHeadingSetpointDegrees());
+      assertEquals(0, desiredPathSpeeds(command).omegaRadiansPerSecond);
+      assertTrue(desiredPathSpeeds(command).vxMetersPerSecond > 0);
+      assertFalse(command.isFinished());
+    } finally {
+      command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void rotationPolicyChangesAtHandoffWithoutResettingTheMotionLimiter() throws Exception {
+    var first = new frc.powerlib.configs.PathWaypoint(
+        new Pose2d(TEST_X + 2, TEST_Y, Rotation2d.kZero),
+        new frc.powerlib.configs.MotionConstraints(2, 1, 2, 1), Constants.Auto.completionCriteria(3, 3),
+        frc.powerlib.auto.RotationTarget.fixed(Rotation2d.fromDegrees(90)), 3);
+    var second = new frc.powerlib.configs.PathWaypoint(
+        new Pose2d(TEST_X + 6, TEST_Y, Rotation2d.kZero), first.constraints(), first.completion(),
+        frc.powerlib.auto.RotationTarget.facePoint(new edu.wpi.first.math.geometry.Translation2d(TEST_X + 2, TEST_Y - 10)), 3);
+    var command = new frc.robot.commands.DrivePathCommand(robot.drivetrain, java.util.List.of(first, second), reason -> fail(reason));
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      command.initialize();
+      for (int i = 0; i < 4; i++) {
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+        command.execute();
+      }
+      double previousX = pointRequest(command).VelocityX;
+      double previousOmega = pointRequest(command).RotationalRate;
+      assertTrue(previousX > 0.05);
+      assertTrue(previousOmega < -0.05);
+      robot.drivetrain.resetPose(new Pose2d(TEST_X + 2, TEST_Y, Rotation2d.fromDegrees(180)));
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      command.execute();
+      assertEquals(1, pathProgress(command).index());
+      assertEquals(-90, robot.drivetrain.getHeadingSetpointDegrees(), 1e-6);
+      assertTrue(desiredPathSpeeds(command).omegaRadiansPerSecond > 0);
+      assertEquals(previousX + 0.02, pointRequest(command).VelocityX, 1e-6);
+      assertEquals(previousOmega + 0.02, pointRequest(command).RotationalRate, 1e-6);
+      assertFalse(command.isFinished());
+      command.end(true);
+      command.initialize();
+      assertEquals(0, pathProgress(command).index());
+    } finally {
+      command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void endpointSettlesAgainstTheLiveTargetRatherThanThePoseHeading() throws Exception {
+    var target = new java.util.concurrent.atomic.AtomicReference<Rotation2d>(Rotation2d.fromDegrees(90));
+    var destination = new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(90));
+    var command = new frc.robot.commands.DriveToPointCommand(robot.drivetrain, destination,
+        Constants.Auto.completionCriteria(3, 3), new frc.powerlib.configs.MotionConstraints(2, 1, 2, 1),
+        frc.powerlib.auto.RotationTarget.live(pose -> target.get()), 3, reason -> fail(reason));
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      command.initialize(); // Robot faces 180; destination pose and initial target both say 90.
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.12);
+      command.execute();
+      assertFalse(command.isFinished());
+      assertEquals(90, robot.drivetrain.getHeadingSetpointDegrees(), 1e-9);
+      target.set(Rotation2d.fromDegrees(180));
+      robot.drivetrain.applyRequest(new com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake());
+      // Native feedback continues asynchronously; let the previous turn request settle.
+      for (int i = 0; i < 60 && !command.isFinished(); i++) {
+        Thread.sleep(5);
+        robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180)));
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+        command.execute();
+        if (i == 0) assertFalse(command.isFinished());
+      }
+      assertTrue(command.isFinished());
+      assertEquals(180, robot.drivetrain.getHeadingSetpointDegrees(), 1e-9);
+    } finally {
+      command.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+  }
+
+  @Test void undefinedPointAndThrowingLiveTargetsAbortWithoutEscapingTheCommand() throws Exception {
+    var rotationTargets = java.util.List.of(
+        frc.powerlib.auto.RotationTarget.facePoint(new edu.wpi.first.math.geometry.Translation2d(TEST_X, TEST_Y)),
+        frc.powerlib.auto.RotationTarget.live(pose -> { throw new IllegalStateException("Unavailable"); }),
+        frc.powerlib.auto.RotationTarget.live(pose -> Rotation2d.fromRadians(Double.NaN)));
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      for (var target : rotationTargets) {
+        var reasons = new java.util.ArrayList<String>();
+        var command = new frc.robot.commands.DriveToPointCommand(robot.drivetrain,
+            new Pose2d(TEST_X + 10, TEST_Y, Rotation2d.kZero), Constants.Auto.completionCriteria(3, 3),
+            new frc.powerlib.configs.MotionConstraints(2, 1, 2, 1), target, 3, reasons::add);
+        try {
+          robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180)));
+          command.initialize();
+          command.execute();
+          assertTrue(command.isFinished());
+          assertEquals(java.util.List.of("Autonomous heading target unavailable"), reasons);
+          assertEquals(0, pointRequest(command).VelocityX);
+          assertEquals(0, pointRequest(command).RotationalRate);
+          assertNull(robot.drivetrain.getHeadingSetpointDegrees());
+        } finally { command.end(true); }
+      }
+    } finally { edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming(); }
+  }
 }

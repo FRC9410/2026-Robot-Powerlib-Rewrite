@@ -15,6 +15,7 @@ import frc.powerlib.auto.CompletionChecker;
 import frc.powerlib.auto.CrossTrackController;
 import frc.powerlib.auto.DistanceSpeedController;
 import frc.powerlib.auto.PathProgress;
+import frc.powerlib.auto.RotationTarget;
 import frc.powerlib.configs.CrossTrackConfig;
 import frc.powerlib.configs.PathWaypoint;
 import frc.powerlib.configs.WaypointHandoffConfig;
@@ -41,7 +42,7 @@ public class DrivePathCommand extends Command {
   private final Timer waypointTimer = new Timer();
   private final SwerveRequest.FieldCentric driveRequest = new SwerveRequest.FieldCentric()
       .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
-  private Function<Pose2d, Rotation2d> headingTarget;
+  private RotationTarget rotationOverride;
   private double lastTimestamp;
   private boolean failed;
   private boolean finished;
@@ -66,10 +67,15 @@ public class DrivePathCommand extends Command {
     addRequirements(drivetrain);
   }
 
-  /** Configure before scheduling, for goals such as aiming at the hub from the current pose. */
-  public DrivePathCommand withHeadingTarget(Function<Pose2d, Rotation2d> target) {
-    headingTarget = Objects.requireNonNull(target, "target");
+  /** Configure before scheduling; overrides every waypoint, including unlocked legacy legs. */
+  public DrivePathCommand withRotationTarget(RotationTarget target) {
+    rotationOverride = Objects.requireNonNull(target, "target");
     return this;
+  }
+
+  /** Compatibility adapter for a live, enabled heading override. */
+  public DrivePathCommand withHeadingTarget(Function<Pose2d, Rotation2d> target) {
+    return withRotationTarget(RotationTarget.live(target));
   }
 
   @Override public void initialize() {
@@ -117,33 +123,38 @@ public class DrivePathCommand extends Command {
     try {
       if (progress.advance(pose.getTranslation())) waypointTimer.restart();
       var waypoint = progress.current();
-      var heading = headingTarget == null ? waypoint.pose().getRotation() : headingTarget.apply(pose);
-      if (heading == null || !Double.isFinite(heading.getRadians())) {
+      var rotation = rotationOverride == null ? waypoint.rotationTarget() : rotationOverride;
+      boolean requireHeading = rotation.enabled();
+      Rotation2d heading;
+      try {
+        heading = requireHeading ? rotation.resolve(pose) : pose.getRotation();
+      } catch (IllegalArgumentException exception) {
         fail("Autonomous heading target unavailable");
         return;
       }
-      var goal = headingTarget == null ? waypoint.pose() : new Pose2d(waypoint.pose().getTranslation(), heading);
+      if (!requireHeading) drivetrain.resetAutonomousHeadingController();
+      var goal = waypoint.pose();
+      if (requireHeading && heading != goal.getRotation()) goal = new Pose2d(goal.getTranslation(), heading);
       if (elapsed > 0) {
         double speed = Math.min(progress.maxTranslationSpeed(pose.getTranslation()),
             distanceController.calculateStopping(progress.remainingDistance(pose.getTranslation()),
                 Constants.Swerve.DRIVE_TO_POINT_STATIC_FRICTION_CONSTANT * drivetrain.MAX_SPEED,
                 progress.atEndpoint() ? waypoint.completion().translationToleranceMeters() : 0, progress.constraints()));
         steering.calculate(progress.currentSegment(), pose.getTranslation(), speed, desiredSpeeds);
-        desiredSpeeds.omegaRadiansPerSecond = headingRate(pose.getRotation(), heading, waypoint);
+        desiredSpeeds.omegaRadiansPerSecond = requireHeading ? headingRate(pose.getRotation(), heading, waypoint) : 0;
         var constrained = limiter.calculate(desiredSpeeds, elapsed);
         drivetrain.applyRequest(driveRequest
-            .withDriveRequestType(waypoint.lockHeading() ? DriveRequestType.Velocity : DriveRequestType.OpenLoopVoltage)
+            .withDriveRequestType(requireHeading ? DriveRequestType.Velocity : DriveRequestType.OpenLoopVoltage)
             .withVelocityX(constrained.vxMetersPerSecond).withVelocityY(constrained.vyMetersPerSecond)
-            .withRotationalRate(constrained.omegaRadiansPerSecond), waypoint.lockHeading() ? heading.getDegrees() : null);
+            .withRotationalRate(constrained.omegaRadiansPerSecond), requireHeading ? heading.getDegrees() : null);
       }
-      finished = progress.atEndpoint() && completion.update(pose, goal, state.Speeds, waypoint.lockHeading(), now);
+      finished = progress.atEndpoint() && completion.update(pose, goal, state.Speeds, requireHeading, now);
     } catch (IllegalArgumentException exception) {
       fail("Invalid autonomous motion request");
     }
   }
 
   private double headingRate(Rotation2d current, Rotation2d target, PathWaypoint waypoint) {
-    if (!waypoint.lockHeading()) return 0;
     double remainingAngle = Math.abs(target.minus(current).getRadians()) - waypoint.completion().headingToleranceRadians();
     if (remainingAngle <= 0) {
       drivetrain.resetAutonomousHeadingController();

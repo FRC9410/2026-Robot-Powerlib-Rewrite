@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.powerlib.auto.Auto;
 import frc.powerlib.auto.AutoBuilder;
+import frc.powerlib.auto.RotationTarget;
 import frc.powerlib.configs.MotionConstraints;
 import frc.powerlib.configs.PathWaypoint;
 import frc.powerlib.health.HealthChecks;
@@ -65,9 +66,9 @@ public final class RobotAutos {
         () -> new DriveToPointCommand(robot.drivetrain, points.get(points.size() - 1),
             Constants.Auto.completionCriteria(Constants.Auto.LEG_TOLERANCE_INCHES[points.size() - 1],
                 Constants.Auto.TURN_TOLERANCE_DEGREES),
-            constraintsForLeg(robot, points.size() - 1), true, Constants.Auto.TURN_TIMEOUT_SECONDS,
-            reason -> run.abort("Final aim: " + reason))
-            .withHeadingTarget(pose -> Rotation2d.fromDegrees(ShootingUtils.headingDegrees(pose, route.alliance()))),
+            constraintsForLeg(robot, points.size() - 1),
+            RotationTarget.live(pose -> Rotation2d.fromDegrees(ShootingUtils.headingDegrees(pose, route.alliance()))),
+            Constants.Auto.TURN_TIMEOUT_SECONDS, reason -> run.abort("Final aim: " + reason)),
         () -> aimAtHub(robot, route.alliance()))
         .buildContinuous(section -> drivePath(robot, section, run::abort));
     Command guarded = Commands.either(sequence, Commands.none(), () -> run.start(route, robot));
