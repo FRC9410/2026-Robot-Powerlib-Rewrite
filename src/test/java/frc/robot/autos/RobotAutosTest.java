@@ -63,4 +63,27 @@ class RobotAutosTest {
     assertEquals(3, Constants.Auto.TURN_TOLERANCE_DEGREES);
     assertEquals(1, Constants.Auto.TURN_TIMEOUT_SECONDS);
   }
+
+  @Test void continuousRoutesKeepTheThreeDrivingSectionsAndTheirActionBoundaries() {
+    for (var route : RobotAutos.ROUTES) {
+      List<String> events = new ArrayList<>();
+      List<frc.powerlib.auto.Auto.DriveSection> sections = new ArrayList<>();
+      var command = RobotAutos.sequence(route,
+          state -> Commands.runOnce(() -> events.add(state.name())),
+          () -> Commands.runOnce(() -> events.add("turn")),
+          () -> Commands.runOnce(() -> events.add("hold")))
+          .buildContinuous(section -> {
+            sections.add(section);
+            return Commands.runOnce(() -> events.add("path" + section.firstPointIndex()));
+          });
+      command.initialize();
+      for (int i = 0; i < 20 && !command.isFinished(); i++) command.execute();
+      assertTrue(command.isFinished());
+      command.end(false);
+      assertEquals(List.of("path0", "INTAKING", "path2", "READY", "path5", "turn", "SHOOTING", "hold"), events);
+      assertEquals(List.of(new frc.powerlib.auto.Auto.DriveSection(0, route.fieldPoints().subList(0, 2)),
+          new frc.powerlib.auto.Auto.DriveSection(2, route.fieldPoints().subList(2, 5)),
+          new frc.powerlib.auto.Auto.DriveSection(5, route.fieldPoints().subList(5, 7))), sections);
+    }
+  }
 }

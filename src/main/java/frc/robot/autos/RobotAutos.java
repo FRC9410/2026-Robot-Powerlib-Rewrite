@@ -12,14 +12,20 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.powerlib.auto.Auto;
 import frc.powerlib.auto.AutoBuilder;
+import frc.powerlib.auto.RotationTarget;
+import frc.powerlib.configs.MotionConstraints;
+import frc.powerlib.configs.PathWaypoint;
 import frc.powerlib.health.HealthChecks;
 import frc.robot.Constants;
 import frc.robot.commands.DriveToPointCommand;
+import frc.robot.commands.DrivePathCommand;
 import frc.robot.commands.RequestState;
 import frc.robot.subsystems.StateMachine;
 import frc.robot.subsystems.StateMachine.RobotState;
 import frc.robot.utils.ShootingUtils;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -55,15 +61,16 @@ public final class RobotAutos {
     Object owner = new Object();
     Run run = new Run();
     List<Pose2d> points = route.fieldPoints();
-    Command sequence = sequence(route, state -> new RequestState(state, owner, robot),
-        () -> aimAtHub(robot, route.alliance()).until(() -> aligned(robot, route.alliance(), Constants.Auto.TURN_TOLERANCE_DEGREES))
-            .withTimeout(Constants.Auto.TURN_TIMEOUT_SECONDS),
+    Command sequence = sequence(route,
+        state -> Commands.either(new RequestState(state, owner, robot), Commands.none(), () -> !run.aborted),
+        () -> new DriveToPointCommand(robot.drivetrain, points.get(points.size() - 1),
+            Constants.Auto.completionCriteria(Constants.Auto.LEG_TOLERANCE_INCHES[points.size() - 1],
+                Constants.Auto.TURN_TOLERANCE_DEGREES),
+            constraintsForLeg(robot, points.size() - 1),
+            RotationTarget.live(pose -> Rotation2d.fromDegrees(ShootingUtils.headingDegrees(pose, route.alliance()))),
+            Constants.Auto.TURN_TIMEOUT_SECONDS, reason -> run.abort("Final aim: " + reason)),
         () -> aimAtHub(robot, route.alliance()))
-        .build(point -> {
-          int leg = points.indexOf(point);
-          return new DriveToPointCommand(robot.drivetrain, point, Constants.Auto.LEG_TOLERANCE_INCHES[leg],
-              Constants.Auto.LEG_SPEED_COEFFICIENTS[leg], Constants.Auto.LEG_LOCK_HEADING[leg], run::abort);
-        });
+        .buildContinuous(section -> drivePath(robot, section, run::abort));
     Command guarded = Commands.either(sequence, Commands.none(), () -> run.start(route, robot));
     return guarded.until(() -> run.aborted || run.timer.hasElapsed(Constants.Field.AUTO_LENGTH_IN_TIME)
         || !DriverStation.isAutonomousEnabled())
@@ -103,10 +110,26 @@ public final class RobotAutos {
     }, robot.drivetrain);
   }
 
-  private static boolean aligned(StateMachine robot, Alliance alliance, double tolerance) {
-    var pose = robot.drivetrain.getState().Pose;
-    return HealthChecks.finitePose(pose) && Math.abs(Rotation2d.fromDegrees(ShootingUtils.headingDegrees(pose, alliance))
-        .minus(pose.getRotation()).getDegrees()) < tolerance;
+  private static Command drivePath(StateMachine robot, Auto.DriveSection section, Consumer<String> abort) {
+    List<PathWaypoint> waypoints = new ArrayList<>(section.points().size());
+    for (int offset = 0; offset < section.points().size(); offset++) {
+      int leg = section.firstPointIndex() + offset;
+      waypoints.add(new PathWaypoint(section.points().get(offset), constraintsForLeg(robot, leg),
+          Constants.Auto.completionCriteria(Constants.Auto.LEG_TOLERANCE_INCHES[leg],
+              Constants.Auto.LEG_HEADING_TOLERANCE_DEGREES),
+          Constants.Auto.LEG_LOCK_HEADING[leg], Constants.RobotContainer.AUTO_LEG_TIMEOUT_SECONDS));
+    }
+    return new DrivePathCommand(robot.drivetrain, waypoints, Constants.Auto.waypointHandoff(),
+        Constants.Auto.crossTrack(), abort);
+  }
+
+  private static MotionConstraints constraintsForLeg(StateMachine robot, int leg) {
+    return new MotionConstraints(
+        robot.drivetrain.MAX_SPEED * Constants.Swerve.DRIVE_TO_POINT_MAX_SPEED_COEFFICIENT
+            * Constants.Auto.LEG_SPEED_COEFFICIENTS[leg],
+        Constants.Auto.MAX_TRANSLATION_ACCELERATION_METERS_PER_SECOND_SQUARED,
+        robot.drivetrain.MAX_DRIVE_TO_POINT_ANGULAR_RATE,
+        Constants.Auto.MAX_ANGULAR_ACCELERATION_RADIANS_PER_SECOND_SQUARED);
   }
 
   private static final class Run {
