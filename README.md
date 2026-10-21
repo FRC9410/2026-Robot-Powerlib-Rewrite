@@ -2,8 +2,8 @@
 
 ## Shoot on the move (`sotm-testing`)
 
-Holding shoot now keeps driver translation available at the same speed as intaking
-(`DRIVE_WHILE_INTAKING_COEFFICIENT`, 40%). The runtime firecontrol classes `ShotCalculator`,
+Holding shoot now keeps driver translation available at 40% of normal speed
+(`DRIVE_WHILE_SHOOTING_COEFFICIENT`, tuned separately from intake speed). The runtime firecontrol classes `ShotCalculator`,
 `ShotLUT` and `ShotParameters` were adapted from
 [2026-ROBOT-SIM-TESTING](https://github.com/aydenterranella/2026-ROBOT-SIM-TESTING/tree/e2bfadbd89e17429873ec029ce2a8b123377f4ec/src/main/java/frc/firecontrol).
 Their FRC Team 5962 perSEVERE MIT attribution is retained. No MapleSim, projectile
@@ -55,13 +55,13 @@ compensated aim distance. The robot publishes
 `Shooting/SOTMEnabled`, `LeadDegrees`, `EffectiveDistanceMeters`, `TimeOfFlightSeconds`,
 `MotionCompensated`, `SOTMValid`, `SOTMConfidence`, `SolutionStatus`,
 `Drive/AimWheelsParked` and `Drive/AimWheelsLocked`. Tunable constants include
-`RobotContainer/Custom/DRIVE_WHILE_INTAKING_COEFFICIENT` (intake and shooting drive speed)
+`RobotContainer/Custom/DRIVE_WHILE_SHOOTING_COEFFICIENT` (shooting drive speed)
 and Shooting's `SOTM_MAX_DRIVETRAIN_SPEED_MPS`, `SOTM_RELEASE_DELAY_SECONDS`, `SOTM_DRAG_COEFFICIENT`,
 `SOTM_MAX_TILT_DEGREES`, `SOTM_VELOCITY_FILTER_SECONDS` and
 `AIM_HEADING_SLEW_DEGREES_PER_SECOND`. Source
 constants and `powerlib-constants.json` are kept in sync. Tests cover velocity lead,
 filtering, release latency, rotating-launcher velocity, solver failures, retained
-stationary calibrations, compensated readiness, the kill switch, intake-speed driving, aim
+stationary calibrations, compensated readiness, the kill switch, shooting drive speed, aim
 slewing and parking.
 
 ## PowerLib installation

@@ -64,8 +64,8 @@ public final class SwerveDriveCommand extends Command {
     boolean aiming = state == RobotState.SPINNING_UP || state == RobotState.SHOOTING;
     double coefficient = FieldUtils.getZone(pose) == FieldUtils.GameZone.INTERCHANGE
         ? Constants.OI.INTERCHANGE_SPEED_COEFFICIENT : drivetrain.getDriverMaxSpeedCoefficient();
-    // Shooting on the move drives at the same speed as intaking.
-    if (aiming || state == RobotState.INTAKING || state == RobotState.EJECTING) coefficient *= Constants.RobotContainer.DRIVE_WHILE_INTAKING_COEFFICIENT;
+    if (aiming) coefficient *= Constants.RobotContainer.DRIVE_WHILE_SHOOTING_COEFFICIENT;
+    else if (state == RobotState.INTAKING || state == RobotState.EJECTING) coefficient *= Constants.RobotContainer.DRIVE_WHILE_INTAKING_COEFFICIENT;
     double direction = alliance.get() == DriverStation.Alliance.Red ? 1 : -1;
     double scale = drivetrain.MAX_SPEED * drivetrain.getDriverVelocityScale() * coefficient;
     double vx = shaped(controller.getLeftY()) * direction * scale;

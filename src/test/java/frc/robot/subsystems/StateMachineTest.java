@@ -101,7 +101,15 @@ class StateMachineTest {
     return velocity;
   }
 
-  @Test void driveUsesMovingShotHeadingAndFeedforwardAtIntakeSpeed() throws Exception {
+  /** Field velocity expected while shooting on the move: the intake velocity rescaled to the shooting coefficient. */
+  private double[] shootingVelocity(edu.wpi.first.wpilibj2.command.button.CommandXboxController pad) throws Exception {
+    double[] intake = intakeVelocity(pad);
+    double scale = Constants.RobotContainer.DRIVE_WHILE_SHOOTING_COEFFICIENT
+        / Constants.RobotContainer.DRIVE_WHILE_INTAKING_COEFFICIENT;
+    return new double[] { intake[0] * scale, intake[1] * scale };
+  }
+
+  @Test void driveUsesMovingShotHeadingAndFeedforwardAtShootingSpeed() throws Exception {
     var pad = new edu.wpi.first.wpilibj2.command.button.CommandXboxController(Constants.OI.DRIVER_CONTROLLER_PORT);
     var shot = new frc.robot.utils.MovingShotCalculator().calculate(robot.drivetrain.getState().Pose,
         new edu.wpi.first.math.kinematics.ChassisSpeeds(0, -0.5, 0),
@@ -113,28 +121,33 @@ class StateMachineTest {
     controller.setLeftY(-1);
     controller.notifyNewData();
     DriverStationSim.notifyNewData();
-    double[] intake = intakeVelocity(pad);
-    assertTrue(Math.hypot(intake[0], intake[1]) > 1.5, "full diagonal intake speed should exceed the old 1.5 m/s cap");
-    double poseHeading = robot.drivetrain.getState().Pose.getRotation().getDegrees();
-    double measuredOmega = robot.drivetrain.getState().Speeds.omegaRadiansPerSecond;
-    command.execute();
-    var requestField = command.getClass().getDeclaredField("aimingRequest");
-    requestField.setAccessible(true);
-    var request = (com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric) requestField.get(command);
-    assertEquals(shot.headingDegrees(), robot.drivetrain.getHeadingSetpointDegrees(), 1e-9);
-    // Shooting on the move drives at exactly the intake speed for the same stick input.
-    assertEquals(intake[0], request.VelocityX, 1e-3);
-    assertEquals(intake[1], request.VelocityY, 1e-3);
-    double error = edu.wpi.first.math.MathUtil.inputModulus(shot.headingDegrees() - poseHeading, -180, 180);
-    double kp = frc.powerlib.PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kP", Constants.Swerve.HEADING_KP);
-    double kd = frc.powerlib.PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kD", Constants.Swerve.HEADING_KD);
-    double feedforward = shot.headingFeedforwardRadiansPerSecond();
-    assertEquals(Math.toRadians(error) * kp + feedforward + kd * (feedforward - measuredOmega),
-        request.RotationalRate, 0.001);
-    assertEquals(0.02, request.Deadband);
-    assertEquals(0, request.RotationalDeadband);
-    assertEquals(com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.Velocity, request.DriveRequestType);
-    command.end(true);
+    double previousCoefficient = Constants.RobotContainer.DRIVE_WHILE_SHOOTING_COEFFICIENT;
+    // Differs from the intake coefficient so the test shows the two speeds are tuned separately.
+    Constants.RobotContainer.DRIVE_WHILE_SHOOTING_COEFFICIENT = 0.25;
+    try {
+      double[] expected = shootingVelocity(pad);
+      double poseHeading = robot.drivetrain.getState().Pose.getRotation().getDegrees();
+      double measuredOmega = robot.drivetrain.getState().Speeds.omegaRadiansPerSecond;
+      command.execute();
+      var requestField = command.getClass().getDeclaredField("aimingRequest");
+      requestField.setAccessible(true);
+      var request = (com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric) requestField.get(command);
+      assertEquals(shot.headingDegrees(), robot.drivetrain.getHeadingSetpointDegrees(), 1e-9);
+      assertEquals(expected[0], request.VelocityX, 1e-3);
+      assertEquals(expected[1], request.VelocityY, 1e-3);
+      double error = edu.wpi.first.math.MathUtil.inputModulus(shot.headingDegrees() - poseHeading, -180, 180);
+      double kp = frc.powerlib.PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kP", Constants.Swerve.HEADING_KP);
+      double kd = frc.powerlib.PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kD", Constants.Swerve.HEADING_KD);
+      double feedforward = shot.headingFeedforwardRadiansPerSecond();
+      assertEquals(Math.toRadians(error) * kp + feedforward + kd * (feedforward - measuredOmega),
+          request.RotationalRate, 0.001);
+      assertEquals(0.02, request.Deadband);
+      assertEquals(0, request.RotationalDeadband);
+      assertEquals(com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.Velocity, request.DriveRequestType);
+    } finally {
+      Constants.RobotContainer.DRIVE_WHILE_SHOOTING_COEFFICIENT = previousCoefficient;
+      command.end(true);
+    }
   }
 
   @Test void killSwitchHoldsTranslationWhileAimingTheStationaryShot() throws Exception {
@@ -152,11 +165,11 @@ class StateMachineTest {
       var requestField = command.getClass().getDeclaredField("aimingRequest");
       requestField.setAccessible(true);
       var request = (com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric) requestField.get(command);
-      double[] intake = intakeVelocity(pad);
+      double[] expected = shootingVelocity(pad);
       frc.robot.utils.ShootingUtils.setSotmEnabled(true);
       command.execute();
-      assertEquals(intake[0], request.VelocityX, 1e-3);
-      assertEquals(intake[1], request.VelocityY, 1e-3);
+      assertEquals(expected[0], request.VelocityX, 1e-3);
+      assertEquals(expected[1], request.VelocityY, 1e-3);
       frc.robot.utils.ShootingUtils.setSotmEnabled(false);
       command.execute();
       assertEquals(0, request.VelocityX);

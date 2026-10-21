@@ -12,7 +12,8 @@ public class RobotContainerConstants {
   public static volatile double AUTO_TRANSLATION_KP = 3.2;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double AUTO_TRANSLATION_KD = 0.2;
-  // Also used while shooting on the move.
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double DRIVE_WHILE_SHOOTING_COEFFICIENT = 0.4;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double DRIVE_WHILE_INTAKING_COEFFICIENT = 0.4;
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE

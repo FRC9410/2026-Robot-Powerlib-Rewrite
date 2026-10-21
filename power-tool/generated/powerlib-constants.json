@@ -226,6 +226,13 @@
       "tunable": true
     },
     {
+      "name": "DRIVE_WHILE_SHOOTING_COEFFICIENT",
+      "type": "double",
+      "value": "0.4",
+      "custom": true,
+      "tunable": true
+    },
+    {
       "name": "DRIVE_WHILE_INTAKING_COEFFICIENT",
       "type": "double",
       "value": "0.4",
