@@ -7,17 +7,20 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.powerlib.vision.LimelightVision;
+import frc.powerlib.vision.VisionPoseFilter;
 import frc.powerlib.health.HealthChecks;
 import frc.robot.Constants;
 
 public class Vision extends SubsystemBase implements AutoCloseable {
   private final Swerve drivetrain;
   private final LimelightVision limelights;
+  private final VisionPoseFilter poseFilter =
+      new VisionPoseFilter(Constants.Vision.POSE_FILTER_CONFIG, Constants.Vision.CONFIG.maxMeasurementAgeSeconds());
   private boolean shouldUpdatePose = true;
   private LimelightVision.Measurement lastMeasurement;
   private LimelightVision.HeadingMeasurement lastHeadingMeasurement;
@@ -34,14 +37,12 @@ public class Vision extends SubsystemBase implements AutoCloseable {
   }
 
   public boolean hasFreshMeasurement() {
-    return lastMeasurement != null && HealthChecks.isFresh(
-        Timer.getFPGATimestamp() - lastMeasurement.timestampSeconds(),
-        Constants.Vision.CONFIG.maxMeasurementAgeSeconds());
+    return poseFilter.plausible(lastMeasurement, Timer.getFPGATimestamp());
   }
 
   /** Seed the pose from the last accepted frame, only while disabled and still fresh. */
   public boolean seedFromFreshVision() {
-    if (!DriverStation.isDisabled() || lastMeasurement == null) return false;
+    if (!DriverStation.isDisabled() || !hasFreshMeasurement()) return false;
     double age = Timer.getFPGATimestamp() - lastMeasurement.timestampSeconds();
     var pose = lastMeasurement.pose();
     if (!HealthChecks.isFresh(age, Constants.Vision.CONFIG.maxMeasurementAgeSeconds())
@@ -54,17 +55,20 @@ public class Vision extends SubsystemBase implements AutoCloseable {
     lastAppliedTimestamp = Timer.getFPGATimestamp();
     lastAppliedHeadingTimestamp = lastAppliedTimestamp;
     headingInitializer.reset();
+    poseFilter.resetRecovery();
     return true;
   }
 
   public boolean hasFreshHeading() {
     return lastHeadingMeasurement != null && HealthChecks.finitePose(lastHeadingMeasurement.pose())
+        && poseFilter.captureAllowed(lastHeadingMeasurement.timestampSeconds(), Timer.getFPGATimestamp())
         && HealthChecks.isFresh(Timer.getFPGATimestamp() - lastHeadingMeasurement.timestampSeconds(),
             Constants.Vision.HEADING_CONFIG.maxMeasurementAgeSeconds());
   }
 
   /** Enable or disable vision corrections, for example from an autonomous path event. */
   public void setShouldUpdatePose(boolean shouldUpdate) {
+    if (shouldUpdatePose != shouldUpdate) poseFilter.resetRecovery();
     shouldUpdatePose = shouldUpdate;
   }
 
@@ -77,15 +81,26 @@ public class Vision extends SubsystemBase implements AutoCloseable {
     // Fresh independent heading is needed for disabled pose seeds too.
     limelights.setThrottle(false);
     var state = drivetrain.getState();
+    double now = Timer.getFPGATimestamp();
+    var pitch = drivetrain.getPigeon2().getPitch();
+    var roll = drivetrain.getPigeon2().getRoll();
+    boolean gyroHealthy = Double.isFinite(state.Pose.getRotation().getRadians()) && (RobotBase.isSimulation()
+        || HealthChecks.signalHealthy(drivetrain.getPigeon2().getYaw(), Constants.Vision.POSE_FILTER_CONFIG.maxOrientationAgeSeconds())
+            && HealthChecks.signalHealthy(pitch, Constants.Vision.POSE_FILTER_CONFIG.maxOrientationAgeSeconds())
+            && HealthChecks.signalHealthy(roll, Constants.Vision.POSE_FILTER_CONFIG.maxOrientationAgeSeconds()));
+    poseFilter.observe(now, pitch.getValueAsDouble(), roll.getValueAsDouble(), gyroHealthy);
     var estimate = limelights.update(
         state.Pose.getRotation().getDegrees(),
-        drivetrain.getPigeon2().getPitch().getValueAsDouble(),
-        drivetrain.getPigeon2().getRoll().getValueAsDouble(),
-        Math.toDegrees(state.Speeds.omegaRadiansPerSecond));
-    estimate.ifPresent(measurement -> lastMeasurement = measurement);
-    limelights.getHeadingMeasurement().ifPresent(measurement -> lastHeadingMeasurement = measurement);
+        pitch.getValueAsDouble(), roll.getValueAsDouble(),
+        Math.toDegrees(state.Speeds.omegaRadiansPerSecond), DriverStation.isDisabled());
+    var position = estimate.orElse(null);
+    var heading = limelights.getHeadingMeasurement()
+        .filter(measurement -> poseFilter.captureAllowed(measurement.timestampSeconds(), now)).orElse(null);
+    if (poseFilter.plausible(position, now)) lastMeasurement = position;
+    if (heading != null) lastHeadingMeasurement = heading;
     // Continue reading while disabled so those cached frames are not applied after enabling.
-    applyMeasurements(estimate.orElse(null), limelights.getHeadingMeasurement().orElse(null));
+    applyMeasurements(position, heading);
+    SignalLogger.writeString("Vision/Position/Status", poseFilter.status());
   }
 
   private void applyMeasurements(LimelightVision.Measurement position,
@@ -144,10 +159,10 @@ public class Vision extends SubsystemBase implements AutoCloseable {
 
   private void applyPositionCorrection(LimelightVision.Measurement measurement) {
     if (measurement.timestampSeconds() < lastAppliedTimestamp) return;
+    var historical = drivetrain.samplePoseAt(Utils.fpgaToCurrentTime(measurement.timestampSeconds()));
+    if (!poseFilter.acceptPosition(measurement, historical.orElse(null), Timer.getFPGATimestamp())) return;
     drivetrain.addVisionMeasurement(
-        measurement.pose(), measurement.timestampSeconds(),
-        VecBuilder.fill(Constants.Vision.CONFIG.basePositionStdDev(), Constants.Vision.CONFIG.basePositionStdDev(),
-            Constants.Vision.HEADING_STD_DEV));
+        measurement.pose(), measurement.timestampSeconds(), measurement.standardDeviations());
     lastAppliedTimestamp = measurement.timestampSeconds();
   }
 

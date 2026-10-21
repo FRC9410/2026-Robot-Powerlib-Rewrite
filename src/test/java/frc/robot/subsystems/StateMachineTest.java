@@ -410,6 +410,7 @@ class StateMachineTest {
     var headingField = Vision.class.getDeclaredField("lastHeadingMeasurement");
     headingField.setAccessible(true);
     Object previousHeading = headingField.get(robot.vision);
+    prepareVisionFilter();
     try {
       headingField.set(robot.vision, null);
       var pose = new Pose2d(1.5, 2.5, Rotation2d.fromDegrees(24));
@@ -632,5 +633,93 @@ class StateMachineTest {
       assertFalse(robot.hasRequest(RobotState.SHOOTING));
       assertEquals(0, robot.shooter.getVelocitySetpoint());
     } finally { edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming(); }
+  }
+
+  private static frc.powerlib.vision.VisionPoseFilter prepareVisionFilter() throws Exception {
+    var field = Vision.class.getDeclaredField("poseFilter");
+    field.setAccessible(true);
+    var filter = (frc.powerlib.vision.VisionPoseFilter) field.get(robot.vision);
+    double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+    for (int i = 20; i >= 0; i--) filter.observe(now - i * 0.02, 0, 0, true);
+    return filter;
+  }
+
+  @Test void manualVisionSeedRejectsOffFieldHeightAndTiltedCaptureFrames() throws Exception {
+    DriverStationSim.setEnabled(false);
+    DriverStationSim.notifyNewData();
+    var field = Vision.class.getDeclaredField("lastMeasurement");
+    field.setAccessible(true);
+    Object previous = field.get(robot.vision);
+    var filter = prepareVisionFilter();
+    try {
+      double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+      for (var measurement : java.util.List.of(
+          new frc.powerlib.vision.LimelightVision.Measurement("test", new Pose2d(99, 2, Rotation2d.kZero), now, 1, 2, .2),
+          new frc.powerlib.vision.LimelightVision.Measurement("test", new Pose2d(2, 2, Rotation2d.kZero), now, 1, 2, .2, 2))) {
+        field.set(robot.vision, measurement);
+        assertFalse(robot.vision.seedFromFreshVision());
+      }
+      field.set(robot.vision, new frc.powerlib.vision.LimelightVision.Measurement("test",
+          new Pose2d(2, 2, Rotation2d.kZero), now, 1, 2, .2));
+      assertTrue(robot.vision.hasFreshMeasurement());
+      filter.observe(edu.wpi.first.wpilibj.Timer.getFPGATimestamp(), 12, 0, true);
+      assertFalse(robot.vision.hasFreshMeasurement());
+      assertFalse(robot.vision.seedFromFreshVision());
+      filter.observe(edu.wpi.first.wpilibj.Timer.getFPGATimestamp(), 0, 0, true);
+      assertFalse(robot.vision.seedFromFreshVision()); // Level now cannot make the old capture safe.
+    } finally { field.set(robot.vision, previous); prepareVisionFilter(); }
+  }
+
+  private static java.lang.reflect.Method positionCorrection() throws Exception {
+    var apply = Vision.class.getDeclaredMethod("applyPositionCorrection", frc.powerlib.vision.LimelightVision.Measurement.class);
+    apply.setAccessible(true);
+    return apply;
+  }
+
+  @Test void aSingleLargePositionOutlierCannotAdvanceTheFusionTimestamp() throws Exception {
+    prepareVisionFilter();
+    var barrier = Vision.class.getDeclaredField("lastAppliedTimestamp");
+    barrier.setAccessible(true);
+    double previous = barrier.getDouble(robot.vision);
+    try {
+      barrier.setDouble(robot.vision, Double.NEGATIVE_INFINITY);
+      double capture = edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - 0.01;
+      var outlier = new frc.powerlib.vision.LimelightVision.Measurement("test",
+          new Pose2d(TEST_X + 4, TEST_Y, Rotation2d.kZero), capture, 1, 2, .1);
+      positionCorrection().invoke(robot.vision, outlier);
+      assertEquals(Double.NEGATIVE_INFINITY, barrier.getDouble(robot.vision));
+      assertEquals(TEST_X, robot.drivetrain.getState().Pose.getX(), .001);
+      assertEquals(TEST_Y, robot.drivetrain.getState().Pose.getY(), .001);
+    } finally { barrier.setDouble(robot.vision, previous); }
+  }
+
+  @Test void visionFusionUsesEachMeasurementsUncertaintyRatherThanTheFixedBase() throws Exception {
+    var barrier = Vision.class.getDeclaredField("lastAppliedTimestamp");
+    barrier.setAccessible(true);
+    double previous = barrier.getDouble(robot.vision);
+    var apply = positionCorrection();
+    double[] displacement = new double[2];
+    try {
+      for (int run = 0; run < 2; run++) {
+        robot.drivetrain.applyRequest(new com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake());
+        robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180)));
+        Thread.sleep(60); // Allow native odometry to retain history at the new starting pose.
+        prepareVisionFilter();
+        barrier.setDouble(robot.vision, Double.NEGATIVE_INFINITY);
+        double capture = edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - .01;
+        assertTrue(robot.drivetrain.samplePoseAt(com.ctre.phoenix6.Utils.fpgaToCurrentTime(capture)).isPresent());
+        var measurement = new frc.powerlib.vision.LimelightVision.Measurement("test",
+            new Pose2d(TEST_X + .4, TEST_Y, Rotation2d.fromDegrees(180)), capture, 1, 2, run == 0 ? .02 : 20);
+        apply.invoke(robot.vision, measurement);
+        assertEquals(capture, barrier.getDouble(robot.vision));
+        Thread.sleep(20);
+        displacement[run] = robot.drivetrain.getState().Pose.getX() - TEST_X;
+      }
+      assertTrue(displacement[0] > .05, "Low uncertainty must visibly correct pose");
+      assertTrue(displacement[0] > 5 * displacement[1], "High uncertainty must apply much less correction");
+    } finally {
+      barrier.setDouble(robot.vision, previous);
+      robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180)));
+    }
   }
 }
