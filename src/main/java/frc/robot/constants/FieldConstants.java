@@ -4,22 +4,35 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 
 public class FieldConstants {
-  public static final double X_MIN = 0.0;
-  public static final double Y_MIN = 0.0;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double X_MIN = 0.0;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double Y_MIN = 0.0;
   // WPILib 2026 REBUILT welded field layout, in the blue-origin coordinate frame.
-  public static final double X_MAX = 16.541;
-  public static final double Y_MAX = 8.069;
-  public static final double TOL = 2.0;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double X_MAX = 16.541;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double Y_MAX = 8.069;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double TOL = 2.0;
 
-  public static final double BLUE_START_X = 0.0;
-  public static final double BLUE_END_X = 4;
-  public static final double CENTER_START_X = 5.2;
-  public static final double CENTER_END_X = 11.35;
-  public static final double RED_START_X = 12.55;
-  public static final double RED_END_X = X_MAX;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double BLUE_START_X = 0.0;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double BLUE_END_X = 4;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double CENTER_START_X = 5.2;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double CENTER_END_X = 11.35;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double RED_START_X = 12.55;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double RED_END_X = X_MAX;
 
-  public static final double AUTO_LENGTH_IN_TIME = 15;
-  public static final double TIME_BETWEEN_SHIFTS = 25;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double AUTO_LENGTH_IN_TIME = 15;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double TIME_BETWEEN_SHIFTS = 25;
 
   public static final Translation3d BLUE_TOP_CORNER = new Translation3d(0.5, 7.5, 0.0);
   public static final Translation3d BLUE_BOTTOM_CORNER = new Translation3d(0.5, 0.5, 0.0);
@@ -36,5 +49,9 @@ public class FieldConstants {
   public static final Translation2d HOPPER_RED = new Translation2d(11.915521, 4.0346376);
   public static final Translation2d HOPPER_BLUE = new Translation2d(4.6255178, 4.0346376);
 
-  public static final double MAX_DISTANCE_TO_HOPPER =  5.406;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double MAX_DISTANCE_TO_HOPPER = 5.406;
+  // POWERLIB CUSTOM CONSTANTS START - DO NOT DELETE
+
+  // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE
 }

@@ -563,6 +563,36 @@ class StateMachineTest {
     } finally { initializer.reset(); }
   }
 
+  @Test void enabledStationaryTwoTagRecoveryResetsLargeHeadingErrorAndPreservesPosition() throws Exception {
+    var recover = Vision.class.getDeclaredMethod("recoverEnabledHeading",
+        frc.powerlib.vision.LimelightVision.HeadingMeasurement.class, double.class);
+    recover.setAccessible(true);
+    var field = Vision.class.getDeclaredField("enabledHeadingInitializer");
+    field.setAccessible(true);
+    var initializer = (frc.robot.utils.VisionHeadingInitializer) field.get(robot.vision);
+    initializer.reset();
+    double started = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+    try {
+      for (int tags = 1; tags <= 2; tags++) {
+        for (int i = 0; i <= 13; i++) {
+          double time = started + tags + i * .02;
+          var heading = new frc.powerlib.vision.LimelightVision.HeadingMeasurement(
+              "test-camera", new Pose2d(9, 9, Rotation2d.fromDegrees(30)), time, .1, tags);
+          assertEquals(tags == 2 && i == 13, (boolean) recover.invoke(robot.vision, heading, time));
+        }
+        assertEquals(tags == 1 ? 180 : 30,
+            robot.drivetrain.getState().Pose.getRotation().getDegrees(), .001);
+      }
+      assertEquals(TEST_X, robot.drivetrain.getState().Pose.getX(), .001);
+      assertEquals(TEST_Y, robot.drivetrain.getState().Pose.getY(), .001);
+      DriverStationSim.setTest(true);
+      DriverStationSim.notifyNewData();
+      var heading = new frc.powerlib.vision.LimelightVision.HeadingMeasurement(
+          "test-camera", new Pose2d(9, 9, Rotation2d.kZero), started + 3, .1, 2);
+      assertFalse((boolean) recover.invoke(robot.vision, heading, started + 3));
+    } finally { initializer.reset(); }
+  }
+
   @Test void headingButtonHelperRunsWhileDisabledAndPreservesEnabledHeading() {
     DriverStationSim.setEnabled(false);
     DriverStationSim.notifyNewData();

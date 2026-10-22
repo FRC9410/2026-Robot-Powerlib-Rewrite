@@ -7,6 +7,24 @@ import frc.powerlib.vision.LimelightVision.HeadingMeasurement;
 import org.junit.jupiter.api.Test;
 
 class VisionHeadingInitializerTest {
+  @Test void enabledRecoveryRequiresStableTwoTagFramesAndStationaryRobot() {
+    var initializer = new VisionHeadingInitializer();
+    for (int i = 0; i < 20; i++) {
+      double time = 10 + i * .02;
+      assertTrue(initializer.update(frame(time, 90), time, 0, 0, 2).isEmpty());
+    }
+    for (int i = 0; i <= 13; i++) {
+      double time = 11 + i * .02;
+      var multiTag = new HeadingMeasurement("camera", frame(time, 90).pose(), time, .1, 2);
+      assertTrue(initializer.update(multiTag, time, .1, 0, 2).isEmpty());
+    }
+    for (int i = 0; i <= 13; i++) {
+      double time = 12 + i * .02;
+      var multiTag = new HeadingMeasurement("camera", frame(time, 90).pose(), time, .1, 2);
+      assertEquals(i == 13, initializer.update(multiTag, time, 0, 0, 2).isPresent());
+    }
+  }
+
   private static HeadingMeasurement frame(double time, double yaw) {
     return new HeadingMeasurement("camera", new Pose2d(2, 3, Rotation2d.fromDegrees(yaw)), time, 0.1);
   }

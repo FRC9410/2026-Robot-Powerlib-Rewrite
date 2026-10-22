@@ -97,7 +97,8 @@
                            "motionMagic":  {
                                                "cruiseVelocity":  0,
                                                "acceleration":  200
-                                           }
+                                           },
+                           "statorCurrentLimitAmps":  ""
                        },
                        {
                            "id":  "intakeWrist",
@@ -146,7 +147,8 @@
                            "absolutePosition":  {
                                                     "units":  "rotations",
                                                     "default":  -0.41
-                                                }
+                                                },
+                           "statorCurrentLimitAmps":  ""
                        },
                        {
                            "id":  "shooter",
@@ -236,7 +238,8 @@
                            "absolutePosition":  {
                                                     "units":  "rotations",
                                                     "default":  0
-                                                }
+                                                },
+                           "statorCurrentLimitAmps":  ""
                        },
                        {
                            "id":  "spindexer",

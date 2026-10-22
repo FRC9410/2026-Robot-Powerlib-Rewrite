@@ -27,7 +27,11 @@ public class Vision extends SubsystemBase implements AutoCloseable {
   private double lastAppliedTimestamp = Double.NEGATIVE_INFINITY;
   private double lastAppliedHeadingTimestamp = Double.NEGATIVE_INFINITY;
   private String headingStatus = "Waiting for independent heading";
+  private boolean positionAccepted;
+  private boolean positionOutOfOrder;
   private final frc.robot.utils.VisionHeadingInitializer headingInitializer =
+      new frc.robot.utils.VisionHeadingInitializer();
+  private final frc.robot.utils.VisionHeadingInitializer enabledHeadingInitializer =
       new frc.robot.utils.VisionHeadingInitializer();
 
   public Vision(Swerve drivetrain) {
@@ -99,8 +103,25 @@ public class Vision extends SubsystemBase implements AutoCloseable {
     if (poseFilter.plausible(position, now)) lastMeasurement = position;
     if (heading != null) lastHeadingMeasurement = heading;
     // Continue reading while disabled so those cached frames are not applied after enabling.
+    positionAccepted = false;
+    positionOutOfOrder = false;
     applyMeasurements(position, heading);
     SignalLogger.writeString("Vision/Position/Status", poseFilter.status());
+    frc.powerlib.PowerRobotContainer.setSubsystemData("Vision", "PositionStatus",
+        !shouldUpdatePose ? "Vision corrections disabled"
+            : !DriverStation.isEnabled() ? "Robot disabled"
+            : positionOutOfOrder ? "Position predates latest fusion"
+            : position == null && gyroHealthy ? "No new position frame; " + poseFilter.status()
+            : poseFilter.status());
+    frc.powerlib.PowerRobotContainer.setSubsystemData("Vision", "PositionAccepted", positionAccepted);
+    frc.powerlib.PowerRobotContainer.setSubsystemData("Vision", "GyroHealthy", gyroHealthy);
+    frc.powerlib.PowerRobotContainer.setSubsystemData("Vision", "PitchDegrees", pitch.getValueAsDouble());
+    frc.powerlib.PowerRobotContainer.setSubsystemData("Vision", "RollDegrees", roll.getValueAsDouble());
+    if (position != null) {
+      frc.powerlib.PowerRobotContainer.setSubsystemData("Vision", "PositionStdDevMeters", position.positionStdDev());
+      frc.powerlib.PowerRobotContainer.setSubsystemData("Vision", "PositionCamera", position.cameraName());
+      SignalLogger.writeDouble("Vision/Position/StdDevMeters", position.positionStdDev(), "meters");
+    }
   }
 
   private void applyMeasurements(LimelightVision.Measurement position,
@@ -115,12 +136,15 @@ public class Vision extends SubsystemBase implements AutoCloseable {
       headingInitializer.reset();
     }
     if (shouldUpdatePose && DriverStation.isEnabled()) {
+      correctedHeading = recoverEnabledHeading(heading, Timer.getFPGATimestamp());
       // Feed delayed measurements in capture order so an older frame cannot undo a newer one.
       boolean headingFirst = heading != null
           && (position == null || heading.timestampSeconds() <= position.timestampSeconds());
-      if (headingFirst) correctedHeading = applyHeadingCorrection(heading);
+      if (headingFirst && !correctedHeading) correctedHeading = applyHeadingCorrection(heading);
       if (position != null) applyPositionCorrection(position);
-      if (heading != null && !headingFirst) correctedHeading = applyHeadingCorrection(heading);
+      if (heading != null && !headingFirst && !correctedHeading) correctedHeading = applyHeadingCorrection(heading);
+    } else {
+      enabledHeadingInitializer.reset();
     }
     SignalLogger.writeBoolean("Vision/Heading/Accepted", correctedHeading);
     SignalLogger.writeString("Vision/Heading/Status", headingStatus);
@@ -157,13 +181,39 @@ public class Vision extends SubsystemBase implements AutoCloseable {
     return true;
   }
 
+  private boolean recoverEnabledHeading(LimelightVision.HeadingMeasurement measurement, double now) {
+    if (!shouldUpdatePose || !DriverStation.isEnabled() || DriverStation.isTest()
+        || !HealthChecks.driveHealthy(drivetrain, Constants.Shooting.MAX_SIGNAL_AGE_SECONDS)) {
+      enabledHeadingInitializer.reset();
+      return false;
+    }
+    var speeds = drivetrain.getState().Speeds;
+    var rotation = enabledHeadingInitializer.update(measurement, now,
+        Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond),
+        Math.toDegrees(speeds.omegaRadiansPerSecond), 2);
+    headingStatus = enabledHeadingInitializer.status();
+    if (rotation.isEmpty()) return false;
+    drivetrain.resetRotation(rotation.get());
+    lastAppliedTimestamp = now;
+    lastAppliedHeadingTimestamp = now;
+    poseFilter.resetRecovery();
+    enabledHeadingInitializer.reset();
+    headingStatus = "Stationary two-tag heading recovered";
+    SignalLogger.writeString("Robot/Control/Action", headingStatus);
+    return true;
+  }
+
   private void applyPositionCorrection(LimelightVision.Measurement measurement) {
-    if (measurement.timestampSeconds() < lastAppliedTimestamp) return;
+    if (measurement.timestampSeconds() < lastAppliedTimestamp) {
+      positionOutOfOrder = true;
+      return;
+    }
     var historical = drivetrain.samplePoseAt(Utils.fpgaToCurrentTime(measurement.timestampSeconds()));
     if (!poseFilter.acceptPosition(measurement, historical.orElse(null), Timer.getFPGATimestamp())) return;
     drivetrain.addVisionMeasurement(
         measurement.pose(), measurement.timestampSeconds(), measurement.standardDeviations());
     lastAppliedTimestamp = measurement.timestampSeconds();
+    positionAccepted = true;
   }
 
   private boolean applyHeadingCorrection(LimelightVision.HeadingMeasurement measurement) {

@@ -188,60 +188,60 @@
                                                      }
                                                  ]
                                },
-                  "robot:RobotContainer": {
-  "constants": [
-    {
-      "name": "AUTO_START_TOLERANCE_METERS",
-      "type": "double",
-      "value": "0.5",
-      "custom": true,
-      "tunable": true
-    },
-    {
-      "name": "AUTO_START_TOLERANCE_DEGREES",
-      "type": "double",
-      "value": "15.0",
-      "custom": true,
-      "tunable": true
-    },
-    {
-      "name": "AUTO_LEG_TIMEOUT_SECONDS",
-      "type": "double",
-      "value": "3.0",
-      "custom": true,
-      "tunable": true
-    },
-    {
-      "name": "AUTO_TRANSLATION_KP",
-      "type": "double",
-      "value": "3.2",
-      "custom": true,
-      "tunable": true
-    },
-    {
-      "name": "AUTO_TRANSLATION_KD",
-      "type": "double",
-      "value": "0.2",
-      "custom": true,
-      "tunable": true
-    },
-    {
-      "name": "DRIVE_WHILE_SHOOTING_COEFFICIENT",
-      "type": "double",
-      "value": "0.4",
-      "custom": true,
-      "tunable": true
-    },
-    {
-      "name": "DRIVE_WHILE_INTAKING_COEFFICIENT",
-      "type": "double",
-      "value": "0.4",
-      "custom": true,
-      "tunable": true
-    }
-  ]
-},
-                "robot:Swerve":  {
+                  "robot:RobotContainer":  {
+                                               "constants":  [
+                                                                 {
+                                                                     "name":  "AUTO_START_TOLERANCE_METERS",
+                                                                     "type":  "double",
+                                                                     "value":  "0.5",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 },
+                                                                 {
+                                                                     "name":  "AUTO_START_TOLERANCE_DEGREES",
+                                                                     "type":  "double",
+                                                                     "value":  "15.0",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 },
+                                                                 {
+                                                                     "name":  "AUTO_LEG_TIMEOUT_SECONDS",
+                                                                     "type":  "double",
+                                                                     "value":  "3.0",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 },
+                                                                 {
+                                                                     "name":  "AUTO_TRANSLATION_KP",
+                                                                     "type":  "double",
+                                                                     "value":  "3.2",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 },
+                                                                 {
+                                                                     "name":  "AUTO_TRANSLATION_KD",
+                                                                     "type":  "double",
+                                                                     "value":  "0.2",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 },
+                                                                 {
+                                                                     "name":  "DRIVE_WHILE_SHOOTING_COEFFICIENT",
+                                                                     "type":  "double",
+                                                                     "value":  "0.2",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 },
+                                                                 {
+                                                                     "name":  "DRIVE_WHILE_INTAKING_COEFFICIENT",
+                                                                     "type":  "double",
+                                                                     "value":  "0.4",
+                                                                     "custom":  true,
+                                                                     "tunable":  true
+                                                                 }
+                                                             ]
+                                           },
+                  "robot:Swerve":  {
                                        "constants":  [
 
                                                      ]
@@ -383,419 +383,855 @@
                                                              }
                                                          ]
                                        },
-                  "robot:Shooting": {
-  "constants": [
-    {
-      "name": "BLUE_HUB",
-      "type": "edu.wpi.first.math.geometry.Translation2d",
-      "value": "FieldConstants.HOPPER_BLUE",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "RED_HUB",
-      "type": "edu.wpi.first.math.geometry.Translation2d",
-      "value": "FieldConstants.HOPPER_RED",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "FIELD_WIDTH",
-      "type": "double",
-      "value": "FieldConstants.Y_MAX",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "BLUE_ZONE_START",
-      "type": "double",
-      "value": "FieldConstants.BLUE_START_X",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "BLUE_ZONE_END",
-      "type": "double",
-      "value": "FieldConstants.BLUE_END_X",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "RED_ZONE_START",
-      "type": "double",
-      "value": "FieldConstants.RED_START_X",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "RED_ZONE_END",
-      "type": "double",
-      "value": "FieldConstants.RED_END_X",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "CENTER_ZONE_START",
-      "type": "double",
-      "value": "FieldConstants.CENTER_START_X",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "CENTER_ZONE_END",
-      "type": "double",
-      "value": "FieldConstants.CENTER_END_X",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "MIN_SHOT_DISTANCE",
-      "type": "double",
-      "value": "1.95",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "MAX_SHOT_DISTANCE",
-      "type": "double",
-      "value": "4.9",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "COLLECT_RPS",
-      "type": "double",
-      "value": "145",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "EJECT_RPS",
-      "type": "double",
-      "value": "-145",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "SHOOTER_TOLERANCE_RPS",
-      "type": "double",
-      "value": "2",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "HEADING_TOLERANCE_DEGREES",
-      "type": "double",
-      "value": "5",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "MAX_SIGNAL_AGE_SECONDS",
-      "type": "double",
-      "value": "0.5",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "SOTM_ENABLED_DEFAULT",
-      "type": "boolean",
-      "value": "true",
-      "custom": true,
-      "tunable": false
-    },
-    {
-      "name": "SOTM_MAX_DRIVETRAIN_SPEED_MPS",
-      "type": "double",
-      "value": "3.0",
-      "custom": true,
-      "tunable": true
-    },
-    {
-      "name": "SOTM_RELEASE_DELAY_SECONDS",
-      "type": "double",
-      "value": "0.02",
-      "custom": true,
-      "tunable": true
-    },
-    {
-      "name": "SOTM_DRAG_COEFFICIENT",
-      "type": "double",
-      "value": "0.24",
-      "custom": true,
-      "tunable": true
-    },
-    {
-      "name": "SOTM_VELOCITY_FILTER_SECONDS",
-      "type": "double",
-      "value": "0.1",
-      "custom": true,
-      "tunable": true
-    },
-    {
-      "name": "AIM_HEADING_SLEW_DEGREES_PER_SECOND",
-      "type": "double",
-      "value": "90",
-      "custom": true,
-      "tunable": true
-    },
-    {
-      "name": "SOTM_MIN_SPEED_MPS",
-      "type": "double",
-      "value": "0.1",
-      "custom": true,
-      "tunable": false
-    },
-    {
-      "name": "SOTM_MAX_TILT_DEGREES",
-      "type": "double",
-      "value": "5.0",
-      "custom": true,
-      "tunable": true
-    },
-    {
-      "name": "LAUNCHER_OFFSET_X_METERS",
-      "type": "double",
-      "value": "-0.20",
-      "custom": true,
-      "tunable": false
-    },
-    {
-      "name": "LAUNCHER_OFFSET_Y_METERS",
-      "type": "double",
-      "value": "0.0",
-      "custom": true,
-      "tunable": false
-    },
-    {
-      "name": "SHOOTER_ANGLE_OFFSET_RADIANS",
-      "type": "double",
-      "value": "Math.PI",
-      "custom": true,
-      "tunable": false
-    },
-    {
-      "name": "SHOOTER_TOF",
-      "type": "double[][]",
-      "value": "{\n      {1.68, 0.515}, {1.97, 0.574}, {2.38, 0.658}, {2.75, 0.733}, {3.29, 0.812},\n      {3.75, 0.856}, {4.05, 0.884}, {4.60, 0.947}, {4.85, 0.976}, {5.50, 1.052}\n  }",
-      "custom": true,
-      "tunable": false
-    },
-    {
-      "name": "HOOD_ANGLES",
-      "type": "double[][]",
-      "value": "{\n            { 4.9, 0.09 },\n            { 4.1, 0.08 },\n            { 3.5, 0.07 },\n            { 3.0, 0.065 },\n            { 2.5, 0.055 },\n            { 1.95, 0.044 }\n    }",
-      "custom": true,
-      "tunable": false
-    },
-    {
-      "name": "SHOOTER_SPEEDS",
-      "type": "double[][]",
-      "value": "{\n             { 4.9, 37 },\n             { 4.1, 34 },\n             { 3.5, 32 },\n             { 3.0, 29.5 },\n             { 2.5, 28.5 },\n             { 1.95, 27.4 }\n    }",
-      "custom": true,
-      "tunable": false
-    },
-    {
-      "name": "FEEDER_SPEEDS",
-      "type": "double[][]",
-      "value": "{\n        { 4.9, 80 },\n        { 4.1, 85 },\n        { 3.5, 85 },\n        { 3.0, 85 },\n        { 2.5, 85 },\n    }",
-      "custom": true,
-      "tunable": false
-    },
-    {
-      "name": "HOOD_ANGLE_INTERPOLATOR",
-      "type": "frc.powerlib.math.LinearInterpolator",
-      "value": "new frc.powerlib.math.LinearInterpolator(HOOD_ANGLES)",
-      "custom": true,
-      "tunable": false
-    },
-    {
-      "name": "SHOOTER_VELOCITY_INTERPOLATOR",
-      "type": "frc.powerlib.math.LinearInterpolator",
-      "value": "new frc.powerlib.math.LinearInterpolator(SHOOTER_SPEEDS)",
-      "custom": true,
-      "tunable": false
-    },
-    {
-      "name": "FEEDER_VELOCITY_INTERPOLATOR",
-      "type": "frc.powerlib.math.LinearInterpolator",
-      "value": "new frc.powerlib.math.LinearInterpolator(FEEDER_SPEEDS)",
-      "custom": true,
-      "tunable": false
-    }
-  ]
-},
-                "robot:Field": {
-  "constants": [
-    {
-      "name": "X_MIN",
-      "type": "double",
-      "value": "0.0",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "Y_MIN",
-      "type": "double",
-      "value": "0.0",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "X_MAX",
-      "type": "double",
-      "value": "16.541",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "Y_MAX",
-      "type": "double",
-      "value": "8.069",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "TOL",
-      "type": "double",
-      "value": "2.0",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "BLUE_START_X",
-      "type": "double",
-      "value": "0.0",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "BLUE_END_X",
-      "type": "double",
-      "value": "4",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "CENTER_START_X",
-      "type": "double",
-      "value": "5.2",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "CENTER_END_X",
-      "type": "double",
-      "value": "11.35",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "RED_START_X",
-      "type": "double",
-      "value": "12.55",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "RED_END_X",
-      "type": "double",
-      "value": "X_MAX",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "AUTO_LENGTH_IN_TIME",
-      "type": "double",
-      "value": "15",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "TIME_BETWEEN_SHIFTS",
-      "type": "double",
-      "value": "25",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "BLUE_TOP_CORNER",
-      "type": "Translation3d",
-      "value": "new Translation3d(0.5, 7.5, 0.0)",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "BLUE_BOTTOM_CORNER",
-      "type": "Translation3d",
-      "value": "new Translation3d(0.5, 0.5, 0.0)",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "RED_TOP_CORNER",
-      "type": "Translation3d",
-      "value": "new Translation3d(16, 7.5, 0.0)",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "RED_BOTTOM_CORNER",
-      "type": "Translation3d",
-      "value": "new Translation3d(16, 0.5, 0.0)",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "NEU_TOP_LEFT",
-      "type": "Translation2d",
-      "value": "new Translation2d(5.872, 7.443)",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "NEU_TOP_RIGHT",
-      "type": "Translation2d",
-      "value": "new Translation2d(10.692, 7.443)",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "NEU_BOTTOM_LEFT",
-      "type": "Translation2d",
-      "value": "new Translation2d(5.872, 0.595)",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "NEU_BOTTOM_RIGHT",
-      "type": "Translation2d",
-      "value": "new Translation2d(10.692, 0.595)",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "HOPPER_RED",
-      "type": "Translation2d",
-      "value": "new Translation2d(11.915521, 4.0346376)",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "HOPPER_BLUE",
-      "type": "Translation2d",
-      "value": "new Translation2d(4.6255178, 4.0346376)",
-      "custom": false,
-      "tunable": false
-    },
-    {
-      "name": "MAX_DISTANCE_TO_HOPPER",
-      "type": "double",
-      "value": "5.406",
-      "custom": false,
-      "tunable": false
-    }
-  ]
-}
+                  "robot:Shooting":  {
+                                         "constants":  [
+                                                           {
+                                                               "name":  "BLUE_HUB",
+                                                               "type":  "edu.wpi.first.math.geometry.Translation2d",
+                                                               "value":  "FieldConstants.HOPPER_BLUE",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "RED_HUB",
+                                                               "type":  "edu.wpi.first.math.geometry.Translation2d",
+                                                               "value":  "FieldConstants.HOPPER_RED",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "FIELD_WIDTH",
+                                                               "type":  "double",
+                                                               "value":  "FieldConstants.Y_MAX",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "BLUE_ZONE_START",
+                                                               "type":  "double",
+                                                               "value":  "FieldConstants.BLUE_START_X",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "BLUE_ZONE_END",
+                                                               "type":  "double",
+                                                               "value":  "FieldConstants.BLUE_END_X",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "RED_ZONE_START",
+                                                               "type":  "double",
+                                                               "value":  "FieldConstants.RED_START_X",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "RED_ZONE_END",
+                                                               "type":  "double",
+                                                               "value":  "FieldConstants.RED_END_X",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "CENTER_ZONE_START",
+                                                               "type":  "double",
+                                                               "value":  "FieldConstants.CENTER_START_X",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "CENTER_ZONE_END",
+                                                               "type":  "double",
+                                                               "value":  "FieldConstants.CENTER_END_X",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "MIN_SHOT_DISTANCE",
+                                                               "type":  "double",
+                                                               "value":  "1.95",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "MAX_SHOT_DISTANCE",
+                                                               "type":  "double",
+                                                               "value":  "4.9",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "COLLECT_RPS",
+                                                               "type":  "double",
+                                                               "value":  "145",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "EJECT_RPS",
+                                                               "type":  "double",
+                                                               "value":  "-145",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "SHOOTER_TOLERANCE_RPS",
+                                                               "type":  "double",
+                                                               "value":  "2",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "HEADING_TOLERANCE_DEGREES",
+                                                               "type":  "double",
+                                                               "value":  "5",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "MAX_SIGNAL_AGE_SECONDS",
+                                                               "type":  "double",
+                                                               "value":  "0.5",
+                                                               "custom":  false,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "SOTM_ENABLED_DEFAULT",
+                                                               "type":  "boolean",
+                                                               "value":  "true",
+                                                               "custom":  true,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "SOTM_MAX_DRIVETRAIN_SPEED_MPS",
+                                                               "type":  "double",
+                                                               "value":  "3.0",
+                                                               "custom":  true,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "SOTM_RELEASE_DELAY_SECONDS",
+                                                               "type":  "double",
+                                                               "value":  "0.02",
+                                                               "custom":  true,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "SOTM_DRAG_COEFFICIENT",
+                                                               "type":  "double",
+                                                               "value":  "0.24",
+                                                               "custom":  true,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "SOTM_VELOCITY_FILTER_SECONDS",
+                                                               "type":  "double",
+                                                               "value":  "0.1",
+                                                               "custom":  true,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "AIM_HEADING_SLEW_DEGREES_PER_SECOND",
+                                                               "type":  "double",
+                                                               "value":  "90",
+                                                               "custom":  true,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "SOTM_MIN_SPEED_MPS",
+                                                               "type":  "double",
+                                                               "value":  "0.1",
+                                                               "custom":  true,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "SOTM_MAX_TILT_DEGREES",
+                                                               "type":  "double",
+                                                               "value":  "5.0",
+                                                               "custom":  true,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "LAUNCHER_OFFSET_X_METERS",
+                                                               "type":  "double",
+                                                               "value":  "-0.20",
+                                                               "custom":  true,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "LAUNCHER_OFFSET_Y_METERS",
+                                                               "type":  "double",
+                                                               "value":  "0.0",
+                                                               "custom":  true,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "SHOOTER_ANGLE_OFFSET_RADIANS",
+                                                               "type":  "double",
+                                                               "value":  "Math.PI",
+                                                               "custom":  true,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "SHOOTER_TOF",
+                                                               "type":  "double[][]",
+                                                               "value":  "{\n      {1.68, 0.515}, {1.97, 0.574}, {2.38, 0.658}, {2.75, 0.733}, {3.29, 0.812},\n      {3.75, 0.856}, {4.05, 0.884}, {4.60, 0.947}, {4.85, 0.976}, {5.50, 1.052}\n  }",
+                                                               "custom":  true,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "HOOD_ANGLES",
+                                                               "type":  "double[][]",
+                                                               "value":  "{\n            { 4.9, 0.09 },\n            { 4.1, 0.08 },\n            { 3.5, 0.07 },\n            { 3.0, 0.065 },\n            { 2.5, 0.055 },\n            { 1.95, 0.044 }\n    }",
+                                                               "custom":  true,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "SHOOTER_SPEEDS",
+                                                               "type":  "double[][]",
+                                                               "value":  "{\n             { 4.9, 37 },\n             { 4.1, 34 },\n             { 3.5, 32 },\n             { 3.0, 29.5 },\n             { 2.5, 28.5 },\n             { 1.95, 27.4 }\n    }",
+                                                               "custom":  true,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "FEEDER_SPEEDS",
+                                                               "type":  "double[][]",
+                                                               "value":  "{\n        { 4.9, 80 },\n        { 4.1, 85 },\n        { 3.5, 85 },\n        { 3.0, 85 },\n        { 2.5, 85 },\n    }",
+                                                               "custom":  true,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "HOOD_ANGLE_INTERPOLATOR",
+                                                               "type":  "frc.powerlib.math.LinearInterpolator",
+                                                               "value":  "new frc.powerlib.math.LinearInterpolator(HOOD_ANGLES)",
+                                                               "custom":  true,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "SHOOTER_VELOCITY_INTERPOLATOR",
+                                                               "type":  "frc.powerlib.math.LinearInterpolator",
+                                                               "value":  "new frc.powerlib.math.LinearInterpolator(SHOOTER_SPEEDS)",
+                                                               "custom":  true,
+                                                               "tunable":  false
+                                                           },
+                                                           {
+                                                               "name":  "FEEDER_VELOCITY_INTERPOLATOR",
+                                                               "type":  "frc.powerlib.math.LinearInterpolator",
+                                                               "value":  "new frc.powerlib.math.LinearInterpolator(FEEDER_SPEEDS)",
+                                                               "custom":  true,
+                                                               "tunable":  false
+                                                           }
+                                                       ]
+                                     },
+                  "robot:Field":  {
+                                      "constants":  [
+                                                        {
+                                                            "name":  "X_MIN",
+                                                            "type":  "double",
+                                                            "value":  "0.0",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "Y_MIN",
+                                                            "type":  "double",
+                                                            "value":  "0.0",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "X_MAX",
+                                                            "type":  "double",
+                                                            "value":  "16.541",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "Y_MAX",
+                                                            "type":  "double",
+                                                            "value":  "8.069",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "TOL",
+                                                            "type":  "double",
+                                                            "value":  "2.0",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "BLUE_START_X",
+                                                            "type":  "double",
+                                                            "value":  "0.0",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "BLUE_END_X",
+                                                            "type":  "double",
+                                                            "value":  "4",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "CENTER_START_X",
+                                                            "type":  "double",
+                                                            "value":  "5.2",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "CENTER_END_X",
+                                                            "type":  "double",
+                                                            "value":  "11.35",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "RED_START_X",
+                                                            "type":  "double",
+                                                            "value":  "12.55",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "RED_END_X",
+                                                            "type":  "double",
+                                                            "value":  "X_MAX",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "AUTO_LENGTH_IN_TIME",
+                                                            "type":  "double",
+                                                            "value":  "15",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "TIME_BETWEEN_SHIFTS",
+                                                            "type":  "double",
+                                                            "value":  "25",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "BLUE_TOP_CORNER",
+                                                            "type":  "Translation3d",
+                                                            "value":  "new Translation3d(0.5, 7.5, 0.0)",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "BLUE_BOTTOM_CORNER",
+                                                            "type":  "Translation3d",
+                                                            "value":  "new Translation3d(0.5, 0.5, 0.0)",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "RED_TOP_CORNER",
+                                                            "type":  "Translation3d",
+                                                            "value":  "new Translation3d(16, 7.5, 0.0)",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "RED_BOTTOM_CORNER",
+                                                            "type":  "Translation3d",
+                                                            "value":  "new Translation3d(16, 0.5, 0.0)",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "NEU_TOP_LEFT",
+                                                            "type":  "Translation2d",
+                                                            "value":  "new Translation2d(5.872, 7.443)",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "NEU_TOP_RIGHT",
+                                                            "type":  "Translation2d",
+                                                            "value":  "new Translation2d(10.692, 7.443)",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "NEU_BOTTOM_LEFT",
+                                                            "type":  "Translation2d",
+                                                            "value":  "new Translation2d(5.872, 0.595)",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "NEU_BOTTOM_RIGHT",
+                                                            "type":  "Translation2d",
+                                                            "value":  "new Translation2d(10.692, 0.595)",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "HOPPER_RED",
+                                                            "type":  "Translation2d",
+                                                            "value":  "new Translation2d(11.915521, 4.0346376)",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "HOPPER_BLUE",
+                                                            "type":  "Translation2d",
+                                                            "value":  "new Translation2d(4.6255178, 4.0346376)",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        },
+                                                        {
+                                                            "name":  "MAX_DISTANCE_TO_HOPPER",
+                                                            "type":  "double",
+                                                            "value":  "5.406",
+                                                            "custom":  false,
+                                                            "tunable":  false
+                                                        }
+                                                    ]
+                                  },
+                  "robot:Auto":  {
+                                     "constants":  [
+                                                       {
+                                                           "name":  "TRANSLATION_TOLERANCE",
+                                                           "type":  "double",
+                                                           "value":  "0.05",
+                                                           "custom":  false,
+                                                           "tunable":  true
+                                                       },
+                                                       {
+                                                           "name":  "ROTATION_TOLERANCE",
+                                                           "type":  "double",
+                                                           "value":  "1.0",
+                                                           "custom":  false,
+                                                           "tunable":  true
+                                                       },
+                                                       {
+                                                           "name":  "RED_LEFT_1",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(13.5, 2.4, Rotation2d.fromDegrees(-90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "RED_LEFT_2",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(10.0, 2.4, Rotation2d.fromDegrees(-90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "RED_LEFT_3",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(9.55, 0.73, Rotation2d.fromDegrees(-90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "RED_LEFT_4",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(8.2, 1, Rotation2d.fromDegrees(-90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "RED_LEFT_5",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(8.2, 3.5, Rotation2d.fromDegrees(-90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "RED_LEFT_6",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(8.4, 2.4, Rotation2d.fromDegrees(-90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "RED_LEFT_7",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(14.3, 2.4, Rotation2d.fromDegrees(135.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "RED_RIGHT_1",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(13.5, 5.7, Rotation2d.fromDegrees(90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "RED_RIGHT_2",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(10.0, 5.7, Rotation2d.fromDegrees(90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "RED_RIGHT_3",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(9.55, 7.27, Rotation2d.fromDegrees(90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "RED_RIGHT_4",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(8.2, 7, Rotation2d.fromDegrees(90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "RED_RIGHT_5",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(8.2, 4.5, Rotation2d.fromDegrees(90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "RED_RIGHT_6",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(8.4, 5.7, Rotation2d.fromDegrees(90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "RED_RIGHT_7",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(14.3, 5.7, Rotation2d.fromDegrees(-135.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_LEFT_1",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(3.1, 5.7, Rotation2d.fromDegrees(-90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_LEFT_2",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(6.5, 5.7, Rotation2d.fromDegrees(-90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_LEFT_3",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(6.95, 7.27, Rotation2d.fromDegrees(-90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_LEFT_4",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(8.2, 7, Rotation2d.fromDegrees(-90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_LEFT_5",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(8.2, 4.5, Rotation2d.fromDegrees(-90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_LEFT_6",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(8.1, 5.7, Rotation2d.fromDegrees(-90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_LEFT_7",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(2.1, 5.7, Rotation2d.fromDegrees(135.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_RIGHT_1",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(3.1, 2.4, Rotation2d.fromDegrees(90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_RIGHT_2",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(6.5, 2.4, Rotation2d.fromDegrees(90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_RIGHT_3",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(6.95, 0.73, Rotation2d.fromDegrees(90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_RIGHT_4",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(8.2, 1, Rotation2d.fromDegrees(90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_RIGHT_5",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(8.2, 3.5, Rotation2d.fromDegrees(90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_RIGHT_6",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(8.1, 2.4, Rotation2d.fromDegrees(90.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "BLUE_RIGHT_7",
+                                                           "type":  "Pose2d",
+                                                           "value":  "new Pose2d(2.1, 2.4, Rotation2d.fromDegrees(-135.0))",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "LEG_TOLERANCE_INCHES",
+                                                           "type":  "double[]",
+                                                           "value":  "{6, 6, 12, 6, 6, 3, 3}",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "LEG_SPEED_COEFFICIENTS",
+                                                           "type":  "double[]",
+                                                           "value":  "{0.5, 1, 0.75, 0.75, 0.4, 0.75, 1}",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "LEG_LOCK_HEADING",
+                                                           "type":  "boolean[]",
+                                                           "value":  "{true, false, true, true, true, true, false}",
+                                                           "custom":  false,
+                                                           "tunable":  false
+                                                       },
+                                                       {
+                                                           "name":  "LEG_HEADING_TOLERANCE_DEGREES",
+                                                           "type":  "double",
+                                                           "value":  "10",
+                                                           "custom":  false,
+                                                           "tunable":  true
+                                                       },
+                                                       {
+                                                           "name":  "STATIC_FEEDFORWARD_THRESHOLD_INCHES",
+                                                           "type":  "double",
+                                                           "value":  "3",
+                                                           "custom":  false,
+                                                           "tunable":  true
+                                                       },
+                                                       {
+                                                           "name":  "TURN_TOLERANCE_DEGREES",
+                                                           "type":  "double",
+                                                           "value":  "3",
+                                                           "custom":  false,
+                                                           "tunable":  true
+                                                       },
+                                                       {
+                                                           "name":  "TURN_TIMEOUT_SECONDS",
+                                                           "type":  "double",
+                                                           "value":  "1",
+                                                           "custom":  false,
+                                                           "tunable":  true
+                                                       }
+                                                   ]
+                                 },
+                  "robot:CanBus":  {
+                                       "constants":  [
+                                                         {
+                                                             "name":  "CANIVORE_BUS_NAME",
+                                                             "type":  "String",
+                                                             "value":  "\"canivore\"",
+                                                             "custom":  false,
+                                                             "tunable":  false
+                                                         },
+                                                         {
+                                                             "name":  "RIO_BUS_NAME",
+                                                             "type":  "String",
+                                                             "value":  "\"rio\"",
+                                                             "custom":  false,
+                                                             "tunable":  false
+                                                         },
+                                                         {
+                                                             "name":  "CANIVORE_BUS",
+                                                             "type":  "CANBus",
+                                                             "value":  "new CANBus(CANIVORE_BUS_NAME)",
+                                                             "custom":  false,
+                                                             "tunable":  false
+                                                         }
+                                                     ]
+                                   },
+                  "robot:LED":  {
+                                    "constants":  [
+                                                      {
+                                                          "name":  "CANDLE_CAN_ID",
+                                                          "type":  "int",
+                                                          "value":  "0",
+                                                          "custom":  false,
+                                                          "tunable":  true
+                                                      },
+                                                      {
+                                                          "name":  "CANDLE_CAN_BUS",
+                                                          "type":  "String",
+                                                          "value":  "CanBusConstants.CANIVORE_BUS_NAME",
+                                                          "custom":  false,
+                                                          "tunable":  false
+                                                      },
+                                                      {
+                                                          "name":  "STRIP_START_INDEX",
+                                                          "type":  "int",
+                                                          "value":  "8",
+                                                          "custom":  false,
+                                                          "tunable":  true
+                                                      },
+                                                      {
+                                                          "name":  "STRIP_LENGTH",
+                                                          "type":  "int",
+                                                          "value":  "60",
+                                                          "custom":  false,
+                                                          "tunable":  true
+                                                      }
+                                                  ]
+                                },
+                  "robot:Location":  {
+                                         "constants":  [
+                                                           {
+                                                               "name":  "PLEASE_DONT_HIT_THE_WALL_OFFSET",
+                                                               "type":  "double",
+                                                               "value":  "0.5",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "BLUE_ALLIANCE_WALL_X",
+                                                               "type":  "double",
+                                                               "value":  "0.785 + PLEASE_DONT_HIT_THE_WALL_OFFSET",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "BLUE_HUB_WALL_X",
+                                                               "type":  "double",
+                                                               "value":  "3.15 - PLEASE_DONT_HIT_THE_WALL_OFFSET",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "BLUE_CENTER_WALL_X",
+                                                               "type":  "double",
+                                                               "value":  "6.0 + PLEASE_DONT_HIT_THE_WALL_OFFSET",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "RED_ALLIANCE_WALL_X",
+                                                               "type":  "double",
+                                                               "value":  "15.73 - PLEASE_DONT_HIT_THE_WALL_OFFSET",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "RED_HUB_WALL_X",
+                                                               "type":  "double",
+                                                               "value":  "13.36 + PLEASE_DONT_HIT_THE_WALL_OFFSET",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "RED_CENTER_WALL_X",
+                                                               "type":  "double",
+                                                               "value":  "10.5 - PLEASE_DONT_HIT_THE_WALL_OFFSET",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "NEAR_WALL_Y",
+                                                               "type":  "double",
+                                                               "value":  "0.82 + PLEASE_DONT_HIT_THE_WALL_OFFSET",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "FAR_WALL_Y",
+                                                               "type":  "double",
+                                                               "value":  "7.25 - PLEASE_DONT_HIT_THE_WALL_OFFSET",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "X_MIN_",
+                                                               "type":  "double",
+                                                               "value":  "0.0",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "X_MAX",
+                                                               "type":  "double",
+                                                               "value":  "0.0",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "Y_MIN",
+                                                               "type":  "double",
+                                                               "value":  "0.0",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "Y_MAX",
+                                                               "type":  "double",
+                                                               "value":  "0.0",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "BLUE_ZONE_X_MID",
+                                                               "type":  "double",
+                                                               "value":  "2.0",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "RED_ZONE_X_MID",
+                                                               "type":  "double",
+                                                               "value":  "14.54",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           },
+                                                           {
+                                                               "name":  "NEUTRAL_X_MID",
+                                                               "type":  "double",
+                                                               "value":  "8.27",
+                                                               "custom":  false,
+                                                               "tunable":  true
+                                                           }
+                                                       ]
+                                     }
               }
 }

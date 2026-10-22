@@ -58,7 +58,10 @@ public final class LimelightVision implements AutoCloseable {
 
   /** Independent camera heading. Timestamp uses the same FPGA clock domain as Measurement. */
   public record HeadingMeasurement(
-      String cameraName, Pose2d pose, double timestampSeconds, double headingStdDevRadians) {
+      String cameraName, Pose2d pose, double timestampSeconds, double headingStdDevRadians, int tagCount) {
+    public HeadingMeasurement(String cameraName, Pose2d pose, double timestampSeconds, double headingStdDevRadians) {
+      this(cameraName, pose, timestampSeconds, headingStdDevRadians, 1);
+    }
     /** Ignore MegaTag1 X/Y: only its heading should influence the estimator. */
     public Matrix<N3, N1> standardDeviations() {
       return VecBuilder.fill(IGNORED_AXIS_STD_DEV, IGNORED_AXIS_STD_DEV, headingStdDevRadians);
@@ -255,7 +258,7 @@ public final class LimelightVision implements AutoCloseable {
       for (int previous = 11; previous < i; previous += 7) if (values[previous] == id) return null;
     }
     return new HeadingMeasurement(name, measurement.pose(), measurement.timestampSeconds(),
-        headingConfig.headingStdDevRadians());
+        headingConfig.headingStdDevRadians(), measurement.tagCount());
   }
 
   private Measurement parseMeasurement(String name, TimestampedDoubleArray frame, double now) {

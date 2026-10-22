@@ -29,7 +29,6 @@ public class VisionConstants {
   public static final String LEFT_TABLE = "limelight-left";
   public static final String RIGHT_TABLE = "limelight-right";
   public static final String TURRET_TABLE = "limelight-turret";
-  // MegaTag2 supplied yaw stays ignored; independent MT1 heading uses HEADING_CONFIG.
   @frc.powerlib.tuning.TunableConstant
   public static volatile double HEADING_STD_DEV = 9999999;
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE

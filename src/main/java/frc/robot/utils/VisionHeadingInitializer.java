@@ -42,6 +42,17 @@ public final class VisionHeadingInitializer {
 
   public Optional<Rotation2d> update(HeadingMeasurement measurement, double now,
       double speedMetersPerSecond, double yawRateDegreesPerSecond) {
+    return update(measurement, now, speedMetersPerSecond, yawRateDegreesPerSecond, 1);
+  }
+
+  /** Require multi-tag evidence for enabled recovery; single-tag frames break its stable window. */
+  public Optional<Rotation2d> update(HeadingMeasurement measurement, double now,
+      double speedMetersPerSecond, double yawRateDegreesPerSecond, int minimumTags) {
+    if (measurement != null && measurement.tagCount() < minimumTags) {
+      clearSamples();
+      status = "Waiting for two-tag heading";
+      return Optional.empty();
+    }
     if (initialized) { status = "MT1 heading initialized"; return Optional.empty(); }
     if (!Double.isFinite(speedMetersPerSecond) || !Double.isFinite(yawRateDegreesPerSecond)
         || Math.abs(speedMetersPerSecond) > 0.05 || Math.abs(yawRateDegreesPerSecond) > 5) {

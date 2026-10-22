@@ -6,24 +6,37 @@ public class ShootingConstants {
 
   public static final edu.wpi.first.math.geometry.Translation2d BLUE_HUB = FieldConstants.HOPPER_BLUE;
   public static final edu.wpi.first.math.geometry.Translation2d RED_HUB = FieldConstants.HOPPER_RED;
-  public static final double FIELD_WIDTH = FieldConstants.Y_MAX;
-  public static final double BLUE_ZONE_START = FieldConstants.BLUE_START_X;
-  public static final double BLUE_ZONE_END = FieldConstants.BLUE_END_X;
-  public static final double RED_ZONE_START = FieldConstants.RED_START_X;
-  public static final double RED_ZONE_END = FieldConstants.RED_END_X;
-  public static final double CENTER_ZONE_START = FieldConstants.CENTER_START_X;
-  public static final double CENTER_ZONE_END = FieldConstants.CENTER_END_X;
-  public static final double MIN_SHOT_DISTANCE = 1.95;
-  public static final double MAX_SHOT_DISTANCE = 4.9;
-  public static final double COLLECT_RPS = 145;
-  public static final double EJECT_RPS = -145;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double FIELD_WIDTH = FieldConstants.Y_MAX;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double BLUE_ZONE_START = FieldConstants.BLUE_START_X;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double BLUE_ZONE_END = FieldConstants.BLUE_END_X;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double RED_ZONE_START = FieldConstants.RED_START_X;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double RED_ZONE_END = FieldConstants.RED_END_X;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double CENTER_ZONE_START = FieldConstants.CENTER_START_X;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double CENTER_ZONE_END = FieldConstants.CENTER_END_X;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double MIN_SHOT_DISTANCE = 1.95;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double MAX_SHOT_DISTANCE = 4.9;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double COLLECT_RPS = 145;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double EJECT_RPS = -145;
   // Readiness/freshness guards added by the rewrite; these are not April 4 calibrations.
-  public static final double SHOOTER_TOLERANCE_RPS = 2;
-  public static final double HEADING_TOLERANCE_DEGREES = 5;
-  public static final double MAX_SIGNAL_AGE_SECONDS = 0.5;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double SHOOTER_TOLERANCE_RPS = 2;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double HEADING_TOLERANCE_DEGREES = 5;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double MAX_SIGNAL_AGE_SECONDS = 0.5;
 
   // POWERLIB CUSTOM CONSTANTS START - DO NOT DELETE
-  // Startup state of the Drive tab's Shoot on move button; off = original stationary shot, no driving while aiming.
   public static final boolean SOTM_ENABLED_DEFAULT = true;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double SOTM_MAX_DRIVETRAIN_SPEED_MPS = 3.0;
@@ -31,20 +44,20 @@ public class ShootingConstants {
   public static volatile double SOTM_RELEASE_DELAY_SECONDS = 0.02;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double SOTM_DRAG_COEFFICIENT = 0.24;
-  // Low-pass time constant on the robot velocity used for the moving-shot lead.
   @frc.powerlib.tuning.TunableConstant
   public static volatile double SOTM_VELOCITY_FILTER_SECONDS = 0.1;
-  // Fastest the teleop aim target may turn; lower it if the wheels still splay while aiming.
   @frc.powerlib.tuning.TunableConstant
   public static volatile double AIM_HEADING_SLEW_DEGREES_PER_SECOND = 90;
-  public static final double SOTM_MIN_SPEED_MPS = 0.1;
-  // Moving shots are blocked when Pigeon pitch or roll exceeds this; standing shots ignore tilt.
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double SOTM_MIN_SPEED_MPS = 0.1;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double SOTM_MAX_TILT_DEGREES = 5.0;
-  public static final double LAUNCHER_OFFSET_X_METERS = -0.20;
-  public static final double LAUNCHER_OFFSET_Y_METERS = 0.0;
-  public static final double SHOOTER_ANGLE_OFFSET_RADIANS = Math.PI;
-  // Provisional flight times from SIM-TESTING e2bfadbd; measure again for our retained RPS/hood table.
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double LAUNCHER_OFFSET_X_METERS = -0.20;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double LAUNCHER_OFFSET_Y_METERS = 0.0;
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double SHOOTER_ANGLE_OFFSET_RADIANS = Math.PI;
   public static final double[][] SHOOTER_TOF = {
       {1.68, 0.515}, {1.97, 0.574}, {2.38, 0.658}, {2.75, 0.733}, {3.29, 0.812},
       {3.75, 0.856}, {4.05, 0.884}, {4.60, 0.947}, {4.85, 0.976}, {5.50, 1.052}
