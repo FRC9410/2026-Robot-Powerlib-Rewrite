@@ -24,7 +24,8 @@ function readSettings(): DisplaySettings {
   } catch { return defaults; }
 }
 
-function Field({ pose, settings }: { pose?: { x: number; y: number; heading: number }; settings: DisplaySettings }) {
+/** `image` is a blue-left top-down field picture cropped to the field boundary; it stretches to the configured size. */
+function Field({ pose, settings, image }: { pose?: { x: number; y: number; heading: number }; settings: DisplaySettings; image?: string }) {
   const gridId = `drive-grid-${useId().replaceAll(":", "")}`;
   const height = 480;
   const width = height * settings.length / settings.width;
@@ -34,17 +35,21 @@ function Field({ pose, settings }: { pose?: { x: number; y: number; heading: num
       <path d={`M ${width / 16} 0 H 0 V ${height / 8}`} fill="none" stroke="#355060" strokeWidth="1" />
     </pattern></defs>
     <g transform={settings.flip ? `translate(${width} ${height}) rotate(180)` : undefined}>
-      <rect width={width} height={height} rx="5" fill="#101e29" stroke="#7993a5" strokeWidth="3" />
-      <rect width={width} height={height} fill={`url(#${gridId})`} />
-      <rect width="16" height={height} fill="#307de0" opacity=".55" />
-      <rect x={width - 16} width="16" height={height} fill="#ec4d5d" opacity=".55" />
-      <path d={`M ${width / 2} 0 V ${height}`} stroke="#698191" strokeDasharray="10 9" />
+      <rect width={width} height={height} rx="5" fill="#101e29" />
+      {image ? <image href={image} width={width} height={height} preserveAspectRatio="none" /> : <>
+        <rect width={width} height={height} fill={`url(#${gridId})`} />
+        <rect width="16" height={height} fill="#307de0" opacity=".55" />
+        <rect x={width - 16} width="16" height={height} fill="#ec4d5d" opacity=".55" />
+        <path d={`M ${width / 2} 0 V ${height}`} stroke="#698191" strokeDasharray="10 9" />
+      </>}
+      <rect width={width} height={height} rx="5" fill="none" stroke="#7993a5" strokeWidth="3" />
       {pose && !outOfBounds && <g transform={`translate(${pose.x / settings.length * width} ${height - pose.y / settings.width * height}) rotate(${-pose.heading})`}>
         <rect x="-15" y="-15" width="30" height="30" rx="4" fill="#ffdc00" stroke="#fff" strokeWidth="2" />
         <path d="M -5 -7 L 9 0 L -5 7" fill="none" stroke="#14212c" strokeWidth="4" />
       </g>}
     </g>
-    {(!pose || outOfBounds) && <text x={width / 2} y={height / 2} textAnchor="middle" fill="#a8bbca" fontSize="18">
+    {(!pose || outOfBounds) && <text x={width / 2} y={height / 2} textAnchor="middle" fill="#a8bbca" fontSize="18"
+      stroke="#101e29" strokeWidth="5" paintOrder="stroke">
       {outOfBounds ? "Pose outside configured field" : "Waiting for live robot pose"}
     </text>}
   </svg>;
@@ -105,8 +110,9 @@ function CameraStream({ camera, override, images, onFailed }: {
 
 export type DrivePanelData = { topics: NtTopicSnapshot[]; drive: ReturnType<typeof driveModel>; now: number };
 
-export function DrivePanel({ subsystems = [], renderTopCards, renderSidebar }: {
+export function DrivePanel({ subsystems = [], fieldImage, renderTopCards, renderSidebar }: {
   subsystems?: GeneratedSubsystem[];
+  fieldImage?: string;
   renderTopCards?: (data: DrivePanelData) => ReactNode;
   renderSidebar?: (data: DrivePanelData) => ReactNode;
 }) {
@@ -211,7 +217,7 @@ export function DrivePanel({ subsystems = [], renderTopCards, renderSidebar }: {
       <div className={`drive-rail ${cameras.length ? "" : "without-cameras"}`}>
         <small className="drive-select-label">Select view</small>
         <button className={`drive-thumb drive-field-thumb ${selectedView === "field" ? "selected" : ""}`} onClick={() => setSelectedView("field")} aria-label="Show field view">
-          <div className="drive-thumb-preview drive-field-preview" style={{ aspectRatio: `${settings.length} / ${settings.width}` }}><Field pose={model.pose} settings={settings} /></div><b>FIELD</b>
+          <div className="drive-thumb-preview drive-field-preview" style={{ aspectRatio: `${settings.length} / ${settings.width}` }}><Field pose={model.pose} settings={settings} image={fieldImage} /></div><b>FIELD</b>
         </button>
         {cameras.length > 0 && <div className="drive-camera-list" ref={cameraList} role="region" aria-label="Camera views" tabIndex={0}>
         {cameras.map(camera => <button key={camera.id} data-camera-id={camera.id} className={`drive-thumb ${selectedView === camera.id ? "selected" : ""}`}
@@ -223,7 +229,7 @@ export function DrivePanel({ subsystems = [], renderTopCards, renderSidebar }: {
         {!cameras.length && <div className="drive-no-cameras">Cameras appear here when published to NetworkTables.</div>}
       </div>
       <div className="drive-stage">{selectedCamera ? <CameraCanvas camera={selectedCamera} images={images} failed={!!failed[selectedCamera.id] || selectedCamera.connected === false} />
-        : <Field pose={model.pose} settings={settings} />}</div>
+        : <Field pose={model.pose} settings={settings} image={fieldImage} />}</div>
       <aside className="drive-sidebar">
         {chooser && <section className="drive-auto"><div className="drive-auto-choice"><label htmlFor="drive-auto">AUTONOMOUS</label>
           <select id="drive-auto" value={pending?.path === chooser.path && chooser.options.includes(pending.name) ? pending.name :

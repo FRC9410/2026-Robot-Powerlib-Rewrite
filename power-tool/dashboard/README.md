@@ -5,7 +5,12 @@ in the top row and a shooter checklist below the autonomous selector. Components
 styles and assets here survive Power Tool installs and updates.
 
 The generic field/camera views, autonomous selector, drivetrain card, mechanism
-cards, setpoints and status bar are reused. Its `renderTopCards` and `renderSidebar`
+cards, setpoints and status bar are reused. The field view draws the robot over
+`assets/field-2026.webp`, the 2026 REBUILT field without fuel from the WPILib
+2026 Elastic install (`2026-field-no-fuel.png`, originally from
+https://www.chiefdelphi.com/t/2026-rebuilt-high-resolution-field-image/510611).
+It is cropped to that image's field corners (524, 94)–(3378, 1490) so its edges
+are the 16.54 × 8.07 m field boundary, blue alliance on the left. Its `renderTopCards` and `renderSidebar`
 callbacks share the existing 100 ms display clock and NetworkTables view.
 
 `Game2026Telemetry` publishes the prepared shooting state's readiness flags to

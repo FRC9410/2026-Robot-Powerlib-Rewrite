@@ -4,6 +4,7 @@ import { formatTime } from "../src/features/drive/driveModel";
 import { useNetworkTables } from "../src/features/networktables/NetworkTablesContext";
 import type { GeneratedSubsystem } from "../src/features/subsystems/types";
 import { gameReadings } from "./gameModel";
+import fieldImage from "./assets/field-2026.webp";
 import "./dashboard.css";
 
 const metric = (value: number | undefined, places = 1) => value === undefined ? "—" : value.toFixed(places);
@@ -104,6 +105,6 @@ function ShooterChecklist({ data }: { data: DrivePanelData }) {
 
 export function DashboardPanel({ subsystems = [] }: { subsystems?: GeneratedSubsystem[] }) {
   return <div className="game2026-dashboard">
-    <DrivePanel subsystems={subsystems} renderTopCards={hubCard} renderSidebar={data => <ShooterChecklist data={data} />} />
+    <DrivePanel subsystems={subsystems} fieldImage={fieldImage} renderTopCards={hubCard} renderSidebar={data => <ShooterChecklist data={data} />} />
   </div>;
 }
