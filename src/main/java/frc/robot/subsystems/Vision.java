@@ -132,6 +132,9 @@ public class Vision extends SubsystemBase implements AutoCloseable {
         : heading == null ? "No fresh reliable multi-tag heading" : "Heading candidate";
     if (shouldUpdatePose && DriverStation.isDisabled()) {
       correctedHeading = initializeHeading(heading, Timer.getFPGATimestamp());
+      if (!correctedHeading && headingInitializer.isInitialized() && heading != null && heading.tagCount() >= 2) {
+        correctedHeading = applyHeadingCorrection(heading);
+      }
     } else {
       headingInitializer.reset();
     }
@@ -154,6 +157,9 @@ public class Vision extends SubsystemBase implements AutoCloseable {
         drivetrain.getPigeon2().getYaw().getValueAsDouble(), "degrees");
     SignalLogger.writeDouble("Vision/Heading/EstimatedDegrees",
         drivetrain.getState().Pose.getRotation().getDegrees(), "degrees");
+    if (shouldUpdatePose && DriverStation.isDisabled() && position != null) {
+      applyPositionCorrection(position);
+    }
   }
 
   private boolean initializeHeading(LimelightVision.HeadingMeasurement measurement, double now) {

@@ -9,7 +9,7 @@ public class VisionConstants {
   // First fresh, valid camera wins. Use an empty array for robots without Limelights.
   // Example: {"limelight-b", "limelight-l", "limelight-r"}
   public static final String[] LIMELIGHT_NAMES = {"limelight-left", "limelight-right", "limelight-turret"};
-  public static final LimelightVisionConfig CONFIG = new LimelightVisionConfig(0.7, 5, 0.5);
+  public static final LimelightVisionConfig CONFIG = new LimelightVisionConfig(0.1, 10, 0.5);
   public static final LimelightHeadingConfig HEADING_CONFIG = LimelightHeadingConfig.DEFAULT;
   public static final VisionPoseFilterConfig POSE_FILTER_CONFIG = VisionPoseFilterConfig.forField(
       FieldConstants.X_MIN, FieldConstants.X_MAX, FieldConstants.Y_MIN, FieldConstants.Y_MAX);

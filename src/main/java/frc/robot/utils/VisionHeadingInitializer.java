@@ -25,6 +25,10 @@ public final class VisionHeadingInitializer {
 
   public String status() { return status; }
 
+  public boolean isInitialized () {
+    return initialized;
+  }
+
   public void reset() {
     initialized = false;
     clearSamples();

@@ -136,13 +136,13 @@ public final class RobotAutos {
         abort("Robot mode/alliance does not match auto");
       } else if (!HealthChecks.driveHealthy(robot.drivetrain, Constants.Shooting.MAX_SIGNAL_AGE_SECONDS)) {
         abort("Drivetrain feedback unavailable at start");
-      } else {
-        var pose = robot.drivetrain.getState().Pose;
-        var start = route.fieldPoints().get(0);
-        if (pose.getTranslation().getDistance(start.getTranslation()) > Constants.RobotContainer.AUTO_START_TOLERANCE_METERS
-            || Math.abs(pose.getRotation().minus(start.getRotation()).getDegrees()) > Constants.RobotContainer.AUTO_START_TOLERANCE_DEGREES) {
-          abort("Starting pose is outside position/heading tolerance");
-        }
+      // } else {
+      //   var pose = robot.drivetrain.getState().Pose;
+      //   var start = route.fieldPoints().get(0);
+      //   if (pose.getTranslation().getDistance(start.getTranslation()) > Constants.RobotContainer.AUTO_START_TOLERANCE_METERS
+      //       || Math.abs(pose.getRotation().minus(start.getRotation()).getDegrees()) > Constants.RobotContainer.AUTO_START_TOLERANCE_DEGREES) {
+      //     abort("Starting pose is outside position/heading tolerance");
+      //   }
       }
       if (!aborted) SignalLogger.writeString("Robot/Auto/Status", "Running " + route.name());
       return !aborted;

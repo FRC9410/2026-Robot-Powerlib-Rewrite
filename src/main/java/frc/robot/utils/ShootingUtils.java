@@ -108,7 +108,7 @@ public final class ShootingUtils {
 
   public static void applyShooter(StateMachine robot, ShotSolution shot) {
     if (!shot.valid()) { stopShooter(robot); return; }
-    robot.shooter.setVelocity(shot.shooterRps());
+    robot.shooter.setVelocity(shot.shooterRps() + 1);
     robot.shooterHood.setPositionRotations(shot.hoodRotations());
   }
 

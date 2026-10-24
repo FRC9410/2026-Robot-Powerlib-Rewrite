@@ -7,7 +7,7 @@ public record VisionPoseFilterConfig(double minX, double maxX, double minY, doub
     double recoverySeconds, double recoverySpreadMeters) {
   /** Conservative starting policy; verify thresholds and camera calibration on the robot. */
   public static VisionPoseFilterConfig forField(double minX, double maxX, double minY, double maxY) {
-    return new VisionPoseFilterConfig(minX, maxX, minY, maxY, 0.25, 0.5, 8, 0.15, 0.1, 1, 3, 0.1, 0.25);
+    return new VisionPoseFilterConfig(minX, maxX, minY, maxY, 0.25, 0.5, 8, 0.15, 0.1, 10, 3, 0.1, 0.25);
   }
 
   public VisionPoseFilterConfig {
