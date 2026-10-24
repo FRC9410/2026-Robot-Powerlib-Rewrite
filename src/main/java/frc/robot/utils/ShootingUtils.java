@@ -11,6 +11,13 @@ import frc.robot.subsystems.StateMachine;
 public final class ShootingUtils {
   private ShootingUtils() {}
 
+  // Preserve the feeder's pre-existing lookup/solver +1 RPS reference, independent of flywheel trim.
+  private static final double FEEDER_REFERENCE_OFFSET_RPS = 1;
+
+  static double feederRps(double calibratedShooterRps) {
+    return Constants.StateMachine.FEEDER_SHOOTER_RATIO * (calibratedShooterRps + FEEDER_REFERENCE_OFFSET_RPS);
+  }
+
   public record ShotSolution(boolean valid, double distanceMeters, double headingDegrees,
       double headingErrorDegrees, double shooterRps, double hoodRotations, double feederRps,
       boolean velocityReady, boolean hoodReady, boolean aligned, boolean feedbackHealthy,
@@ -70,17 +77,17 @@ public final class ShootingUtils {
         && Double.isFinite(Constants.StateMachine.FEEDER_SHOOTER_RATIO) && Constants.StateMachine.FEEDER_SHOOTER_RATIO < 0
         && inScoringZone(pose, alliance) && Double.isFinite(distance)
         && distance >= Constants.Shooting.MIN_SHOT_DISTANCE - 1e-9 && distance <= Constants.Shooting.MAX_SHOT_DISTANCE + 1e-9
-        && Double.isFinite(Constants.StateMachine.SHOOTER_EXTRA_RPS) && Constants.StateMachine.SHOOTER_EXTRA_RPS >= 0
+        && Double.isFinite(Constants.Shooter.SHOOTER_EXTRA_RPS) && Constants.Shooter.SHOOTER_EXTRA_RPS >= 0
         && Double.isFinite(Constants.StateMachine.HOOD_TOLERANCE_ROTATIONS) && Constants.StateMachine.HOOD_TOLERANCE_ROTATIONS > 0
         && Double.isFinite(Constants.StateMachine.SPINDEXER_SHOOT_RPS) && Constants.StateMachine.SPINDEXER_SHOOT_RPS > 0;
     if (!valid) return new ShotSolution(false, distance, heading, error, 0, 0, 0, false, false, false, feedbackHealthy,
         false, false, distance, 0, 0, 0, "Outside calibrated scoring range or invalid settings");
-    double demand = Constants.Shooting.SHOOTER_VELOCITY_INTERPOLATOR.getInterpolatedValue(distance)
-        + Constants.StateMachine.SHOOTER_EXTRA_RPS;
+    double calibratedRps = Constants.Shooting.SHOOTER_VELOCITY_INTERPOLATOR.getInterpolatedValue(distance);
+    double demand = calibratedRps + Constants.Shooter.SHOOTER_EXTRA_RPS;
     double hood = MathUtil.clamp(Constants.Shooting.HOOD_ANGLE_INTERPOLATOR.getInterpolatedValue(distance)
         + Constants.StateMachine.HOOD_SHOT_OFFSET_ROTATIONS,
         Constants.ShooterHood.SHOOTER_HOOD_MIN, Constants.ShooterHood.SHOOTER_HOOD_MAX);
-    double feeder = Constants.StateMachine.FEEDER_SHOOTER_RATIO * demand;
+    double feeder = feederRps(calibratedRps);
     return new ShotSolution(true, distance, heading, error, demand, hood, feeder,
         Double.isFinite(shooterRps) && Math.abs(shooterRps - demand) <= Constants.Shooting.SHOOTER_TOLERANCE_RPS,
         Double.isFinite(hoodRotations) && Math.abs(hoodRotations - hood) <= Constants.StateMachine.HOOD_TOLERANCE_ROTATIONS,
@@ -108,7 +115,7 @@ public final class ShootingUtils {
 
   public static void applyShooter(StateMachine robot, ShotSolution shot) {
     if (!shot.valid()) { stopShooter(robot); return; }
-    robot.shooter.setVelocity(shot.shooterRps() + 1);
+    robot.shooter.setVelocity(shot.shooterRps());
     robot.shooterHood.setPositionRotations(shot.hoodRotations());
   }
 

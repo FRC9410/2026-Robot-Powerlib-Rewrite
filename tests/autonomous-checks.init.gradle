@@ -1,0 +1,17 @@
+// .\gradlew.bat --offline -I tests/autonomous-checks.init.gradle test
+gradle.projectsEvaluated {
+    rootProject.tasks.named('test', org.gradle.api.tasks.testing.Test) {
+        enabled = true
+        useJUnitPlatform()
+        maxParallelForks = 1
+        filter {
+            includeTestsMatching('frc.robot.autos.RobotAutosTest')
+            includeTestsMatching('frc.robot.subsystems.StateMachineTest.autoLegContinuesPastThreeSecondsAndAdvancesOnlyAfterArrival')
+            includeTestsMatching('frc.robot.subsystems.StateMachineTest.autoCancellationClearsItsRequestsAndStopsAllOutputs')
+            includeTestsMatching('frc.robot.subsystems.StateMachineTest.autoStopsWhenAutonomousIsDisabled')
+            includeTestsMatching('frc.robot.subsystems.StateMachineTest.autoStillStopsAtEndOfAutonomousPeriod')
+        }
+        outputs.upToDateWhen { false }
+        testLogging { events 'passed', 'failed', 'skipped' }
+    }
+}

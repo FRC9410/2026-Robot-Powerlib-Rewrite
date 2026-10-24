@@ -1,7 +1,6 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -49,7 +48,7 @@ public class RobotContainer implements PowerRobotContainer {
   private void zeroHeading() {
     if (!DriverStation.isDisabled()) return;
     // Robot must physically face blue-field +X; preserve X/Y while zeroing heading.
-    stateMachine.drivetrain.resetRotation(new Rotation2d());
+    stateMachine.vision.zeroHeading();
     SignalLogger.writeString("Robot/Control/Action", "Heading zeroed; X/Y preserved");
   }
 

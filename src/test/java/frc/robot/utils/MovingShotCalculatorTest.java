@@ -23,12 +23,12 @@ class MovingShotCalculatorTest {
       double hood = Constants.Shooting.HOOD_ANGLE_INTERPOLATOR.getInterpolatedValue(row[0])
           + Constants.StateMachine.HOOD_SHOT_OFFSET_ROTATIONS;
       var shot = new MovingShotCalculator().calculate(pose(alliance, row[0]), new ChassisSpeeds(), alliance,
-          row[1] + 1, hood, true, true, 0, 0);
+          row[1] + Constants.Shooter.SHOOTER_EXTRA_RPS, hood, true, true, 0, 0);
       assertTrue(shot.valid(), shot.status());
-      assertEquals(ShootingUtils.calculate(pose(alliance, row[0]), alliance, row[1] + 1, hood, true), shot);
+      assertEquals(ShootingUtils.calculate(pose(alliance, row[0]), alliance, row[1] + Constants.Shooter.SHOOTER_EXTRA_RPS, hood, true), shot);
       assertFalse(shot.motionCompensated());
       assertTrue(shot.canFeed());
-      assertEquals(row[1] + 1, shot.shooterRps(), 1e-8);
+      assertEquals(row[1] + Constants.Shooter.SHOOTER_EXTRA_RPS, shot.shooterRps(), 1e-8);
       assertEquals(hood, shot.hoodRotations(), 1e-8);
       assertEquals(row[0], shot.effectiveDistanceMeters(), 1e-8);
     }
@@ -54,8 +54,9 @@ class MovingShotCalculatorTest {
         Alliance.Blue, 30.5, 0.06, true, true, 0, 0);
     assertTrue(approach.valid(), approach.status());
     assertTrue(retreat.valid(), retreat.status());
-    assertTrue(approach.shooterRps() < 30.5);
-    assertTrue(retreat.shooterRps() > 30.5);
+    double standing = ShootingUtils.calculate(location, Alliance.Blue, 0, 0, true).shooterRps();
+    assertTrue(approach.shooterRps() < standing);
+    assertTrue(retreat.shooterRps() > standing);
   }
 
   @Test void feedReadinessUsesTheCompensatedHeadingAndFreshMechanismFeedback() {
@@ -170,5 +171,33 @@ class MovingShotCalculatorTest {
     } finally {
       ShootingUtils.setSotmEnabled(previous);
     }
+  }
+
+  @Test void shooterTrimDoesNotChangeMovingFeederCalibration() {
+    double previous = Constants.Shooter.SHOOTER_EXTRA_RPS;
+    try {
+      for (var alliance : Alliance.values()) {
+        var location = pose(alliance, 3);
+        var velocity = new ChassisSpeeds(0, -.5, 0);
+        Constants.Shooter.SHOOTER_EXTRA_RPS = 0;
+        var untrimmed = new MovingShotCalculator().calculate(location, velocity, alliance,
+            0, .06, true, true, 0, 0);
+        assertTrue(untrimmed.valid(), untrimmed.status());
+        assertTrue(untrimmed.motionCompensated());
+        for (double trim : new double[] {2, 5}) {
+          Constants.Shooter.SHOOTER_EXTRA_RPS = trim;
+          var trimmed = new MovingShotCalculator().calculate(location, velocity, alliance,
+              untrimmed.shooterRps() + trim, untrimmed.hoodRotations(), true, true, 0, 0);
+          assertTrue(trimmed.valid(), trimmed.status());
+          assertEquals(untrimmed.shooterRps() + trim, trimmed.shooterRps(), 1e-9);
+          assertEquals(untrimmed.feederRps(), trimmed.feederRps(), 1e-9,
+              "Flywheel trim must not change the moving-shot feeder demand");
+          assertEquals(untrimmed.hoodRotations(), trimmed.hoodRotations(), 1e-9);
+          assertEquals(untrimmed.headingDegrees(), trimmed.headingDegrees(), 1e-9);
+          assertEquals(untrimmed.timeOfFlightSeconds(), trimmed.timeOfFlightSeconds(), 1e-9);
+          assertTrue(trimmed.velocityReady());
+        }
+      }
+    } finally { Constants.Shooter.SHOOTER_EXTRA_RPS = previous; }
   }
 }

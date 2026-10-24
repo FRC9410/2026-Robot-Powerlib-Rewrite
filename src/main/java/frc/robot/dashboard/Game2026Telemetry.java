@@ -22,7 +22,7 @@ public final class Game2026Telemetry {
     setShot("CalibratedRange", requested && shot.valid());
     setShot("FeedReady", requested && shot.canFeed());
     setShot("HeadingErrorDegrees", requested ? shot.headingErrorDegrees() : Double.NaN);
-    setShot("VisionAccepted", robot.vision.hasFreshMeasurement());
+    setShot("VisionAccepted", robot.vision.hasFreshAcceptedMeasurement());
     setShot("SOTMEnabled", ShootingUtils.sotmEnabled());
     setShot("SOTMValid", requested && shot.solverValid());
     setShot("MotionCompensated", requested && shot.motionCompensated());

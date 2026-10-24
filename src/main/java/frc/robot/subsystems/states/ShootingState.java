@@ -29,7 +29,7 @@ public final class ShootingState implements State<RobotState, StateMachine> {
     var drive = robot.drivetrain.getState();
     shot = fireControl.calculate(drive.Pose, drive.Speeds,
         DriverStation.getAlliance().orElse(null), robot.shooter.inputs.velocityRotationsPerSecond,
-        robot.shooterHood.inputs.positionRotations, feedbackHealthy(robot), robot.vision.hasFreshMeasurement(),
+        robot.shooterHood.inputs.positionRotations, feedbackHealthy(robot), robot.vision.hasFreshAcceptedMeasurement(),
         robot.drivetrain.getPigeon2().getPitch().getValueAsDouble(),
         robot.drivetrain.getPigeon2().getRoll().getValueAsDouble());
     if (!shot.valid()) resetTimer();

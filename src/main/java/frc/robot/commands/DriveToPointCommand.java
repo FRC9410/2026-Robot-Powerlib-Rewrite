@@ -5,7 +5,6 @@ import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.powerlib.health.HealthChecks;
 import frc.robot.Constants;
@@ -22,7 +21,6 @@ public final class DriveToPointCommand extends Command {
   private final Consumer<String> abort;
   private final PIDController distanceController = new PIDController(
       Constants.RobotContainer.AUTO_TRANSLATION_KP, 0, Constants.RobotContainer.AUTO_TRANSLATION_KD);
-  private final Timer timer = new Timer();
   private final SwerveRequest.FieldCentric unlocked = new SwerveRequest.FieldCentric()
       .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
   private boolean failed;
@@ -41,7 +39,6 @@ public final class DriveToPointCommand extends Command {
   @Override public void initialize() {
     failed = false;
     distanceController.reset();
-    timer.restart();
   }
 
   @Override public void execute() {
@@ -79,15 +76,9 @@ public final class DriveToPointCommand extends Command {
         && pose.getTranslation().getDistance(destination.getTranslation()) < toleranceMeters
         && (!lockHeading || Math.abs(pose.getRotation().minus(destination.getRotation()).getDegrees())
             < Constants.Auto.LEG_HEADING_TOLERANCE_DEGREES);
-    if (reached) return true;
-    if (timer.hasElapsed(Constants.RobotContainer.AUTO_LEG_TIMEOUT_SECONDS)) {
-      failed = true;
-      abort.accept("Drive-to-point leg timed out");
-      return true;
-    }
-    return false;
+    return reached;
   }
 
   private void stop() { drivetrain.applyRequest(unlocked.withVelocityX(0).withVelocityY(0).withRotationalRate(0)); }
-  @Override public void end(boolean interrupted) { timer.stop(); stop(); }
+  @Override public void end(boolean interrupted) { stop(); }
 }

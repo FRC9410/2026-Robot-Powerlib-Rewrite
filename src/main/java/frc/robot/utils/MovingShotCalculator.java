@@ -118,12 +118,13 @@ public final class MovingShotCalculator {
     }
     double heading = result.driveAngle().getDegrees();
     double error = MathUtil.inputModulus(heading - pose.getRotation().getDegrees(), -180, 180);
-    double rps = result.shooterRps() + Constants.StateMachine.SHOOTER_EXTRA_RPS;
+    double calibratedRps = result.shooterRps();
+    double rps = calibratedRps + Constants.Shooter.SHOOTER_EXTRA_RPS;
     double hood = MathUtil.clamp(solver.getHoodAngle(result.solvedDistanceM()) / 360
         + Constants.StateMachine.HOOD_SHOT_OFFSET_ROTATIONS,
         Constants.ShooterHood.SHOOTER_HOOD_MIN, Constants.ShooterHood.SHOOTER_HOOD_MAX);
     return new ShotSolution(true, base.distanceMeters(), heading, error, rps, hood,
-        Constants.StateMachine.FEEDER_SHOOTER_RATIO * rps,
+        ShootingUtils.feederRps(calibratedRps),
         Double.isFinite(actualRps) && Math.abs(actualRps - rps) <= Constants.Shooting.SHOOTER_TOLERANCE_RPS,
         Double.isFinite(actualHood) && Math.abs(actualHood - hood) <= Constants.StateMachine.HOOD_TOLERANCE_ROTATIONS,
         Math.abs(error) <= Constants.Shooting.HEADING_TOLERANCE_DEGREES, feedbackHealthy,
