@@ -27,6 +27,9 @@ public class AutoConstants {
   public static final Pose2d RED_RIGHT_6 = new Pose2d(8.4, 5.7, Rotation2d.fromDegrees(90.0));
   public static final Pose2d RED_RIGHT_7 = new Pose2d(14.3, 5.7, Rotation2d.fromDegrees(-135.0));
 
+  public static final Pose2d RED_CENTER_1 = new Pose2d(14.0, 4.05, Rotation2d.fromDegrees(180));
+  public static final Pose2d RED_CENTER_2 = new Pose2d(15.3, 1.95, Rotation2d.fromDegrees(180));
+
   // ---- Blue left (driver station left) ----
   public static final Pose2d BLUE_LEFT_1 = new Pose2d(3.1, 5.7, Rotation2d.fromDegrees(-90.0));
   public static final Pose2d BLUE_LEFT_2 = new Pose2d(6.5, 5.7, Rotation2d.fromDegrees(-90.0));
@@ -44,6 +47,9 @@ public class AutoConstants {
   public static final Pose2d BLUE_RIGHT_5 = new Pose2d(8.2, 3.5, Rotation2d.fromDegrees(90.0));
   public static final Pose2d BLUE_RIGHT_6 = new Pose2d(8.1, 2.4, Rotation2d.fromDegrees(90.0));
   public static final Pose2d BLUE_RIGHT_7 = new Pose2d(2.1, 2.4, Rotation2d.fromDegrees(-135.0));
+
+  public static final Pose2d BLUE_CENTER_1 = new Pose2d(2.6, 4.05, Rotation2d.fromDegrees(180));
+  public static final Pose2d BLUE_CENTER_2 = new Pose2d(1.3, 6.15, Rotation2d.fromDegrees(180));
 
   // Per-leg settings from April 4 RobotContainer/SwerveDriveCommand.
   public static final double[] LEG_TOLERANCE_INCHES = {6, 6, 12, 6, 6, 3, 3};

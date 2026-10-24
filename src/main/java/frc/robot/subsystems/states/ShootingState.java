@@ -37,6 +37,12 @@ public final class ShootingState implements State<RobotState, StateMachine> {
 
   @Override
   public boolean match(RobotState requestedState, StateMachine robot) {
+    // if (requestedState != RobotState.SHOOTING) return false;
+
+    // if (DriverStation.isAutonomousEnabled()){
+    //   return shot.valid();
+    // }
+    // return shot.canFeed();
     return requestedState == RobotState.SHOOTING && shot.canFeed();
   }
 
