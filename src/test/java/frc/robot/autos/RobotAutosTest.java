@@ -50,7 +50,7 @@ class RobotAutosTest {
       assertTrue(command.isFinished());
       command.end(false);
       assertEquals(List.of("drive0", "drive1", "INTAKING", "drive2", "drive3", "drive4", "READY",
-          "drive5", "drive6", "turn", "SHOOTING", "hold"), events);
+          "drive5", "drive6", "turn", "SPINNING_UP", "SHOOTING", "hold"), events);
     }
   }
 
