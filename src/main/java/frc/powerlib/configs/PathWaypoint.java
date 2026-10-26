@@ -8,12 +8,15 @@ import java.util.Objects;
 /** Target and policy for one leg. Intermediate arrival uses only the position tolerance. */
 public record PathWaypoint(Pose2d pose, MotionConstraints constraints, CompletionCriteria completion,
     RotationTarget rotationTarget, double timeoutSeconds) {
+  /** Zero disables the leg deadline; positive values opt into a timeout. */
+  public static final double NO_TIMEOUT = 0;
+
   public PathWaypoint {
     if (!HealthChecks.finitePose(pose)) throw new IllegalArgumentException("Waypoint pose must be finite");
     Objects.requireNonNull(constraints, "constraints");
     Objects.requireNonNull(completion, "completion");
     Objects.requireNonNull(rotationTarget, "rotationTarget");
-    ConfigValidation.positive(timeoutSeconds, "timeoutSeconds");
+    ConfigValidation.nonnegative(timeoutSeconds, "timeoutSeconds");
   }
 
   /** Compatibility: locked legs face the pose heading; unlocked legs do not control heading. */

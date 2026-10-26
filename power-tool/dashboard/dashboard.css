@@ -19,6 +19,14 @@
 .game2026-check { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px solid #293746; padding: 9px 0; font-size: 12px; }
 .game2026-check > span:last-child { max-width: 58%; overflow-wrap: anywhere; }
 .game2026-shot-status { margin: 8px 0 0; color: #a9b6c5; font-size: 11px; line-height: 1.4; }
+.game2026-toggle { min-width: 64px; border: 1px solid; border-radius: 6px; padding: 4px 10px; font: inherit; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; cursor: pointer; }
+.game2026-toggle.on { color: #67dfae; border-color: #2f7a5c; background: #143127; }
+.game2026-toggle.off { color: #facc15; border-color: #7a6418; background: #2f2a10; }
+.game2026-toggle.unknown { color: #8293a6; border-color: #3a4756; background: transparent; }
+.game2026-toggle:not(:disabled):hover { filter: brightness(1.25); }
+.game2026-toggle:focus-visible { outline: 2px solid #91c5ff; outline-offset: 2px; }
+.game2026-toggle:disabled { cursor: default; opacity: 0.6; }
+.game2026-toggle-error { margin: 0 0 6px; color: #ff9aa6; font-size: 11px; text-align: right; }
 @container (max-height: 620px) {
   .game2026-hub { padding: 6px 12px; }
   .game2026-hub > b { font-size: 26px; }
@@ -27,6 +35,7 @@
   .game2026-shot h2 { font-size: 15px; line-height: 1.2; }
   .game2026-shot-heading { padding-bottom: 6px; }
   .game2026-shot-status { font-size: 10px; line-height: 1.25; margin-top: 5px; }
+  .game2026-toggle { padding: 2px 8px; }
 }
 @container (max-height: 520px) {
   .game2026-hub { padding: 4px 10px; }

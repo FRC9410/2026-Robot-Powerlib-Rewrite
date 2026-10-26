@@ -18,7 +18,7 @@ public final class DriveToPointCommand extends DrivePathCommand {
       MotionConstraints constraints, boolean lockHeading, Consumer<String> abort) {
     this(drivetrain, destination, Constants.Auto.completionCriteria(toleranceInches,
         Constants.Auto.LEG_HEADING_TOLERANCE_DEGREES), constraints, lockHeading,
-        Constants.RobotContainer.AUTO_LEG_TIMEOUT_SECONDS, abort);
+        PathWaypoint.NO_TIMEOUT, abort);
   }
 
   public DriveToPointCommand(Swerve drivetrain, Pose2d destination, CompletionCriteria criteria,

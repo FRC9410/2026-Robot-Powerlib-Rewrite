@@ -11,16 +11,39 @@ import frc.robot.subsystems.StateMachine;
 public final class ShootingUtils {
   private ShootingUtils() {}
 
+  // Preserve the feeder's pre-existing lookup/solver +1 RPS reference, independent of flywheel trim.
+  private static final double FEEDER_REFERENCE_OFFSET_RPS = 1;
+
+  static double feederRps(double calibratedShooterRps) {
+    return Constants.StateMachine.FEEDER_SHOOTER_RATIO * (calibratedShooterRps + FEEDER_REFERENCE_OFFSET_RPS);
+  }
+
   public record ShotSolution(boolean valid, double distanceMeters, double headingDegrees,
       double headingErrorDegrees, double shooterRps, double hoodRotations, double feederRps,
-      boolean velocityReady, boolean hoodReady, boolean aligned, boolean feedbackHealthy) {
+      boolean velocityReady, boolean hoodReady, boolean aligned, boolean feedbackHealthy,
+      boolean solverValid, boolean motionCompensated, double effectiveDistanceMeters,
+      double timeOfFlightSeconds, double headingFeedforwardRadiansPerSecond,
+      double solverConfidence, String status) {
     public boolean canFeed() {
       return valid && velocityReady && hoodReady && aligned && feedbackHealthy;
     }
   }
 
   public static final ShotSolution UNAVAILABLE = new ShotSolution(false, Double.NaN,
-      Double.NaN, Double.NaN, 0, 0, 0, false, false, false, false);
+      Double.NaN, Double.NaN, 0, 0, 0, false, false, false, false,
+      false, false, Double.NaN, 0, 0, 0, "No shot solution");
+
+  private static volatile boolean sotmEnabled = Constants.Shooting.SOTM_ENABLED_DEFAULT;
+
+  /** Shoot-on-the-move kill switch; off restores the original stationary shot. */
+  public static boolean sotmEnabled() {
+    return sotmEnabled;
+  }
+
+  /** Set by the Drive tab's Shoot on move button through SotmSwitch. */
+  public static void setSotmEnabled(boolean enabled) {
+    sotmEnabled = enabled;
+  }
 
   public static boolean inScoringZone(Pose2d pose, Alliance alliance) {
     if (!HealthChecks.finitePose(pose) || alliance == null || pose.getY() < 0
@@ -53,21 +76,29 @@ public final class ShootingUtils {
     boolean valid = Double.isFinite(Constants.StateMachine.HOOD_SHOT_OFFSET_ROTATIONS)
         && Double.isFinite(Constants.StateMachine.FEEDER_SHOOTER_RATIO) && Constants.StateMachine.FEEDER_SHOOTER_RATIO < 0
         && inScoringZone(pose, alliance) && Double.isFinite(distance)
-        && distance >= Constants.Shooting.MIN_SHOT_DISTANCE && distance <= Constants.Shooting.MAX_SHOT_DISTANCE
-        && Double.isFinite(Constants.StateMachine.SHOOTER_EXTRA_RPS) && Constants.StateMachine.SHOOTER_EXTRA_RPS >= 0
+        && distance >= Constants.Shooting.MIN_SHOT_DISTANCE - 1e-9 && distance <= Constants.Shooting.MAX_SHOT_DISTANCE + 1e-9
+        && Double.isFinite(Constants.Shooter.SHOOTER_EXTRA_RPS) && Constants.Shooter.SHOOTER_EXTRA_RPS >= 0
         && Double.isFinite(Constants.StateMachine.HOOD_TOLERANCE_ROTATIONS) && Constants.StateMachine.HOOD_TOLERANCE_ROTATIONS > 0
         && Double.isFinite(Constants.StateMachine.SPINDEXER_SHOOT_RPS) && Constants.StateMachine.SPINDEXER_SHOOT_RPS > 0;
-    if (!valid) return new ShotSolution(false, distance, heading, error, 0, 0, 0, false, false, false, feedbackHealthy);
-    double demand = Constants.Shooting.SHOOTER_VELOCITY_INTERPOLATOR.getInterpolatedValue(distance)
-        + Constants.StateMachine.SHOOTER_EXTRA_RPS;
+    if (!valid) return new ShotSolution(false, distance, heading, error, 0, 0, 0, false, false, false, feedbackHealthy,
+        false, false, distance, 0, 0, 0, "Outside calibrated scoring range or invalid settings");
+    double calibratedRps = Constants.Shooting.SHOOTER_VELOCITY_INTERPOLATOR.getInterpolatedValue(distance);
+    double demand = calibratedRps + Constants.Shooter.SHOOTER_EXTRA_RPS;
     double hood = MathUtil.clamp(Constants.Shooting.HOOD_ANGLE_INTERPOLATOR.getInterpolatedValue(distance)
         + Constants.StateMachine.HOOD_SHOT_OFFSET_ROTATIONS,
         Constants.ShooterHood.SHOOTER_HOOD_MIN, Constants.ShooterHood.SHOOTER_HOOD_MAX);
-    double feeder = Constants.StateMachine.FEEDER_SHOOTER_RATIO * demand;
+    double feeder = feederRps(calibratedRps);
     return new ShotSolution(true, distance, heading, error, demand, hood, feeder,
         Double.isFinite(shooterRps) && Math.abs(shooterRps - demand) <= Constants.Shooting.SHOOTER_TOLERANCE_RPS,
         Double.isFinite(hoodRotations) && Math.abs(hoodRotations - hood) <= Constants.StateMachine.HOOD_TOLERANCE_ROTATIONS,
-        Math.abs(error) <= Constants.Shooting.HEADING_TOLERANCE_DEGREES, feedbackHealthy);
+        Math.abs(error) <= Constants.Shooting.HEADING_TOLERANCE_DEGREES, feedbackHealthy,
+        false, false, distance, 0, 0, 0, "Stationary shot");
+  }
+
+  static ShotSolution blocked(ShotSolution base, String status) {
+    return new ShotSolution(false, base.distanceMeters(), base.headingDegrees(), base.headingErrorDegrees(),
+        0, 0, 0, false, false, false, base.feedbackHealthy(), false, false,
+        Double.NaN, 0, 0, 0, status);
   }
 
   public static void stopFeeding(StateMachine robot) {

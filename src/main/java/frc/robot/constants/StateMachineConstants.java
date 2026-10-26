@@ -9,8 +9,6 @@ public class StateMachineConstants {
   @frc.powerlib.tuning.TunableConstant
   public static volatile double HOOD_TOLERANCE_ROTATIONS = 0.01;
   @frc.powerlib.tuning.TunableConstant
-  public static volatile double SHOOTER_EXTRA_RPS = 1.0;
-  @frc.powerlib.tuning.TunableConstant
   public static volatile double SPINDEXER_SHOOT_RPS = 80.0;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double HOOD_SHOT_OFFSET_ROTATIONS = -0.005;

@@ -50,7 +50,7 @@ class RobotAutosTest {
       assertTrue(command.isFinished());
       command.end(false);
       assertEquals(List.of("drive0", "drive1", "INTAKING", "drive2", "drive3", "drive4", "READY",
-          "drive5", "drive6", "turn", "SHOOTING", "hold"), events);
+          "drive5", "drive6", "turn", "SPINNING_UP", "SHOOTING", "hold"), events);
     }
   }
 
@@ -80,7 +80,7 @@ class RobotAutosTest {
       for (int i = 0; i < 20 && !command.isFinished(); i++) command.execute();
       assertTrue(command.isFinished());
       command.end(false);
-      assertEquals(List.of("path0", "INTAKING", "path2", "READY", "path5", "turn", "SHOOTING", "hold"), events);
+      assertEquals(List.of("path0", "INTAKING", "path2", "READY", "path5", "turn", "SPINNING_UP", "SHOOTING", "hold"), events);
       assertEquals(List.of(new frc.powerlib.auto.Auto.DriveSection(0, route.fieldPoints().subList(0, 2)),
           new frc.powerlib.auto.Auto.DriveSection(2, route.fieldPoints().subList(2, 5)),
           new frc.powerlib.auto.Auto.DriveSection(5, route.fieldPoints().subList(5, 7))), sections);

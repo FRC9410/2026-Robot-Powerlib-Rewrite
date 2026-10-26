@@ -1,0 +1,15 @@
+// Run every robot regression: .\gradlew.bat --offline -I tests/competition-checks.init.gradle test
+gradle.projectsEvaluated {
+    rootProject.tasks.register('verifyRobot') {
+        group = 'verification'
+        description = 'Run all robot regression tests, including native vision simulations.'
+        dependsOn(rootProject.tasks.named('test'))
+    }
+    rootProject.tasks.named('test', org.gradle.api.tasks.testing.Test) {
+        enabled = true
+        useJUnitPlatform()
+        maxParallelForks = 1
+        outputs.upToDateWhen { false }
+        testLogging { events 'passed', 'failed', 'skipped' }
+    }
+}

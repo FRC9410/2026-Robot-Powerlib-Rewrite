@@ -7,4 +7,7 @@ public class CanBusConstants {
   public static final String RIO_BUS_NAME = "rio";
 
   public static final CANBus CANIVORE_BUS = new CANBus(CANIVORE_BUS_NAME);
+  // POWERLIB CUSTOM CONSTANTS START - DO NOT DELETE
+
+  // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE
 }

@@ -13,6 +13,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
 import frc.powerlib.configs.LimelightHeadingConfig;
 import frc.powerlib.configs.LimelightVisionConfig;
+import frc.powerlib.configs.VisionHeadingInitializationConfig;
 import java.util.Arrays;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -67,6 +68,17 @@ public class LimelightVisionTest {
     }
   }
 
+  @Test public void preservesHeightForPositionPlausibilityChecksAndKeepsPlanarCompatibility() {
+    try (var fixture = new Fixture()) {
+      var values = frame(1, 0);
+      values[2] = 1.5;
+      fixture.publish("first", "botpose_orb_wpiblue", values, fixture.now);
+      var measurement = fixture.reader.update(0, 0, 0, 0).orElseThrow();
+      assertEquals(1.5, measurement.heightMeters(), 0);
+      assertEquals(0, new LimelightVision.Measurement("test", new Pose2d(), 10, 1, 2, .28).heightMeters(), 0);
+    }
+  }
+
   @Test public void headingNeedsMultipleDistinctReliableTags() {
     double[][] invalid = { frame(0, 5), frame(1, 5), frame(2, 5), frame(2, 5), frame(2, 5), frame(2, 5), frame(2, 5), frame(2, 5) };
     invalid[2][24] = 0.3; // Second tag ambiguity, not just the first tag's quality.
@@ -117,6 +129,41 @@ public class LimelightVisionTest {
       fixture.publish("second", "botpose_wpiblue", unreliable, fixture.now);
       fixture.reader.update(0, 0, 0, 0, true);
       assertEquals("first", fixture.reader.getHeadingMeasurement().orElseThrow().cameraName());
+    }
+  }
+
+  @Test public void stableSingleTagFramesCanInitializeDisabledHeading() {
+    try (var fixture = new Fixture()) {
+      var initializer = new VisionHeadingInitializer(VisionHeadingInitializationConfig.DEFAULT, 0.2);
+      var single = frame(1, 90);
+      single[8] = 0;
+      java.util.Optional<Rotation2d> result = java.util.Optional.empty();
+      for (int i = 0; i < 27 && result.isEmpty(); i++) {
+        fixture.now = 10 + i * 0.02;
+        fixture.heading(single);
+        fixture.reader.update(0, 0, 0, 0, true);
+        result = initializer.update(fixture.reader.getHeadingMeasurement().orElseThrow(), fixture.now, 0, 0);
+      }
+      assertEquals(90, result.orElseThrow().getDegrees(), 1e-9);
+    }
+  }
+
+  @Test public void singleTagFallbackRejectsWeakGeometryAmbiguityAndAge() {
+    for (int fault = 0; fault < 4; fault++) {
+      try (var fixture = new Fixture()) {
+        var single = frame(1, 90);
+        single[8] = 0;
+        switch (fault) {
+          case 0 -> single[9] = 2.01;
+          case 1 -> single[17] = .051;
+          case 2 -> single[6] = 101;
+          case 3 -> single[15] = 2.01;
+        }
+        fixture.heading(single);
+        fixture.reader.update(0, 0, 0, 0, true);
+        assertTrue(
+            fixture.reader.getHeadingMeasurements().isEmpty());
+      }
     }
   }
 
@@ -247,5 +294,126 @@ public class LimelightVisionTest {
     assertThrows(IllegalArgumentException.class, () -> new LimelightHeadingConfig(0.3, 4, 0.2, 0, 15, 0.2));
     assertThrows(IllegalArgumentException.class, () -> new LimelightHeadingConfig(0.3, 4, 0.2, 45, 181, 0.2));
     assertThrows(IllegalArgumentException.class, () -> new LimelightHeadingConfig(0.3, 4, 0.2, 45, 15, 1.1));
+  }
+
+  @Test public void exposesFreshPositionCandidatesForDownstreamFallbackAndClearsThemNextLoop() {
+    try (var fixture = new Fixture()) {
+      var outside = frame(2, 0);
+      outside[0] = 30;
+      fixture.publish("first", "botpose_orb_wpiblue", outside, fixture.now);
+      fixture.publish("second", "botpose_orb_wpiblue", frame(2, 0), fixture.now);
+      assertEquals("first", fixture.reader.update(0, 0, 0, 0).orElseThrow().cameraName());
+      var candidates = fixture.reader.getPositionMeasurements();
+      assertEquals(2, candidates.size());
+      assertEquals("second", candidates.get(1).cameraName());
+      assertThrows(UnsupportedOperationException.class, () -> candidates.clear());
+      fixture.update(0);
+      assertTrue(fixture.reader.getPositionMeasurements().isEmpty());
+    }
+  }
+
+  @Test public void exposesAllHeadingsWithMultiTagPreferenceAndConsumesThemOnce() {
+    try (var fixture = new Fixture()) {
+      fixture.heading(frame(1, 80));
+      fixture.publish("second", "botpose_wpiblue", frame(2, 5), fixture.now);
+      fixture.reader.update(0, 0, 0, 0, true);
+      var candidates = fixture.reader.getHeadingMeasurements();
+      assertEquals(2, candidates.size());
+      assertEquals("second", candidates.get(0).cameraName());
+      assertEquals(2, candidates.get(0).tagCount());
+      assertEquals("first", candidates.get(1).cameraName());
+      assertEquals(1, candidates.get(1).tagCount());
+      assertThrows(UnsupportedOperationException.class, candidates::clear);
+      fixture.update(0);
+      assertTrue(candidates.isEmpty());
+    }
+  }
+
+  @Test public void laterHeadingRemainsAvailableAfterTiltCaptureRejection() {
+    try (var fixture = new Fixture()) {
+      var old = frame(2, 90);
+      old[6] = 150;
+      old[9] = 1; // Better geometric quality, but capture-time filtering must still reject it.
+      var recent = frame(2, 5);
+      recent[6] = 20;
+      fixture.heading(old);
+      fixture.publish("second", "botpose_wpiblue", recent, fixture.now);
+      fixture.update(0);
+      var filter = new VisionPoseFilter(
+          frc.powerlib.configs.VisionPoseFilterConfig.forField(0, 17.548, 0, 8.052), .5);
+      for (int i = 0; i <= 25; i++) filter.observe(9.75 + i * .01, 0, 0, true);
+      var candidates = fixture.reader.getHeadingMeasurements();
+      assertEquals(2, candidates.size());
+      assertFalse(filter.captureAllowed(candidates.get(0).timestampSeconds(), fixture.now));
+      assertTrue(filter.captureAllowed(candidates.get(1).timestampSeconds(), fixture.now));
+    }
+  }
+
+  @Test public void laterHeadingCanFuseAfterPrimaryFailsErrorOrHistoryChecks() {
+    for (boolean missingHistory : new boolean[] {false, true}) {
+      try (var fixture = new Fixture()) {
+        var primary = frame(2, 90);
+        primary[6] = 150;
+        primary[9] = 1;
+        fixture.heading(primary);
+        fixture.publish("second", "botpose_wpiblue", frame(2, 5), fixture.now);
+        fixture.update(0);
+        var applied = new java.util.ArrayList<Pose2d>();
+        var fusion = new VisionMeasurementFusion(.5,
+            timestamp -> missingHistory && timestamp < 9.9
+                ? java.util.Optional.empty() : java.util.Optional.of(new Pose2d()),
+            (pose, timestamp, deviations) -> applied.add(pose));
+        var candidates = fixture.reader.getHeadingMeasurements();
+        assertFalse(fusion.addHeading(candidates.get(0), fixture.now, 45));
+        assertTrue(fusion.addHeading(candidates.get(1), fixture.now, 45));
+        assertEquals(1, applied.size());
+        assertEquals(5, applied.get(0).getRotation().getDegrees(), 1e-9);
+      }
+    }
+  }
+
+  @Test public void selectsLowestUncertaintyPositionAndBestGeometricHeading() {
+    try (var fixture = new Fixture()) {
+      var poor = frame(2, 30);
+      poor[9] = 3.5;
+      var good = frame(3, 0);
+      good[9] = 1.5;
+      for (String topic : new String[] {"botpose_wpiblue", "botpose_orb_wpiblue"}) {
+        fixture.publish("first", topic, poor, fixture.now);
+        fixture.publish("second", topic, good, fixture.now);
+      }
+      assertEquals("second", fixture.reader.update(0, 0, 0, 0).orElseThrow().cameraName());
+      var heading = fixture.reader.getHeadingMeasurement().orElseThrow();
+      assertEquals("second", heading.cameraName());
+      assertEquals(3, heading.tagCount());
+      assertEquals(1.5, heading.averageTagDistanceMeters(), 0);
+      assertEquals(.05, heading.maxTagAmbiguity(), 0);
+    }
+  }
+
+  @Test public void headingQualityUsesAmbiguitySpanAndFreshnessBeforeConfiguredOrder() {
+    try (var fixture = new Fixture()) {
+      var poor = frame(2, 30);
+      var good = frame(2, 0);
+      poor[17] = .15;
+      fixture.heading(poor);
+      fixture.publish("second", "botpose_wpiblue", good, fixture.now);
+      fixture.update(0);
+      assertEquals("second", fixture.reader.getHeadingMeasurement().orElseThrow().cameraName());
+      fixture.now += .02;
+      poor[17] = .05;
+      good[8] = 2;
+      fixture.heading(poor);
+      fixture.publish("second", "botpose_wpiblue", good, fixture.now);
+      fixture.update(0);
+      assertEquals("second", fixture.reader.getHeadingMeasurement().orElseThrow().cameraName());
+      fixture.now += .02;
+      good[8] = 1;
+      poor[6] = 150;
+      fixture.heading(poor);
+      fixture.publish("second", "botpose_wpiblue", good, fixture.now);
+      fixture.update(0);
+      assertEquals("second", fixture.reader.getHeadingMeasurement().orElseThrow().cameraName());
+    }
   }
 }

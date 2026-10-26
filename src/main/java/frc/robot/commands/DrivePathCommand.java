@@ -107,7 +107,8 @@ public class DrivePathCommand extends Command {
       return;
     }
     // A late arrival cannot restart an already-expired waypoint deadline.
-    if (waypointTimer.hasElapsed(progress.current().timeoutSeconds())) {
+    double timeout = progress.current().timeoutSeconds();
+    if (timeout > 0 && waypointTimer.hasElapsed(timeout)) {
       fail("Autonomous waypoint timed out");
       return;
     }

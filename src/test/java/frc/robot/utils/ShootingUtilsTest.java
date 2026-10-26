@@ -14,9 +14,9 @@ class ShootingUtilsTest {
   }
 
   @Test void interpolatesCommittedTablesAndPreservesFeederDirection() {
-    var shot = ShootingUtils.calculate(bluePose(2.75, 0), Alliance.Blue, 30, 0.05, true);
+    var shot = ShootingUtils.calculate(bluePose(2.75, 0), Alliance.Blue, 31, 0.05, true);
     assertTrue(shot.valid());
-    assertEquals(30, shot.shooterRps(), 1e-9);
+    assertEquals(31, shot.shooterRps(), 1e-9);
     assertEquals(0.055, shot.hoodRotations(), 1e-9);
     assertEquals(-60, shot.feederRps(), 1e-9);
     assertTrue(shot.canFeed());
@@ -25,7 +25,7 @@ class ShootingUtilsTest {
   @Test void matchesEveryCommittedShotTableRow() {
     for (double[] row : Constants.Shooting.SHOOTER_SPEEDS) {
       double hood = Constants.Shooting.HOOD_ANGLE_INTERPOLATOR.getInterpolatedValue(row[0]) - 0.005;
-      double shooter = row[1] + Constants.StateMachine.SHOOTER_EXTRA_RPS;
+      double shooter = row[1] + Constants.Shooter.SHOOTER_EXTRA_RPS;
       double xDistance = Math.min(row[0], 4);
       Pose2d location = new Pose2d(Constants.Shooting.BLUE_HUB.getX() - xDistance,
           Constants.Shooting.BLUE_HUB.getY() + Math.sqrt(row[0] * row[0] - xDistance * xDistance), new Rotation2d());
@@ -41,9 +41,9 @@ class ShootingUtilsTest {
     assertFalse(ShootingUtils.calculate(bluePose(2.5, 0), null, 0, 0, true).valid());
     assertFalse(ShootingUtils.calculate(new Pose2d(Double.NaN, 4, new Rotation2d()), Alliance.Blue, 0, 0, true).valid());
     assertFalse(ShootingUtils.calculate(bluePose(1.949, 0), Alliance.Blue, 28.4, 0.039, true).valid());
-    var closeShot = ShootingUtils.calculate(bluePose(1.95, 0), Alliance.Blue, 28.4, 0.039, true);
+    var closeShot = ShootingUtils.calculate(bluePose(1.95, 0), Alliance.Blue, 29.4, 0.039, true);
     assertTrue(closeShot.canFeed());
-    assertEquals(28.4, closeShot.shooterRps(), 1e-9);
+    assertEquals(29.4, closeShot.shooterRps(), 1e-9);
     assertEquals(0.039, closeShot.hoodRotations(), 1e-9);
     assertFalse(ShootingUtils.calculate(new Pose2d(6, 4, new Rotation2d()), Alliance.Blue, 0, 0, true).valid());
     assertFalse(ShootingUtils.calculate(new Pose2d(0.01, 0, new Rotation2d()), Alliance.Blue, 0, 0, true).valid());

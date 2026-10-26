@@ -60,6 +60,10 @@ public class ShooterConstants {
           STATOR_CURRENT_LIMIT_AMPS);
 
   // POWERLIB CUSTOM CONSTANTS START - DO NOT DELETE
+  // Flywheel-only trim: combines the prior configured +1 RPS and the output method's former +1 RPS.
+  // The feeder retains its separate calibration reference.
+  @frc.powerlib.tuning.TunableConstant
+  public static volatile double SHOOTER_EXTRA_RPS = 2.0;
 
   // POWERLIB CUSTOM CONSTANTS END - DO NOT DELETE
 }

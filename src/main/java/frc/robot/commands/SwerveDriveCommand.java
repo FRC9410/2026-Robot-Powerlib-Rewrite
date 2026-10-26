@@ -13,22 +13,40 @@ import frc.robot.subsystems.StateMachine.RobotState;
 import frc.robot.subsystems.Swerve;
 import frc.robot.utils.FieldUtils;
 import frc.robot.utils.ShootingUtils;
+import frc.robot.utils.AimingDriveController;
+import edu.wpi.first.math.geometry.Rotation2d;
 import java.util.Objects;
 import java.util.function.Supplier;
 
 /** Uses a blue-field frame and live current state for drive scaling and shot alignment. */
 public final class SwerveDriveCommand extends Command {
+  private static final double LOOP_SECONDS = 0.02;
   private final Swerve drivetrain;
   private final CommandXboxController controller;
   private final Supplier<RobotState> currentStateSupplier;
+  private final Supplier<ShootingUtils.ShotSolution> shotSupplier;
   private final SwerveRequest.FieldCentric request = new SwerveRequest.FieldCentric()
       .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
+  private final SwerveRequest.FieldCentric aimingRequest = new SwerveRequest.FieldCentric()
+      .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
+      .withDriveRequestType(com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.Velocity)
+      .withDeadband(0.02).withRotationalDeadband(0);
+  private final SwerveRequest.PointWheelsAt parallelWheels = new SwerveRequest.PointWheelsAt()
+      .withModuleDirection(Rotation2d.kZero);
+  private final SwerveRequest.SwerveDriveBrake lockedWheels = new SwerveRequest.SwerveDriveBrake();
+  private final AimingDriveController aimingDrive = new AimingDriveController();
 
   public SwerveDriveCommand(Swerve drivetrain, CommandXboxController controller,
       Supplier<RobotState> currentStateSupplier) {
+    this(drivetrain, controller, currentStateSupplier, () -> ShootingUtils.UNAVAILABLE);
+  }
+
+  public SwerveDriveCommand(Swerve drivetrain, CommandXboxController controller,
+      Supplier<RobotState> currentStateSupplier, Supplier<ShootingUtils.ShotSolution> shotSupplier) {
     this.drivetrain = drivetrain;
     this.controller = controller;
     this.currentStateSupplier = Objects.requireNonNull(currentStateSupplier);
+    this.shotSupplier = Objects.requireNonNull(shotSupplier);
     addRequirements(drivetrain);
   }
 
@@ -58,16 +76,46 @@ public final class SwerveDriveCommand extends Command {
     double rotatedX = vx * Math.cos(skew) - vy * Math.sin(skew);
     vy = vx * Math.sin(skew) + vy * Math.cos(skew);
     vx = rotatedX;
+    if (aiming && !ShootingUtils.sotmEnabled()) {
+      // Kill switch off: original stationary shot, so hold translation while aiming.
+      vx = 0;
+      vy = 0;
+    }
     Double heading = null;
     if (aiming && ShootingUtils.inScoringZone(pose, alliance.get())) {
-      heading = ShootingUtils.headingDegrees(pose, alliance.get());
+      var shot = shotSupplier.get();
+      boolean solved = shot != null && shot.solverValid() && shot.valid();
+      var aim = aimingDrive.slewHeading(
+          solved ? shot.headingDegrees() : ShootingUtils.headingDegrees(pose, alliance.get()),
+          Constants.Shooting.AIM_HEADING_SLEW_DEGREES_PER_SECOND, LOOP_SECONDS);
+      heading = aim.headingDegrees();
       double error = MathUtil.inputModulus(heading - pose.getRotation().getDegrees(), -180, 180);
       double kp = PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kP", Constants.Swerve.HEADING_KP);
-      if (!Double.isFinite(kp) || kp <= 0) { stop(); return; }
-      omega = MathUtil.clamp(Math.toRadians(error) * kp,
+      double kd = PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kD", Constants.Swerve.HEADING_KD);
+      if (!Double.isFinite(kp) || kp <= 0 || !Double.isFinite(kd) || kd < 0) { stop(); return; }
+      // Follow the slewed target's rate while it catches up, otherwise the solver's tracking rate.
+      double feedforward = aim.limited() ? aim.rateRadiansPerSecond()
+          : solved ? shot.headingFeedforwardRadiansPerSecond() : 0;
+      double measuredOmega = drivetrain.getState().Speeds.omegaRadiansPerSecond;
+      // D acts on heading-error rate (target rate minus measured rate) to damp overshoot.
+      double damping = Double.isFinite(measuredOmega) ? kd * (feedforward - measuredOmega) : 0;
+      omega = MathUtil.clamp(Math.toRadians(error) * kp + feedforward + damping,
           -drivetrain.MAX_DRIVE_TO_POINT_ANGULAR_RATE, drivetrain.MAX_DRIVE_TO_POINT_ANGULAR_RATE);
+      if (aimingDrive.updateParking(vx, vy, drivetrain.getState().Speeds, error)) {
+        // Stationary shot (SOTM off): X-lock so the robot resists pushes; otherwise park parallel.
+        boolean lock = !ShootingUtils.sotmEnabled();
+        PowerRobotContainer.setSubsystemData("Drive", "AimWheelsParked", true);
+        PowerRobotContainer.setSubsystemData("Drive", "AimWheelsLocked", lock);
+        drivetrain.applyRequest(lock ? lockedWheels : parallelWheels, heading);
+        return;
+      }
+    } else {
+      aimingDrive.reset();
     }
-    drivetrain.applyRequest(request.withVelocityX(vx).withVelocityY(vy).withRotationalRate(omega), heading);
+    PowerRobotContainer.setSubsystemData("Drive", "AimWheelsParked", false);
+    PowerRobotContainer.setSubsystemData("Drive", "AimWheelsLocked", false);
+    drivetrain.applyRequest((aiming ? aimingRequest : request)
+        .withVelocityX(vx).withVelocityY(vy).withRotationalRate(omega), heading);
   }
 
   private double shaped(double value) {
@@ -75,7 +123,12 @@ public final class SwerveDriveCommand extends Command {
     return adjusted * adjusted * adjusted;
   }
 
-  private void stop() { drivetrain.applyRequest(request.withVelocityX(0).withVelocityY(0).withRotationalRate(0)); }
+  private void stop() {
+    aimingDrive.reset();
+    PowerRobotContainer.setSubsystemData("Drive", "AimWheelsParked", false);
+    PowerRobotContainer.setSubsystemData("Drive", "AimWheelsLocked", false);
+    drivetrain.applyRequest(request.withVelocityX(0).withVelocityY(0).withRotationalRate(0));
+  }
   @Override public void end(boolean interrupted) { stop(); }
   @Override public boolean isFinished() { return false; }
 }

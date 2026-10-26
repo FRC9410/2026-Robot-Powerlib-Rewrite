@@ -97,7 +97,8 @@
                            "motionMagic":  {
                                                "cruiseVelocity":  0,
                                                "acceleration":  200
-                                           }
+                                           },
+                           "statorCurrentLimitAmps":  ""
                        },
                        {
                            "id":  "intakeWrist",
@@ -144,9 +145,10 @@
                                             "discontinuityPoint":  0.5
                                         },
                            "absolutePosition":  {
-                                                    "units":  "degrees",
+                                                    "units":  "rotations",
                                                     "default":  -0.41
-                                                }
+                                                },
+                           "statorCurrentLimitAmps":  ""
                        },
                        {
                            "id":  "shooter",
@@ -234,9 +236,10 @@
                                             "discontinuityPoint":  0.5
                                         },
                            "absolutePosition":  {
-                                                    "units":  "degrees",
+                                                    "units":  "rotations",
                                                     "default":  0
-                                                }
+                                                },
+                           "statorCurrentLimitAmps":  ""
                        },
                        {
                            "id":  "spindexer",

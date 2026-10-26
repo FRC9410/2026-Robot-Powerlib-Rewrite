@@ -1,5 +1,69 @@
 # 2026-Robot-Powerlib-Rewrite
 
+## Shoot on the move (`sotm-testing`)
+
+Holding shoot now keeps driver translation available at 40% of normal speed
+(`DRIVE_WHILE_SHOOTING_COEFFICIENT`, tuned separately from intake speed). The runtime firecontrol classes `ShotCalculator`,
+`ShotLUT` and `ShotParameters` were adapted from
+[2026-ROBOT-SIM-TESTING](https://github.com/aydenterranella/2026-ROBOT-SIM-TESTING/tree/e2bfadbd89e17429873ec029ce2a8b123377f4ec/src/main/java/frc/firecontrol).
+Their FRC Team 5962 perSEVERE MIT attribution is retained. No MapleSim, projectile
+simulator, LUT generator, or simulation-only dependencies were added.
+
+The solver converts measured robot-relative velocity into field coordinates, low-pass
+filters it (`SOTM_VELOCITY_FILTER_SECONDS`, 0.1 s), predicts the launcher through a
+20 ms release delay, includes rotational velocity at the rear-mounted launcher, and
+solves a drag-adjusted virtual target using Newton's method. Acceleration is not
+estimated: differencing measured velocity roughly tripled noise in the aim heading.
+Current RPS/hood tables and offsets remain intact: robot-center calibration distances
+are shifted by the 0.20 m rear launcher offset inside the lookup table so stationary
+shots retain their original demands. Phoenix already supplies a current pose, so no
+additional vision latency is applied.
+
+The imported flight-time table is **provisional**: the reference used different RPS
+and hood settings. Measure flight times for this robot's retained calibration before
+relying on moving-shot accuracy. Verify the 0.20 m launcher offset and release delay
+on hardware too. No new on-robot shot calibration is claimed by the software tests.
+
+When the robot isn't driving (filtered translation under 0.1 m/s, including turning in
+place to aim), it uses the original standing shot unchanged, and tilt is not checked.
+While driving, both actual center distance and compensated calibration distance must
+remain within 1.95-4.9 m in the scoring zone. Feeding still requires the existing
+5-degree heading, hood, flywheel and feedback checks. Excessive tilt (over the tunable
+`SOTM_MAX_TILT_DEGREES`, 5 degrees), speed (over 3 m/s), invalid input, uncalibrated lead
+distance or solver nonconvergence prevents a moving shot and stops the shooter until a valid shot returns. Solver
+confidence is diagnostic; feed permission uses the explicit validity and readiness checks.
+
+Teleop aiming slews the heading target at up to `AIM_HEADING_SLEW_DEGREES_PER_SECOND`
+(90) so lead changes and moving/static fallbacks turn the robot smoothly, and adds the
+configured `Heading/kD` as damping. Lower the slew rate if the wheels still splay while
+aiming. Once translation and rotation settle within 1 degree of aim, wheels park
+instead of retaining the turn-in-place stance: parallel with SOTM on, or X-locked
+(`SwerveDriveBrake`) with SOTM off so the stationary shot resists pushes. Driver
+translation or drift beyond 2 degrees resumes normal aiming. This applies to teleop and
+the autonomous final aim. The turn-in-place wheel angles remain necessary while the
+robot is rotating.
+
+The **Shoot on move** button on Power Tool's Shot ready card is the kill switch. OFF
+restores the original stationary shot with driver translation held at zero while
+aiming. The button writes `/PowerLib/Shooting/SOTMRequestedEnabled`; `SotmSwitch`
+applies each new request every loop, with or without tuning, and the button shows the
+robot's reported `Shooting/SOTMEnabled`. Robot code starts with
+`SOTM_ENABLED_DEFAULT` (on).
+
+The Shot ready card also shows SOTM confidence, lead angle and flight time, and the
+compensated aim distance. The robot publishes
+`Shooting/SOTMEnabled`, `LeadDegrees`, `EffectiveDistanceMeters`, `TimeOfFlightSeconds`,
+`MotionCompensated`, `SOTMValid`, `SOTMConfidence`, `SolutionStatus`,
+`Drive/AimWheelsParked` and `Drive/AimWheelsLocked`. Tunable constants include
+`RobotContainer/Custom/DRIVE_WHILE_SHOOTING_COEFFICIENT` (shooting drive speed)
+and Shooting's `SOTM_MAX_DRIVETRAIN_SPEED_MPS`, `SOTM_RELEASE_DELAY_SECONDS`, `SOTM_DRAG_COEFFICIENT`,
+`SOTM_MAX_TILT_DEGREES`, `SOTM_VELOCITY_FILTER_SECONDS` and
+`AIM_HEADING_SLEW_DEGREES_PER_SECOND`. Source
+constants and `powerlib-constants.json` are kept in sync. Tests cover velocity lead,
+filtering, release latency, rotating-launcher velocity, solver failures, retained
+stationary calibrations, compensated readiness, the kill switch, shooting drive speed, aim
+slewing and parking.
+
 ## PowerLib installation
 
 This branch starts from the fresh `main` robot project at `c37a98f33`.
@@ -20,8 +84,8 @@ The four autos use the original intake/return/turn/shoot sequence, per-leg speed
 tolerances and heading-lock choices. Red headings are converted to blue-field
 coordinates. Auto selection follows the reported alliance, with `None` as the default.
 The rewrite retains 100 ms dashboard updates, 200 ms tuning, 50 Hz logging,
-readiness/freshness checks, disabled-only pose seeding, start-pose guards and auto
-leg timeouts. Shooting allows distances from 1.95-4.9 m. A new 1.95 m row extends
+readiness/freshness checks, disabled-only manual pose seeding, operator pose confirmation
+and the overall autonomous cutoff. Shooting allows distances from 1.95-4.9 m. A new 1.95 m row extends
 the closest April 4 segment (2.5-3.0 m): 27.4 RPS and 0.044 hood rotations before
 offsets. Shots closer than 1.95 m are rejected. The new values are extrapolated and need
 hardware tuning. `gradlew build` tests shot outputs, route values,
@@ -106,8 +170,8 @@ position, optional heading, and low measured translation/angular speed to hold c
 The provisional arrival limits are 0.05 m/s, 5 degrees/s and 0.1 s, configured in AutoConstants;
 validate them and route timing on hardware. The April 4 waypoints, per-leg tolerances and
 heading locks are unchanged. Normal braking uses the shared chassis motion limiter;
-cancellation and faults stop immediately. Leg deadlines remain 3 s, final aiming 1 s and
-the overall routine 20 s. Final aiming uses the same completion check with a live hub heading
+cancellation and faults stop immediately. Regional drive legs have no default deadline;
+final aiming retains its explicit 1 s deadline and the overall routine remains 20 s. Final aiming uses the same completion check with a live hub heading
 and the last waypoint's position tolerance; a timeout aborts before requesting SHOOTING.
 The command caches completion during execute(), so isFinished() has no control side effects.
 
@@ -118,7 +182,8 @@ DriveToPointCommand is the single-point wrapper around that same implementation.
 points advance on position tolerance, while section endpoints require measured-speed settling.
 PathProgress caches braking bounds for lower future speed targets and the final stop. Per-leg
 settings use ordered indices, so duplicate coordinates retain their own policies. The active
-waypoint's 3 s deadline restarts only on advancement; timeout is checked before advancement.
+waypoint can opt into a positive deadline, restarted only on advancement and checked before advancement.
+A zero deadline disables the leg timeout; regional routes use this policy.
 Velocity transitions stay acceleration-limited. Intermediate handoffs accept radius arrival
 or bounded forward plane crossings;
 corner smoothing remains later work.

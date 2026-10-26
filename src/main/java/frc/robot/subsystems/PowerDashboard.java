@@ -82,6 +82,7 @@ public class PowerDashboard extends SubsystemBase {
   @Override
   public void periodic() {
     publishShootingDistance();
+    frc.robot.dashboard.SotmSwitch.poll();
     frc.robot.dashboard.Game2026Telemetry.publish(stateMachine);
     driveTelemetry.publish();
     syncTuningMode();

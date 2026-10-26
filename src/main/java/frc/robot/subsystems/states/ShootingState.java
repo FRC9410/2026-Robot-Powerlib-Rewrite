@@ -12,6 +12,7 @@ import frc.robot.utils.ShootingUtils.ShotSolution;
 
 public final class ShootingState implements State<RobotState, StateMachine> {
   private ShotSolution shot = ShootingUtils.UNAVAILABLE;
+  private final frc.robot.utils.MovingShotCalculator fireControl = new frc.robot.utils.MovingShotCalculator();
 
   public ShotSolution getShotSolution() { return shot; }
   private double shootingStarted = Double.NaN;
@@ -25,14 +26,23 @@ public final class ShootingState implements State<RobotState, StateMachine> {
       reset();
       return;
     }
-    shot = ShootingUtils.calculate(robot.drivetrain.getState().Pose,
+    var drive = robot.drivetrain.getState();
+    shot = fireControl.calculate(drive.Pose, drive.Speeds,
         DriverStation.getAlliance().orElse(null), robot.shooter.inputs.velocityRotationsPerSecond,
-        robot.shooterHood.inputs.positionRotations, feedbackHealthy(robot));
+        robot.shooterHood.inputs.positionRotations, feedbackHealthy(robot), robot.vision.hasFreshAcceptedMeasurement(),
+        robot.drivetrain.getPigeon2().getPitch().getValueAsDouble(),
+        robot.drivetrain.getPigeon2().getRoll().getValueAsDouble());
     if (!shot.valid()) resetTimer();
   }
 
   @Override
   public boolean match(RobotState requestedState, StateMachine robot) {
+    // if (requestedState != RobotState.SHOOTING) return false;
+
+    // if (DriverStation.isAutonomousEnabled()){
+    //   return shot.valid();
+    // }
+    // return shot.canFeed();
     return requestedState == RobotState.SHOOTING && shot.canFeed();
   }
 
@@ -66,6 +76,7 @@ public final class ShootingState implements State<RobotState, StateMachine> {
   @Override
   public void reset() {
     shot = ShootingUtils.UNAVAILABLE;
+    fireControl.reset();
     resetTimer();
   }
 

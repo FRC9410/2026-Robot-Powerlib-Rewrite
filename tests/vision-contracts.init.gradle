@@ -1,0 +1,36 @@
+// Run only the cumulative vision review contracts, including the native Swerve simulation:
+// .\gradlew.bat --offline -I tests/vision-contracts.init.gradle test
+// This explicitly enables the otherwise disabled test task for this invocation only.
+gradle.projectsEvaluated {
+    rootProject.tasks.named('test', org.gradle.api.tasks.testing.Test) {
+        enabled = true
+        useJUnitPlatform()
+        maxParallelForks = 1
+        filter {
+            includeTestsMatching('frc.powerlib.vision.VisionFlowContractTest')
+            includeTestsMatching('frc.powerlib.vision.LimelightVisionTest')
+            includeTestsMatching('frc.powerlib.vision.VisionHeadingInitializerTest')
+            includeTestsMatching('frc.powerlib.vision.VisionHeadingReadinessTest')
+            includeTestsMatching('frc.powerlib.vision.VisionHeadingSelectorTest')
+            includeTestsMatching('frc.powerlib.vision.VisionMeasurementFusionTest')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.conflictingCameraCadencesCannotRepeatedlyResetHeadingOrStarvePosition')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.headingCameraCanFailOverAndReturnWithoutAlternatingResets')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.selectedCameraThatBecomesUnstableCannotBlockStableBackup')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.movingHeadingConfirmationCanHandoffToSlowerBetterCamera')
+            includeTestsMatching('frc.powerlib.vision.VisionPoseFilterTest')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.unstableBestHeadingCameraCannotStarveStableTwoTagBackup')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.acceptedFallbackCannotStarveBetterCamerasThirteenMeterRecovery')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.betterCameraCanRecoverDespiteLongerPipelineLatency')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.strictSingleTagFallbackRecoversStationaryHeadingDisabledAndEnabled')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.qualifiedSingleTagCorrectsSmallDriftWithoutHardResetsOrPositionInterruptions')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.initializationDisabledStillAllowsStationaryBetterCameraHandoffWithoutHardReset')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.disabledAndEnabledRecoveryRequireTheirOwnFreshEvidence')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.testModeKeepsPositionFusionButBlocksHeadingChanges')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.stationaryHeadingOutliersWaitForStableRequalification')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.inconsistentStationaryCameraCannotKickHeadingBeforeBackupTakesOver')
+            includeTestsMatching('frc.robot.subsystems.DisabledVisionSimulationTest.stage*')
+        }
+        outputs.upToDateWhen { false }
+        testLogging { events 'passed', 'failed', 'skipped' }
+    }
+}

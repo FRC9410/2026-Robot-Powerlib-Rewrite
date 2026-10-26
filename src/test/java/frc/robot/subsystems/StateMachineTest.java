@@ -41,30 +41,47 @@ class StateMachineTest {
     controller.setBButton(false);
     controller.setBackButton(false);
     controller.setStartButton(false);
+    controller.setLeftX(0);
+    controller.setLeftY(0);
+    controller.setRightX(0);
     DriverStationSim.notifyNewData();
     // Poll released controls before resetting so each test starts with fresh trigger edges.
     CommandScheduler.getInstance().run();
     container.resetForMode();
-    // Stopping requests do not instantaneously remove simulated chassis momentum.
-    // Establish a stationary fixture before tests that reset pose or initialize heading.
-    robot.drivetrain.applyRequest(new com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake());
-    int stationarySamples = 0;
-    for (int i = 0; i < 100 && stationarySamples < 3; i++) {
-      Thread.sleep(10);
-      var speeds = robot.drivetrain.getState().Speeds;
-      stationarySamples = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 1e-4
-          && Math.abs(speeds.omegaRadiansPerSecond) < 1e-4 ? stationarySamples + 1 : 0;
-    }
-    assertEquals(3, stationarySamples, "Simulated drivetrain did not settle between tests");
+    settleDrivetrain();
     robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180)));
     robot.shooter.inputs.velocityRotationsPerSecond = 0;
     robot.shooterHood.inputs.positionRotations = 0.09;
   }
 
-  @AfterAll static void close() {
+  /**
+   * Drive tests command real motion in the Phoenix drivetrain sim. Brake and wait for it to stop,
+   * so later tests see a stationary robot instead of a moving shot or a drifting pose.
+   */
+  private static void settleDrivetrain() {
+    robot.drivetrain.applyRequest(new com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric());
+    long deadline = System.nanoTime() + 1_000_000_000L;
+    while (System.nanoTime() < deadline) {
+      var speeds = robot.drivetrain.getState().Speeds;
+      if (speeds.vxMetersPerSecond == 0 && speeds.vyMetersPerSecond == 0
+          && speeds.omegaRadiansPerSecond == 0) return;
+      try {
+        Thread.sleep(5);
+      } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
+        return;
+      }
+    }
+    fail("Simulated drivetrain did not stop within 1 s");
+  }
+
+  @AfterAll static void close() throws Exception {
     CommandScheduler.getInstance().cancelAll();
     CommandScheduler.getInstance().unregisterAllSubsystems();
     robot.vision.close();
+    var notifier = Swerve.class.getDeclaredField("m_simNotifier");
+    notifier.setAccessible(true);
+    ((edu.wpi.first.wpilibj.Notifier) notifier.get(robot.drivetrain)).close();
     robot.drivetrain.close();
     DriverStationSim.resetData();
   }
@@ -73,6 +90,119 @@ class StateMachineTest {
     DriverStationSim.notifyNewData();
     CommandScheduler.getInstance().run();
     CommandScheduler.getInstance().run();
+  }
+
+  /** Field velocity commanded for the current stick input while intaking, for comparison. */
+  private double[] intakeVelocity(edu.wpi.first.wpilibj2.command.button.CommandXboxController pad) throws Exception {
+    var intake = new frc.robot.commands.SwerveDriveCommand(robot.drivetrain, pad, () -> RobotState.INTAKING);
+    intake.execute();
+    var field = intake.getClass().getDeclaredField("request");
+    field.setAccessible(true);
+    var request = (com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric) field.get(intake);
+    double[] velocity = { request.VelocityX, request.VelocityY };
+    intake.end(true);
+    return velocity;
+  }
+
+  /** Field velocity expected while shooting on the move: the intake velocity rescaled to the shooting coefficient. */
+  private double[] shootingVelocity(edu.wpi.first.wpilibj2.command.button.CommandXboxController pad) throws Exception {
+    double[] intake = intakeVelocity(pad);
+    double scale = Constants.RobotContainer.DRIVE_WHILE_SHOOTING_COEFFICIENT
+        / Constants.RobotContainer.DRIVE_WHILE_INTAKING_COEFFICIENT;
+    return new double[] { intake[0] * scale, intake[1] * scale };
+  }
+
+  @Test void driveUsesMovingShotHeadingAndFeedforwardAtShootingSpeed() throws Exception {
+    var pad = new edu.wpi.first.wpilibj2.command.button.CommandXboxController(Constants.OI.DRIVER_CONTROLLER_PORT);
+    var shot = new frc.robot.utils.MovingShotCalculator().calculate(robot.drivetrain.getState().Pose,
+        new edu.wpi.first.math.kinematics.ChassisSpeeds(0, -0.5, 0),
+        edu.wpi.first.wpilibj.DriverStation.Alliance.Blue, 29.5, 0.05, true, true, 0, 0);
+    assertTrue(shot.valid(), shot.status());
+    var command = new frc.robot.commands.SwerveDriveCommand(robot.drivetrain, pad,
+        () -> RobotState.SHOOTING, () -> shot);
+    controller.setLeftX(-1);
+    controller.setLeftY(-1);
+    controller.notifyNewData();
+    DriverStationSim.notifyNewData();
+    double previousCoefficient = Constants.RobotContainer.DRIVE_WHILE_SHOOTING_COEFFICIENT;
+    // Differs from the intake coefficient so the test shows the two speeds are tuned separately.
+    Constants.RobotContainer.DRIVE_WHILE_SHOOTING_COEFFICIENT = 0.25;
+    try {
+      double[] expected = shootingVelocity(pad);
+      double poseHeading = robot.drivetrain.getState().Pose.getRotation().getDegrees();
+      double measuredOmega = robot.drivetrain.getState().Speeds.omegaRadiansPerSecond;
+      command.execute();
+      var requestField = command.getClass().getDeclaredField("aimingRequest");
+      requestField.setAccessible(true);
+      var request = (com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric) requestField.get(command);
+      assertEquals(shot.headingDegrees(), robot.drivetrain.getHeadingSetpointDegrees(), 1e-9);
+      assertEquals(expected[0], request.VelocityX, 1e-3);
+      assertEquals(expected[1], request.VelocityY, 1e-3);
+      double error = edu.wpi.first.math.MathUtil.inputModulus(shot.headingDegrees() - poseHeading, -180, 180);
+      double kp = frc.powerlib.PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kP", Constants.Swerve.HEADING_KP);
+      double kd = frc.powerlib.PowerRobotContainer.getSubsystemVariable("Swerve", "Heading/kD", Constants.Swerve.HEADING_KD);
+      double feedforward = shot.headingFeedforwardRadiansPerSecond();
+      assertEquals(Math.toRadians(error) * kp + feedforward + kd * (feedforward - measuredOmega),
+          request.RotationalRate, 0.001);
+      assertEquals(0.02, request.Deadband);
+      assertEquals(0, request.RotationalDeadband);
+      assertEquals(com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.Velocity, request.DriveRequestType);
+    } finally {
+      Constants.RobotContainer.DRIVE_WHILE_SHOOTING_COEFFICIENT = previousCoefficient;
+      command.end(true);
+    }
+  }
+
+  @Test void killSwitchHoldsTranslationWhileAimingTheStationaryShot() throws Exception {
+    var pad = new edu.wpi.first.wpilibj2.command.button.CommandXboxController(Constants.OI.DRIVER_CONTROLLER_PORT);
+    var command = new frc.robot.commands.SwerveDriveCommand(robot.drivetrain, pad,
+        () -> RobotState.SHOOTING, robot::getShotSolution);
+    controller.setLeftX(-1);
+    controller.setLeftY(-1);
+    controller.notifyNewData();
+    DriverStationSim.notifyNewData();
+    // Ten degrees off target so the stopped robot keeps aiming instead of parking its wheels.
+    robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(170)));
+    boolean previous = frc.robot.utils.ShootingUtils.sotmEnabled();
+    try {
+      var requestField = command.getClass().getDeclaredField("aimingRequest");
+      requestField.setAccessible(true);
+      var request = (com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric) requestField.get(command);
+      double[] expected = shootingVelocity(pad);
+      frc.robot.utils.ShootingUtils.setSotmEnabled(true);
+      command.execute();
+      assertEquals(expected[0], request.VelocityX, 1e-3);
+      assertEquals(expected[1], request.VelocityY, 1e-3);
+      frc.robot.utils.ShootingUtils.setSotmEnabled(false);
+      command.execute();
+      assertEquals(0, request.VelocityX);
+      assertEquals(0, request.VelocityY);
+    } finally {
+      frc.robot.utils.ShootingUtils.setSotmEnabled(previous);
+      command.end(true);
+    }
+  }
+
+  @Test void aimedStoppedRobotXLocksOnlyForTheStationaryShot() {
+    var pad = new edu.wpi.first.wpilibj2.command.button.CommandXboxController(Constants.OI.DRIVER_CONTROLLER_PORT);
+    var command = new frc.robot.commands.SwerveDriveCommand(robot.drivetrain, pad,
+        () -> RobotState.SHOOTING, robot::getShotSolution);
+    boolean previous = frc.robot.utils.ShootingUtils.sotmEnabled();
+    try {
+      // The reset pose faces straight away from the hub, so the rear shooter is aimed.
+      frc.robot.utils.ShootingUtils.setSotmEnabled(true);
+      command.execute();
+      assertEquals(true, frc.powerlib.PowerRobotContainer.getData("Drive/AimWheelsParked"));
+      assertEquals(false, frc.powerlib.PowerRobotContainer.getData("Drive/AimWheelsLocked"));
+      frc.robot.utils.ShootingUtils.setSotmEnabled(false);
+      command.execute();
+      assertEquals(true, frc.powerlib.PowerRobotContainer.getData("Drive/AimWheelsParked"));
+      assertEquals(true, frc.powerlib.PowerRobotContainer.getData("Drive/AimWheelsLocked"));
+    } finally {
+      frc.robot.utils.ShootingUtils.setSotmEnabled(previous);
+      command.end(true);
+    }
+    assertEquals(false, frc.powerlib.PowerRobotContainer.getData("Drive/AimWheelsLocked"));
   }
 
   @Test void intakingAndEjectingHaveSeparateOutputsAndReturnToStandby() {
@@ -99,9 +229,9 @@ class StateMachineTest {
     robot.requestState(RobotState.SHOOTING, requestOwner);
     robot.execute();
     assertEquals(RobotState.SPINNING_UP, robot.getCurrentState());
-    assertEquals(29.5, robot.shooter.getVelocitySetpoint(), 0.01);
+    assertEquals(30.5, robot.shooter.getVelocitySetpoint(), 0.01);
     assertEquals(0, robot.feeder.getVelocitySetpoint());
-    robot.shooter.inputs.velocityRotationsPerSecond = 29.5;
+    robot.shooter.inputs.velocityRotationsPerSecond = 30.5;
     robot.shooterHood.inputs.positionRotations = 0.05;
     robot.execute();
     assertEquals(RobotState.SHOOTING, robot.getCurrentState());
@@ -116,42 +246,35 @@ class StateMachineTest {
   }
 
   @Test void shootingPulseRestartsAfterEjectingAndModeReset() throws Exception {
-    var stateField = StateMachine.class.getDeclaredField("shootingState");
-    stateField.setAccessible(true);
-    var shooting = (frc.robot.subsystems.states.ShootingState) stateField.get(robot);
-    var started = shooting.getClass().getDeclaredField("shootingStarted");
-    started.setAccessible(true);
-    robot.requestState(RobotState.SHOOTING, requestOwner);
-    robot.execute();
-    started.setDouble(shooting, edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - 1.1);
-    robot.execute();
-    assertEquals(Constants.IntakeWrist.INTAKE_FEED, robot.intakeWrist.getSetpointRotations());
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      var stateField = StateMachine.class.getDeclaredField("shootingState");
+      stateField.setAccessible(true);
+      var shooting = (frc.robot.subsystems.states.ShootingState) stateField.get(robot);
+      var started = shooting.getClass().getDeclaredField("shootingStarted");
+      started.setAccessible(true);
+      robot.requestState(RobotState.SHOOTING, requestOwner);
+      robot.execute();
+      started.setDouble(shooting, edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - 1.1);
+      robot.execute();
+      assertEquals(Constants.IntakeWrist.INTAKE_FEED, robot.intakeWrist.getSetpointRotations());
 
-    Object ejectOwner = new Object();
-    robot.requestState(RobotState.EJECTING, ejectOwner);
-    robot.execute();
-    robot.clearRequest(ejectOwner);
-    robot.execute();
-    assertEquals(RobotState.SPINNING_UP, robot.getCurrentState());
-    assertEquals(Constants.IntakeWrist.INTAKE_IDLE, robot.intakeWrist.getSetpointRotations());
+      Object ejectOwner = new Object();
+      robot.requestState(RobotState.EJECTING, ejectOwner);
+      robot.execute();
+      robot.clearRequest(ejectOwner);
+      robot.execute();
+      assertEquals(RobotState.SPINNING_UP, robot.getCurrentState());
+      assertEquals(Constants.IntakeWrist.INTAKE_IDLE, robot.intakeWrist.getSetpointRotations());
 
-    started.setDouble(shooting, edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - 1.1);
-    container.resetForMode();
-    // Stopping requests do not instantaneously remove simulated chassis momentum.
-    // Establish a stationary fixture before tests that reset pose or initialize heading.
-    robot.drivetrain.applyRequest(new com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake());
-    int stationarySamples = 0;
-    for (int i = 0; i < 100 && stationarySamples < 3; i++) {
-      Thread.sleep(10);
-      var speeds = robot.drivetrain.getState().Speeds;
-      stationarySamples = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 1e-4
-          && Math.abs(speeds.omegaRadiansPerSecond) < 1e-4 ? stationarySamples + 1 : 0;
-    }
-    assertEquals(3, stationarySamples, "Simulated drivetrain did not settle between tests");
-    assertTrue(Double.isNaN(started.getDouble(shooting)));
-    robot.requestState(RobotState.SHOOTING, requestOwner);
-    robot.execute();
-    assertEquals(Constants.IntakeWrist.INTAKE_IDLE, robot.intakeWrist.getSetpointRotations());
+      started.setDouble(shooting, edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - 1.1);
+      container.resetForMode();
+      assertTrue(Double.isNaN(started.getDouble(shooting)));
+      robot.requestState(RobotState.SHOOTING, requestOwner);
+      robot.execute();
+      assertEquals(Constants.IntakeWrist.INTAKE_IDLE, robot.intakeWrist.getSetpointRotations());
+
+    } finally { edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming(); }
   }
 
   @Test void dashboardDistanceUpdatesWithoutAShootingRequest() throws Exception {
@@ -170,7 +293,7 @@ class StateMachineTest {
   }
 
   @Test void explicitSpinUpNeverFeedsEvenWhenReady() {
-    robot.shooter.inputs.velocityRotationsPerSecond = 29.5;
+    robot.shooter.inputs.velocityRotationsPerSecond = 30.5;
     robot.shooterHood.inputs.positionRotations = 0.05;
     robot.requestState(RobotState.SPINNING_UP, requestOwner);
     robot.execute();
@@ -269,7 +392,7 @@ class StateMachineTest {
     try {
       robot.requestState(RobotState.EJECTING, requestOwner);
       robot.requestState(RobotState.SHOOTING, new Object());
-      robot.shooter.inputs.velocityRotationsPerSecond = 29.5;
+      robot.shooter.inputs.velocityRotationsPerSecond = 30.5;
       robot.shooterHood.inputs.positionRotations = 0.05;
       robot.execute();
       assertEquals(RobotState.EJECTING, robot.getCurrentState());
@@ -295,6 +418,7 @@ class StateMachineTest {
     var headingField = Vision.class.getDeclaredField("lastHeadingMeasurement");
     headingField.setAccessible(true);
     Object previousHeading = headingField.get(robot.vision);
+    prepareVisionFilter();
     try {
       headingField.set(robot.vision, null);
       var pose = new Pose2d(1.5, 2.5, Rotation2d.fromDegrees(24));
@@ -310,7 +434,7 @@ class StateMachineTest {
       assertEquals(180, robot.drivetrain.getState().Pose.getRotation().getDegrees(), 0.001);
       double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
       headingField.set(robot.vision, new frc.powerlib.vision.LimelightVision.HeadingMeasurement(
-          "test-camera", new Pose2d(9, 9, Rotation2d.fromDegrees(12)), now, 0.1));
+          "test-camera", new Pose2d(9, 9, Rotation2d.fromDegrees(12)), now, 0.1, 1, 1.5, .02, 0));
       assertTrue(robot.vision.seedFromFreshVision());
       assertEquals(12, robot.drivetrain.getState().Pose.getRotation().getDegrees(), 0.001);
       assertEquals(pose.getTranslation(), robot.drivetrain.getState().Pose.getTranslation());
@@ -373,78 +497,9 @@ class StateMachineTest {
     assertEquals(145, robot.intakeRoller.getVelocitySetpoint());
   }
 
-  @Test void lateHeadingIsEvaluatedDespiteNewerPositionAndCannotReplay() throws Exception {
-    var positionTime = Vision.class.getDeclaredField("lastAppliedTimestamp");
-    var headingTime = Vision.class.getDeclaredField("lastAppliedHeadingTimestamp");
-    positionTime.setAccessible(true);
-    headingTime.setAccessible(true);
-    double previousPositionTime = positionTime.getDouble(robot.vision);
-    double previousHeadingTime = headingTime.getDouble(robot.vision);
-    var apply = Vision.class.getDeclaredMethod("applyHeadingCorrection",
-        frc.powerlib.vision.LimelightVision.HeadingMeasurement.class);
-    apply.setAccessible(true);
-    try {
-      double captureTime = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
-      positionTime.setDouble(robot.vision, captureTime + 0.001);
-      headingTime.setDouble(robot.vision, Double.NEGATIVE_INFINITY);
-      var heading = new frc.powerlib.vision.LimelightVision.HeadingMeasurement(
-          "test-camera", new Pose2d(9, 9, Rotation2d.fromDegrees(175)), captureTime, 0.1);
-      // The shared timestamp check previously rejected this heading before attempting fusion.
-      boolean accepted = (boolean) apply.invoke(robot.vision, heading);
-      var status = Vision.class.getDeclaredField("headingStatus");
-      status.setAccessible(true);
-      // Native pose history becomes available asynchronously as simulation starts.
-      // Both outcomes prove this older heading reached evaluation instead of being
-      // discarded merely because a newer position measurement was already applied.
-      assertEquals(accepted ? "Independent heading applied" : "Capture pose unavailable", status.get(robot.vision));
-      assertEquals(captureTime, headingTime.getDouble(robot.vision));
-      assertEquals(captureTime + 0.001, positionTime.getDouble(robot.vision));
-      assertFalse((boolean) apply.invoke(robot.vision, heading));
-      assertEquals("Repeated or out-of-order heading", status.get(robot.vision));
-      assertEquals(TEST_X, robot.drivetrain.getState().Pose.getX(), 0.001);
-      assertEquals(TEST_Y, robot.drivetrain.getState().Pose.getY(), 0.001);
-    } finally {
-      positionTime.setDouble(robot.vision, previousPositionTime);
-      headingTime.setDouble(robot.vision, previousHeadingTime);
-    }
-  }
   @Test void sharedHealthChecksPreserveConfiguredSimulationBehavior() {
     assertTrue(frc.powerlib.health.HealthChecks.driveHealthy(robot.drivetrain, 0.5));
     assertTrue(frc.powerlib.health.HealthChecks.mechanismHealthy(robot.shooter, robot.shooter.getVelocityMotor(), 0.5));
-  }
-
-  @Test void disabledAutomaticMT1InitializationCorrectsLargeErrorAndPreservesPosition() throws Exception {
-    DriverStationSim.setEnabled(false);
-    DriverStationSim.notifyNewData();
-    var initialize = Vision.class.getDeclaredMethod("initializeHeading",
-        frc.powerlib.vision.LimelightVision.HeadingMeasurement.class, double.class);
-    initialize.setAccessible(true);
-    var initializerField = Vision.class.getDeclaredField("headingInitializer");
-    initializerField.setAccessible(true);
-    var initializer = (frc.robot.utils.VisionHeadingInitializer) initializerField.get(robot.vision);
-    initializer.reset();
-    double started = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
-    try {
-      for (int i = 0; i <= 13; i++) {
-        double time = started + i * 0.02;
-        var heading = new frc.powerlib.vision.LimelightVision.HeadingMeasurement(
-            "test-camera", new Pose2d(9, 9, Rotation2d.fromDegrees(30)), time, 0.1);
-        assertEquals(i == 13, (boolean) initialize.invoke(robot.vision, heading, time));
-      }
-      assertEquals(30, robot.drivetrain.getState().Pose.getRotation().getDegrees(), 0.001);
-      assertEquals(TEST_X, robot.drivetrain.getState().Pose.getX(), 0.001);
-      assertEquals(TEST_Y, robot.drivetrain.getState().Pose.getY(), 0.001);
-      initializer.reset();
-      DriverStationSim.setEnabled(true);
-      DriverStationSim.notifyNewData();
-      for (int i = 0; i <= 13; i++) {
-        double time = started + 1 + i * 0.02;
-        var heading = new frc.powerlib.vision.LimelightVision.HeadingMeasurement(
-            "test-camera", new Pose2d(9, 9, Rotation2d.fromDegrees(90)), time, 0.1);
-        assertFalse((boolean) initialize.invoke(robot.vision, heading, time));
-      }
-      assertEquals(30, robot.drivetrain.getState().Pose.getRotation().getDegrees(), 0.001);
-    } finally { initializer.reset(); }
   }
 
   @Test void headingButtonHelperRunsWhileDisabledAndPreservesEnabledHeading() {
@@ -498,15 +553,15 @@ class StateMachineTest {
     }
   }
 
-  @Test void autoRejectsWrongStartingPoseWithoutResettingOdometry() {
+  @Test void autoUsesConfirmedLivePoseWithoutRequiringExactStartingWaypoint() {
     DriverStationSim.setAutonomous(true);
     DriverStationSim.notifyNewData();
     var before = robot.drivetrain.getState().Pose;
     var auto = frc.robot.autos.RobotAutos.build(frc.robot.autos.RobotAutos.ROUTES.get(3), robot);
     auto.initialize();
     auto.execute(); // ParallelRaceGroup records completion during execute, as the scheduler does.
-    assertTrue(auto.isFinished());
-    auto.end(false);
+    assertFalse(auto.isFinished());
+    auto.end(true);
     assertEquals(before.getX(), robot.drivetrain.getState().Pose.getX(), 0.001);
     assertFalse(robot.hasRequest(RobotState.INTAKING));
     assertFalse(robot.hasRequest(RobotState.SHOOTING));
@@ -524,7 +579,9 @@ class StateMachineTest {
     var reasons = new java.util.ArrayList<String>();
     edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
     var command = new frc.robot.commands.DriveToPointCommand(robot.drivetrain,
-        new Pose2d(TEST_X + 10, TEST_Y + 10, Rotation2d.fromDegrees(90)), 3, limits, true, reasons::add);
+        new Pose2d(TEST_X + 10, TEST_Y + 10, Rotation2d.fromDegrees(90)),
+        Constants.Auto.completionCriteria(3, Constants.Auto.LEG_HEADING_TOLERANCE_DEGREES),
+        limits, true, 3, reasons::add);
     try {
       var state = robot.drivetrain.getState();
       var previous = edu.wpi.first.math.kinematics.ChassisSpeeds.fromRobotRelativeSpeeds(
@@ -556,7 +613,7 @@ class StateMachineTest {
       assertEquals(0, pointRequest(command).RotationalRate);
       assertNull(robot.drivetrain.getHeadingSetpointDegrees());
       command.initialize();
-      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(Constants.RobotContainer.AUTO_LEG_TIMEOUT_SECONDS + 0.1);
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(3.1);
       assertFalse(command.isFinished()); // Reading completion does not process a timeout.
       command.execute();
       assertTrue(command.isFinished());
@@ -674,7 +731,18 @@ class StateMachineTest {
     }
   }
 
-  @Test void timedOutAutoLegAbortsWithoutStartingIntake() {
+  private static void arriveAtFirstSectionEndpoint(edu.wpi.first.wpilibj2.command.Command auto, Pose2d endpoint) {
+    robot.drivetrain.resetPose(endpoint);
+    for (int i = 0; i < 300 && !robot.hasRequest(RobotState.INTAKING) && !auto.isFinished(); i++) {
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(0.02);
+      auto.execute();
+    }
+    assertTrue(robot.hasRequest(RobotState.INTAKING), () -> "Settled arrival must advance the route: pose="
+        + robot.drivetrain.getState().Pose + ", speeds=" + robot.drivetrain.getState().Speeds
+        + ", finished=" + auto.isFinished());
+  }
+
+  @Test void autoLegContinuesPastThreeSecondsWithoutSkippingWaypoints() {
     DriverStationSim.setAutonomous(true);
     DriverStationSim.notifyNewData();
     var route = frc.robot.autos.RobotAutos.ROUTES.get(3);
@@ -683,15 +751,189 @@ class StateMachineTest {
     edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
     try {
       auto.initialize();
-      auto.execute(); // A sample at the goal does not complete the first leg before settling.
-      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(Constants.RobotContainer.AUTO_LEG_TIMEOUT_SECONDS + 0.1);
+      auto.execute(); // Reach leg 1; leg 2 is now active.
+      for (double delay : new double[] {3.1, 4, 4}) {
+        edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(delay);
+        auto.execute();
+        assertFalse(auto.isFinished(), "An unreached leg must remain active beyond three seconds");
+        assertFalse(robot.hasRequest(RobotState.INTAKING), "Elapsed time must not skip a waypoint");
+      }
+      // Settled arrival/action handoff is exercised separately, without teleporting a cruising robot.
+    } finally {
+      auto.end(true);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+    assertFalse(robot.hasRequest(RobotState.INTAKING));
+    assertFalse(robot.hasRequest(RobotState.SHOOTING));
+    assertEquals(0, robot.shooter.getVelocitySetpoint());
+    assertEquals(0, robot.intakeRoller.getVelocitySetpoint());
+    assertEquals(0, robot.feeder.getVelocitySetpoint());
+  }
+
+  @Test void autoStopsWhenAutonomousIsDisabled() {
+    DriverStationSim.setAutonomous(true);
+    DriverStationSim.notifyNewData();
+    var route = frc.robot.autos.RobotAutos.ROUTES.get(3);
+    robot.drivetrain.resetPose(route.fieldPoints().get(0));
+    var auto = frc.robot.autos.RobotAutos.build(route, robot);
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      auto.initialize();
       auto.execute();
-      assertTrue(auto.isFinished());
+      arriveAtFirstSectionEndpoint(auto, route.fieldPoints().get(1));
+      DriverStationSim.setEnabled(false);
+      DriverStationSim.notifyNewData();
+      auto.execute();
+      assertTrue(auto.isFinished(), "Disable must still stop the autonomous routine");
+    } finally {
       auto.end(false);
-      assertFalse(robot.hasRequest(RobotState.INTAKING));
-      assertFalse(robot.hasRequest(RobotState.SHOOTING));
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+    assertFalse(robot.hasRequest(RobotState.INTAKING));
+    assertEquals(0, robot.intakeRoller.getVelocitySetpoint());
+    assertEquals(0, robot.feeder.getVelocitySetpoint());
+    assertEquals(0, robot.shooter.getVelocitySetpoint());
+  }
+
+  @Test void autoStillStopsAtEndOfAutonomousPeriod() {
+    DriverStationSim.setAutonomous(true);
+    DriverStationSim.notifyNewData();
+    var route = frc.robot.autos.RobotAutos.ROUTES.get(3);
+    robot.drivetrain.resetPose(route.fieldPoints().get(0));
+    var auto = frc.robot.autos.RobotAutos.build(route, robot);
+    edu.wpi.first.wpilibj.simulation.SimHooks.pauseTiming();
+    try {
+      auto.initialize();
+      auto.execute();
+      edu.wpi.first.wpilibj.simulation.SimHooks.stepTiming(Constants.Field.AUTO_LENGTH_IN_TIME + .1);
+      auto.execute();
+      assertTrue(auto.isFinished(), "Removing a leg timeout must not extend the autonomous period");
+    } finally {
+      auto.end(false);
+      edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming();
+    }
+    assertFalse(robot.hasRequest(RobotState.INTAKING));
+    assertEquals(0, robot.intakeRoller.getVelocitySetpoint());
+    assertEquals(0, robot.shooter.getVelocitySetpoint());
+  }
+  private static frc.powerlib.vision.VisionPoseFilter prepareVisionFilter() throws Exception {
+    var field = Vision.class.getDeclaredField("poseFilter");
+    field.setAccessible(true);
+    var filter = (frc.powerlib.vision.VisionPoseFilter) field.get(robot.vision);
+    double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+    for (int i = 20; i >= 0; i--) filter.observe(now - i * 0.02, 0, 0, true);
+    return filter;
+  }
+
+  @Test void manualVisionSeedRejectsOffFieldHeightAndTiltedCaptureFrames() throws Exception {
+    DriverStationSim.setEnabled(false);
+    DriverStationSim.notifyNewData();
+    var field = Vision.class.getDeclaredField("lastMeasurement");
+    field.setAccessible(true);
+    Object previous = field.get(robot.vision);
+    var filter = prepareVisionFilter();
+    try {
+      double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+      for (var measurement : java.util.List.of(
+          new frc.powerlib.vision.LimelightVision.Measurement("test", new Pose2d(99, 2, Rotation2d.kZero), now, 1, 2, .2),
+          new frc.powerlib.vision.LimelightVision.Measurement("test", new Pose2d(2, 2, Rotation2d.kZero), now, 1, 2, .2, 2))) {
+        field.set(robot.vision, measurement);
+        assertFalse(robot.vision.seedFromFreshVision());
+      }
+      field.set(robot.vision, new frc.powerlib.vision.LimelightVision.Measurement("test",
+          new Pose2d(2, 2, Rotation2d.kZero), now, 1, 2, .2));
+      assertTrue(robot.vision.hasFreshMeasurement());
+      filter.observe(edu.wpi.first.wpilibj.Timer.getFPGATimestamp(), 12, 0, true);
+      assertFalse(robot.vision.hasFreshMeasurement());
+      assertFalse(robot.vision.seedFromFreshVision());
+      filter.observe(edu.wpi.first.wpilibj.Timer.getFPGATimestamp(), 0, 0, true);
+      assertFalse(robot.vision.seedFromFreshVision()); // Level now cannot make the old capture safe.
+    } finally { field.set(robot.vision, previous); prepareVisionFilter(); }
+  }
+
+  private static java.lang.reflect.Method positionCorrection() throws Exception {
+    var apply = Vision.class.getDeclaredMethod("applyPositionCorrection", frc.powerlib.vision.LimelightVision.Measurement.class, double.class);
+    apply.setAccessible(true);
+    return apply;
+  }
+
+  private static frc.powerlib.vision.VisionMeasurementFusion visionFusion() throws Exception {
+    var field = Vision.class.getDeclaredField("fusion");
+    field.setAccessible(true);
+    return (frc.powerlib.vision.VisionMeasurementFusion) field.get(robot.vision);
+  }
+
+  @Test void aSingleLargePositionOutlierCannotAdvanceTheFusionTimestamp() throws Exception {
+    prepareVisionFilter();
+    var fusion = visionFusion();
+    double capture = edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - .01;
+    fusion.resetPose(capture - .01); // Isolate this test from prior manual seeds.
+    var outlier = new frc.powerlib.vision.LimelightVision.Measurement("test",
+        new Pose2d(TEST_X + 12, TEST_Y, Rotation2d.kZero), capture, 1, 2, .1);
+    assertTrue(fusion.isNewPosition(outlier));
+    assertFalse((boolean) positionCorrection().invoke(robot.vision, outlier, edu.wpi.first.wpilibj.Timer.getFPGATimestamp()));
+    assertTrue(fusion.isNewPosition(outlier), "Rejected frames must not advance the fusion timestamp");
+    assertEquals(TEST_X, robot.drivetrain.getState().Pose.getX(), .001);
+    assertEquals(TEST_Y, robot.drivetrain.getState().Pose.getY(), .001);
+  }
+
+  @Test void visionFusionUsesEachMeasurementsUncertaintyRatherThanTheFixedBase() throws Exception {
+    var fusion = visionFusion();
+    var apply = positionCorrection();
+    double[] displacement = new double[2];
+    try {
+      for (int run = 0; run < 2; run++) {
+        robot.drivetrain.applyRequest(new com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake());
+        robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180)));
+        Thread.sleep(60); // Allow native odometry to retain history at the new starting pose.
+        prepareVisionFilter();
+        fusion.resetPose(edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - .02);
+        double capture = edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - .01;
+        assertTrue(robot.drivetrain.samplePoseAt(com.ctre.phoenix6.Utils.fpgaToCurrentTime(capture)).isPresent());
+        var measurement = new frc.powerlib.vision.LimelightVision.Measurement("test",
+            new Pose2d(TEST_X + .4, TEST_Y, Rotation2d.fromDegrees(180)), capture, 1, 2, run == 0 ? .02 : 20);
+        apply.invoke(robot.vision, measurement, edu.wpi.first.wpilibj.Timer.getFPGATimestamp());
+        assertFalse(fusion.isNewPosition(measurement));
+        Thread.sleep(20);
+        displacement[run] = robot.drivetrain.getState().Pose.getX() - TEST_X;
+      }
+      assertTrue(displacement[0] > .05, "Low uncertainty must visibly correct pose");
+      assertTrue(displacement[0] > 5 * displacement[1], "High uncertainty must apply much less correction");
+    } finally {
+
+      robot.drivetrain.resetPose(new Pose2d(TEST_X, TEST_Y, Rotation2d.fromDegrees(180)));
+    }
+  }
+
+  @Test void customShooterTrimChangesOnlyFlywheelDemandAndReadiness() {
+    double previous = Constants.Shooter.SHOOTER_EXTRA_RPS;
+    try {
+      for (double trim : new double[] {0, 2, 5}) {
+        Constants.Shooter.SHOOTER_EXTRA_RPS = trim;
+        robot.requestState(RobotState.SHOOTING, requestOwner);
+        double expected = 28.5 + trim; // Existing 2.5 m calibration plus the one custom trim.
+        robot.shooter.inputs.velocityRotationsPerSecond = expected - Constants.Shooting.SHOOTER_TOLERANCE_RPS - .1;
+        robot.shooterHood.inputs.positionRotations = .05;
+        robot.execute();
+        assertEquals(expected, robot.getShotSolution().shooterRps(), 1e-9);
+        assertEquals(expected, robot.shooter.getVelocitySetpoint(), 1e-9);
+        assertFalse(robot.getShotSolution().velocityReady());
+        assertEquals(0, robot.feeder.getVelocitySetpoint());
+        robot.shooter.inputs.velocityRotationsPerSecond = expected;
+        robot.execute();
+        assertEquals(RobotState.SHOOTING, robot.getCurrentState());
+        assertTrue(robot.getShotSolution().velocityReady());
+        assertEquals(-59, robot.feeder.getVelocitySetpoint(), 1e-9, "Flywheel trim must not change feeder calibration");
+      }
+      Constants.Shooter.SHOOTER_EXTRA_RPS = Double.NaN;
+      robot.execute();
+      assertFalse(robot.getShotSolution().valid());
       assertEquals(0, robot.shooter.getVelocitySetpoint());
-    } finally { edu.wpi.first.wpilibj.simulation.SimHooks.resumeTiming(); }
+      assertEquals(0, robot.feeder.getVelocitySetpoint());
+    } finally {
+      Constants.Shooter.SHOOTER_EXTRA_RPS = previous;
+      robot.stopAll();
+    }
   }
 
   @Test void finalAimTimeoutAbortsWithoutRequestingShooting() {
@@ -1506,31 +1748,40 @@ class StateMachineTest {
   @Test void visionCheckpointAdvancesOnlyWhenPositionFusionRuns() throws Exception {
     var fusedField = Vision.class.getDeclaredField("lastFusedPositionTimestamp");
     fusedField.setAccessible(true);
-    var barrierField = Vision.class.getDeclaredField("lastAppliedTimestamp");
-    barrierField.setAccessible(true);
+    var establishedField = Vision.class.getDeclaredField("headingEstablished");
+    establishedField.setAccessible(true);
     double previousFused = fusedField.getDouble(robot.vision);
-    double previousBarrier = barrierField.getDouble(robot.vision);
+    boolean previousEstablished = establishedField.getBoolean(robot.vision);
     boolean previousEnabled = robot.vision.shouldUpdatePose();
-    var apply = Vision.class.getDeclaredMethod("applyMeasurements", frc.powerlib.vision.LimelightVision.Measurement.class,
-        frc.powerlib.vision.LimelightVision.HeadingMeasurement.class);
+    var apply = Vision.class.getDeclaredMethod("applyMeasurements", java.util.List.class, java.util.List.class);
     apply.setAccessible(true);
+    var filter = prepareVisionFilter();
+    var fusion = visionFusion();
+    Thread.sleep(30); // Populate native capture-time pose history after the preceding clock-stepped test.
     try {
       fusedField.setDouble(robot.vision, Double.NEGATIVE_INFINITY);
-      barrierField.setDouble(robot.vision, Double.NEGATIVE_INFINITY);
+      establishedField.setBoolean(robot.vision, true);
       double capture = edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - 0.01;
+      fusion.resetPose(capture - 0.05);
       var measurement = new frc.powerlib.vision.LimelightVision.Measurement("test-camera",
           robot.drivetrain.getState().Pose, capture, 1, 2, 0.1);
       robot.vision.setShouldUpdatePose(false);
-      apply.invoke(robot.vision, measurement, null);
+      apply.invoke(robot.vision, java.util.List.of(measurement), java.util.List.of());
       assertEquals(Double.NEGATIVE_INFINITY, robot.vision.getLastAppliedPositionTimestampSeconds());
       robot.vision.setShouldUpdatePose(true);
-      apply.invoke(robot.vision, measurement, null);
-      assertEquals(capture, robot.vision.getLastAppliedPositionTimestampSeconds());
-      barrierField.setDouble(robot.vision, capture + 0.005); // A reset/heading timestamp barrier is not position fusion.
-      assertEquals(capture, robot.vision.getLastAppliedPositionTimestampSeconds());
+      apply.invoke(robot.vision, java.util.List.of(measurement), java.util.List.of());
+      assertEquals(capture, robot.vision.getLastAppliedPositionTimestampSeconds(),
+          () -> filter.status() + "; " + fusion.status());
+      var delayed = new frc.powerlib.vision.LimelightVision.Measurement("other-camera",
+          robot.drivetrain.getState().Pose, capture - 0.01, 1, 2, 0.1);
+      apply.invoke(robot.vision, java.util.List.of(delayed), java.util.List.of());
+      assertFalse(fusion.isNewPosition(delayed), "A delayed camera must still be fused");
+      assertEquals(capture, robot.vision.getLastAppliedPositionTimestampSeconds(), "A delayed camera cannot move the checkpoint backward");
+      fusion.resetPose(capture + 0.005);
+      assertEquals(capture, robot.vision.getLastAppliedPositionTimestampSeconds(), "Fusion cutoffs are not position measurements");
     } finally {
       fusedField.setDouble(robot.vision, previousFused);
-      barrierField.setDouble(robot.vision, previousBarrier);
+      establishedField.setBoolean(robot.vision, previousEstablished);
       robot.vision.setShouldUpdatePose(previousEnabled);
     }
   }

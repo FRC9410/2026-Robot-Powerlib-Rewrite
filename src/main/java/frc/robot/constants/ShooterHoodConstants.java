@@ -32,7 +32,7 @@ public class ShooterHoodConstants {
   public static final double MOTION_MAGIC_CRUISE_VELOCITY = 15;
   public static final double MOTION_MAGIC_ACCELERATION = 30;
   public static final String NAME = "ShooterHood";
-  public static final String POSITION_UNITS = "degrees";
+  public static final String POSITION_UNITS = "rotations";
   public static final Optional<Double> DEFAULT_POSITION = Optional.of(0.0);
 
   public static final AbsolutePositionSubsystemConfig SHOOTER_HOOD_CONFIG =
