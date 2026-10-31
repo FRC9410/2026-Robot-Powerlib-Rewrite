@@ -19,7 +19,7 @@ export type GeneratedSubsystem = {
   type?: string;
   focEnabled?: boolean;
   torqueFF?: number | string;
-  /** Optional leader stator limit; preserved when editing existing subsystems. */
+  /** Optional mechanism stator limit; preserved when editing existing subsystems. */
   statorCurrentLimitAmps?: number | string;
   motors?: GeneratedMotor[];
   pid?: Record<string, number | string | null>;

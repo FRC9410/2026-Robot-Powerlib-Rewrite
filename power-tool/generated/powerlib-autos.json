@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "autos": [
+    {
+      "id": "3d6900ac-afee-445f-8bc9-bff759dfd6e1",
+      "name": "Red Left",
+      "alliance": "Red",
+      "isDefault": false,
+      "clearRequestsAtEnd": true,
+      "symmetry": {
+        "flipX": false,
+        "flipY": false
+      },
+      "steps": [
+        {
+          "id": "294c2dc2-de41-4d2b-b88e-da2def24d9da",
+          "type": "drive",
+          "x": 10.66,
+          "y": 2.13,
+          "heading": -88,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 1,
+          "endVelocityTolerance": 2
+        },
+        {
+          "id": "dfe8e4b8-dac7-4ce4-b867-9a8ab595894d",
+          "type": "drive",
+          "x": 6.63,
+          "y": 1.9,
+          "heading": -90,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.05,
+          "endVelocityTolerance": 0.1
+        },
+        {
+          "id": "9b684105-209f-4094-8abf-f4a9f444e8af",
+          "type": "drive",
+          "x": 4.97,
+          "y": 0.7,
+          "heading": -90,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.05,
+          "endVelocityTolerance": 0.1
+        },
+        {
+          "id": "4997d841-b2b8-4f2c-9b3e-144f0a107ee9",
+          "type": "requestState",
+          "state": "INTAKING"
+        },
+        {
+          "id": "a3a19877-e96d-4e8e-a56b-55d599e5c51a",
+          "type": "drive",
+          "x": 4.92,
+          "y": 3.94,
+          "heading": -90,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.05,
+          "endVelocityTolerance": 0.1
+        },
+        {
+          "id": "d03e3827-5502-4bcf-a937-b9ec6a38ed15",
+          "type": "drive",
+          "x": 6.33,
+          "y": 2.39,
+          "heading": 137,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.05,
+          "endVelocityTolerance": 0.1
+        },
+        {
+          "id": "ad221fbd-762e-4652-b9bd-db5663f9e3fa",
+          "type": "requestState",
+          "state": "IDLE"
+        },
+        {
+          "id": "f69b590e-b3f5-41bd-a6a7-f7c18597a321",
+          "type": "drive",
+          "x": 7.41,
+          "y": 2.37,
+          "heading": 90,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.05,
+          "endVelocityTolerance": 0.1
+        },
+        {
+          "id": "bf24c7e2-009a-46ed-866c-db6581a3b137",
+          "type": "drive",
+          "x": 11.01,
+          "y": 2.24,
+          "heading": 137,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.05,
+          "endVelocityTolerance": 0.1
+        },
+        {
+          "id": "cf8e1b38-4e24-41f6-ab68-cd6abcc6c55d",
+          "type": "requestState",
+          "state": "SHOOTING"
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,17 @@
 import type { ConstantRow, ConstantsFile } from "../features/constants/types";
 export {};
 
+type AutoFilesState = {
+  path: string;
+  document: unknown;
+  states: string[];
+  driveCommandInstalled: boolean;
+  robotAutosHooked: boolean | null;
+  robotAutosStrings: string[];
+  robot: { width: number; length: number };
+  error?: string;
+};
+
 declare global {
   interface Window {
     powerlib?: {
@@ -24,6 +35,13 @@ declare global {
         stdout: string;
         stderr: string;
       }>;
+      readAutos: () => Promise<AutoFilesState>;
+      saveAutos: (document: unknown) => Promise<AutoFilesState>;
+      updateAutoCode: (document: unknown, javaSource: string) => Promise<{
+        generatedPath: string;
+        hookAdded: boolean;
+        state: AutoFilesState;
+      }>;
       updateInstallSection: (section: string) => Promise<{
         stdout: string;
         stderr: string;
@@ -35,6 +53,8 @@ declare global {
       onMenuUpdateSubsystemCode: (callback: () => void) => () => void;
       onMenuUpdateInstallSection: (callback: (_event: unknown, section: string) => void) => () => void;
       onMenuUpdatePowerTool: (callback: () => void) => () => void;
+      onMenuFieldLayout: (callback: (_event: unknown, id: string) => void) => () => void;
+      setFieldLayoutMenu: (id: string) => void;
     };
   }
 }
