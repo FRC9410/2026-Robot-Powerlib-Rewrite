@@ -30,7 +30,7 @@ public class FieldConstants {
   public static volatile double RED_END_X = X_MAX;
 
   @frc.powerlib.tuning.TunableConstant
-  public static volatile double AUTO_LENGTH_IN_TIME = 20;
+  public static volatile double AUTO_LENGTH_IN_TIME = 15;
   @frc.powerlib.tuning.TunableConstant
   public static volatile double TIME_BETWEEN_SHIFTS = 25;
 

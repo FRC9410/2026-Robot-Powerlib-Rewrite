@@ -284,14 +284,13 @@
                                             },
                   "subsystem:shooter":  {
                                             "constants":  [
-                                                               {
-                                                                   "name":  "SHOOTER_EXTRA_RPS",
-                                                                   "type":  "double",
-                                                                   "value":  "2.0",
-                                                                   "custom":  true,
-                                                                   "tunable":  true
-                                                               }
-
+                                                              {
+                                                                  "name":  "SHOOTER_EXTRA_RPS",
+                                                                  "type":  "double",
+                                                                  "value":  "2.0",
+                                                                  "custom":  true,
+                                                                  "tunable":  true
+                                                              }
                                                           ]
                                         },
                   "subsystem:intakeRoller":  {
