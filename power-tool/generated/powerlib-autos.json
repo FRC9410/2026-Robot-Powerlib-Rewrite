@@ -1,6 +1,7 @@
 {
   "version": 1,
   "periodSeconds": 20,
+  "points": [],
   "autos": [
     {
       "id": "3d6900ac-afee-445f-8bc9-bff759dfd6e1",
@@ -25,6 +26,11 @@
           "y": 2.466,
           "heading": -90,
           "subpoints": [],
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
           "maxVelocity": 3,
           "maxAcceleration": 3,
           "endDistanceTolerance": 0.05,
@@ -37,28 +43,54 @@
           "y": 2.466,
           "heading": -90,
           "subpoints": [],
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
           "maxVelocity": 3,
           "maxAcceleration": 3,
           "endDistanceTolerance": 0.2,
           "endVelocityTolerance": 1
         },
         {
+          "id": "0bcbd496-3b84-425a-96fe-e1d83be2763a",
+          "type": "drive",
+          "x": 9.836,
+          "y": 1.194,
+          "heading": -90,
+          "subpoints": [],
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.5,
+          "endVelocityTolerance": 5
+        },
+        {
           "id": "e95dda25-916a-4f8c-8630-e6d141c0260b",
           "type": "drive",
-          "x": 8.94,
-          "y": 0.725,
+          "x": 9.083,
+          "y": 0.919,
           "heading": -90,
-          "subpoints": [
-            {
-              "id": "01941da2-338c-4f94-ab1c-463f9b5540c4",
-              "progress": 0.8,
-              "state": "INTAKING"
-            }
-          ],
+          "subpoints": [],
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
           "maxVelocity": 3,
           "maxAcceleration": 3,
           "endDistanceTolerance": 0.5,
           "endVelocityTolerance": 1
+        },
+        {
+          "id": "f75403d6-84dc-4fa4-9af0-a0d0ca830094",
+          "type": "requestState",
+          "state": "INTAKING"
         },
         {
           "id": "68f338a7-b7a9-48d9-9275-3577f23a8490",
@@ -67,21 +99,48 @@
           "y": 3.503,
           "heading": -90,
           "subpoints": [],
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
           "maxVelocity": 1.5,
           "maxAcceleration": 3,
           "endDistanceTolerance": 0.5,
           "endVelocityTolerance": 1
         },
         {
-          "id": "67164659-be37-4f65-a275-8541e31ed515",
+          "id": "07898d98-4926-4647-be3e-2800c9ce371f",
           "type": "drive",
-          "x": 10.064,
-          "y": 2.534,
-          "heading": 135,
+          "x": 9.638,
+          "y": 4.035,
+          "heading": 104.2,
           "subpoints": [],
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
           "maxVelocity": 1.5,
           "maxAcceleration": 3,
-          "endDistanceTolerance": 0.2,
+          "endDistanceTolerance": 1,
+          "endVelocityTolerance": 2
+        },
+        {
+          "id": "67164659-be37-4f65-a275-8541e31ed515",
+          "type": "drive",
+          "x": 9.584,
+          "y": 2.412,
+          "heading": 120,
+          "subpoints": [],
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
+          "maxVelocity": 1.5,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.5,
           "endVelocityTolerance": 2
         },
         {
@@ -91,10 +150,20 @@
           "y": 2.466,
           "heading": 180,
           "subpoints": [],
-          "maxVelocity": 3,
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
+          "maxVelocity": 1.5,
           "maxAcceleration": 3,
           "endDistanceTolerance": 0.2,
           "endVelocityTolerance": 3
+        },
+        {
+          "id": "2525af41-5ecf-4010-85e5-3959b592560a",
+          "type": "requestState",
+          "state": "IDLE"
         },
         {
           "id": "af52a69b-058c-40c2-8296-e0b65174c854",
@@ -104,13 +173,18 @@
           "heading": 180,
           "subpoints": [
             {
-              "id": "e2785ba6-9a60-4549-b544-bdad18428b7f",
-              "progress": 0.25,
+              "id": "85b26759-436c-4b17-b1c0-eed427cbfcfb",
+              "progress": 0.5,
               "state": "SPINNING_UP"
             }
           ],
-          "maxVelocity": 3,
-          "maxAcceleration": 3,
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
+          "maxVelocity": 4,
+          "maxAcceleration": 4,
           "endDistanceTolerance": 0.2,
           "endVelocityTolerance": 3
         },
@@ -121,6 +195,11 @@
           "y": 2.466,
           "heading": 135,
           "subpoints": [],
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
           "maxVelocity": 3,
           "maxAcceleration": 3,
           "endDistanceTolerance": 0.05,
@@ -130,6 +209,61 @@
           "id": "49ab84e4-b5c7-4859-982f-81960fbe19ed",
           "type": "requestState",
           "state": "SHOOTING"
+        },
+        {
+          "id": "41d9ee4c-0740-47b6-8990-5e373565be81",
+          "type": "wait",
+          "seconds": 10
+        }
+      ]
+    },
+    {
+      "id": "04dace02-c717-45fe-9af1-a040e49f6f39",
+      "name": "Auto 2",
+      "alliance": null,
+      "isDefault": false,
+      "clearRequestsAtEnd": true,
+      "symmetry": {
+        "flipX": false,
+        "flipY": false
+      },
+      "steps": [
+        {
+          "id": "d16acce2-da5b-4143-b6fe-b8568b3cbe1e",
+          "type": "drive",
+          "x": 2.83,
+          "y": 4.19,
+          "heading": 0,
+          "subpoints": [],
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.05,
+          "endVelocityTolerance": 0.1
+        },
+        {
+          "id": "16ce72dd-782f-4063-b8de-4216665581c7",
+          "type": "drive",
+          "x": 15.58,
+          "y": 3.7,
+          "heading": -81.8,
+          "subpoints": [],
+          "turn": {
+            "mode": "face",
+            "x": 7.6,
+            "y": 6.89,
+            "pointId": null
+          },
+          "pointId": null,
+          "maxTurnRate": null,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.05,
+          "endVelocityTolerance": 0.1
         }
       ]
     }
