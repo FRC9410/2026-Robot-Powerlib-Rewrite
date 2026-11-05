@@ -70,6 +70,7 @@ public final class RobotAutos {
       new Route("Blue Center", Alliance.Blue, List.of(Constants.Auto.BLUE_CENTER_1, Constants.Auto.BLUE_CENTER_2)));
 
   public static void register(AutoBuilder chooser, StateMachine robot) {
+    GeneratedAutos.register(chooser, robot);
     for (Route route : ROUTES)
       chooser.addAuto(route.name(), route.alliance(), () -> build(route, robot));
     for (Route route : CENTER_ROUTES)

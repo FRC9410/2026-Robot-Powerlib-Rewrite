@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "periodSeconds": 20,
+  "points": [
+    {
+      "id": "c7367e96-6acf-4063-9fdb-3778d94eaf83",
+      "name": "Left Bump",
+      "x": 6.009,
+      "y": 4.565,
+      "heading": 0
+    }
+  ],
+  "cameras": [],
+  "autos": [
+    {
+      "id": "d2e426fa-511c-4deb-b402-ba53c691f1be",
+      "name": "Auto 1",
+      "alliance": null,
+      "isDefault": false,
+      "clearRequestsAtEnd": true,
+      "symmetry": {
+        "flipX": false,
+        "flipY": false
+      },
+      "steps": [
+        {
+          "id": "b00caf17-f493-490a-984b-6a998aba8098",
+          "type": "drive",
+          "x": 6.009,
+          "y": 4.565,
+          "heading": 0,
+          "subpoints": [],
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": "c7367e96-6acf-4063-9fdb-3778d94eaf83",
+          "maxTurnRate": null,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.05,
+          "endVelocityTolerance": 0.1
+        },
+        {
+          "id": "9261f43e-f7dd-4fe5-bb87-e327f22173a5",
+          "type": "drive",
+          "x": 10.315,
+          "y": 3.65,
+          "heading": 0,
+          "subpoints": [],
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.05,
+          "endVelocityTolerance": 0.1
+        },
+        {
+          "id": "d8169d08-1670-4aab-be6b-d3c7fe3f7a4a",
+          "type": "drive",
+          "x": 9.979,
+          "y": 1.608,
+          "heading": 0,
+          "subpoints": [],
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.5,
+          "endVelocityTolerance": 1
+        },
+        {
+          "id": "6db7519b-cc54-4555-9679-039f0501f1d8",
+          "type": "drive",
+          "x": 8.701,
+          "y": 1.227,
+          "heading": -90,
+          "subpoints": [],
+          "turn": {
+            "mode": "now"
+          },
+          "pointId": null,
+          "maxTurnRate": null,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.05,
+          "endVelocityTolerance": 0.1
+        },
+        {
+          "id": "0ea36c06-1df5-4cb8-a04d-a6eba9bfbea8",
+          "type": "drive",
+          "x": 6.009,
+          "y": 4.565,
+          "heading": 0,
+          "subpoints": [],
+          "turn": {
+            "mode": "face",
+            "x": 6.34,
+            "y": 1.77,
+            "pointId": null
+          },
+          "pointId": "c7367e96-6acf-4063-9fdb-3778d94eaf83",
+          "maxTurnRate": null,
+          "maxVelocity": 3,
+          "maxAcceleration": 3,
+          "endDistanceTolerance": 0.05,
+          "endVelocityTolerance": 0.1
+        }
+      ]
+    }
+  ]
+}
