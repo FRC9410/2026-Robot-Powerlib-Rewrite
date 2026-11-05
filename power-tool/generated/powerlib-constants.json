@@ -20,7 +20,7 @@
                                                          {
                                                              "name":  "CONFIG",
                                                              "type":  "LimelightVisionConfig",
-                                                             "value":  "new LimelightVisionConfig(0.7, 5, 0.5)",
+                                                             "value":  "new LimelightVisionConfig(0.1, 10, 0.5)",
                                                              "custom":  false,
                                                              "tunable":  false
                                                          },
@@ -685,7 +685,7 @@
                                                         {
                                                             "name":  "AUTO_LENGTH_IN_TIME",
                                                             "type":  "double",
-                                                            "value":  "15",
+                                                            "value":  "20",
                                                             "custom":  false,
                                                             "tunable":  false
                                                         },

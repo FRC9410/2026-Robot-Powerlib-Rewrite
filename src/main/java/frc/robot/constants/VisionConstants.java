@@ -10,7 +10,7 @@ public class VisionConstants {
   // Measurements are ranked by quality; camera order breaks ties. Empty means no Limelights.
   // Example: {"limelight-b", "limelight-l", "limelight-r"}
   public static final String[] LIMELIGHT_NAMES = {"limelight-left", "limelight-right", "limelight-turret"};
-  public static final LimelightVisionConfig CONFIG = new LimelightVisionConfig(0.7, 5, 0.5);
+  public static final LimelightVisionConfig CONFIG = new LimelightVisionConfig(0.1, 10, 0.5);
   public static final LimelightHeadingConfig HEADING_CONFIG = LimelightHeadingConfig.DEFAULT;
   public static final VisionHeadingInitializationConfig HEADING_INITIALIZATION_CONFIG =
       VisionHeadingInitializationConfig.DEFAULT;
