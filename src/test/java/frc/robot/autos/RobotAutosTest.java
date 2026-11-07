@@ -25,7 +25,7 @@ class RobotAutosTest {
       var route = RobotAutos.ROUTES.get(r);
       assertEquals(7, route.points().size());
       for (int p = 0; p < 7; p++) {
-        Pose2d point = route.points().get(p);
+        Pose2d point = route.points().get(p).pose();
         assertEquals(expected[r][p][0], point.getX(), 1e-12);
         assertEquals(expected[r][p][1], point.getY(), 1e-12);
         assertEquals(expected[r][p][2], point.getRotation().getDegrees(), 1e-12);

@@ -21,6 +21,7 @@ import frc.robot.subsystems.StateMachine;
 import frc.robot.subsystems.StateMachine.RobotState;
 import frc.robot.utils.ShootingUtils;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -29,7 +30,7 @@ public final class RobotAutos {
   private RobotAutos() {
   }
 
-  public record Route(String name, Alliance alliance, List<Pose2d> points) {
+  public record Route(String name, Alliance alliance, List<AutoPoint> points) {
     public Route {
       points = List.copyOf(points);
     }
@@ -39,7 +40,7 @@ public final class RobotAutos {
      * 180-degree offset.
      */
     public List<Pose2d> fieldPoints() {
-      return points.stream().map(point -> alliance == Alliance.Red
+      return points.stream().map(AutoPoint::pose).map(point -> alliance == Alliance.Red
           ? new Pose2d(point.getTranslation(), point.getRotation().plus(Rotation2d.fromDegrees(180)))
           : point).toList();
     }
@@ -76,17 +77,12 @@ public final class RobotAutos {
   public static Command build(Route route, StateMachine robot) {
     Object owner = new Object();
     Run run = new Run();
-    List<Pose2d> points = route.fieldPoints();
     Command sequence = sequence(route, state -> new RequestState(state, owner, robot),
         () -> aimAtHub(robot, route.alliance())
             .until(() -> aligned(robot, route.alliance(), Constants.Auto.TURN_TOLERANCE_DEGREES))
             .withTimeout(Constants.Auto.TURN_TIMEOUT_SECONDS),
         () -> aimAtHub(robot, route.alliance()))
-        .build(point -> {
-          int leg = points.indexOf(point);
-          return new DriveToPointCommand(robot.drivetrain, point, Constants.Auto.LEG_TOLERANCE_INCHES[leg],
-              Constants.Auto.LEG_SPEED_COEFFICIENTS[leg], Constants.Auto.LEG_LOCK_HEADING[leg], run::abort);
-        });
+        .build(driveLegFactory(route, robot, run::abort));
     Command guarded = Commands.either(sequence, Commands.none(), () -> run.start(route, robot));
     return guarded.until(() -> run.aborted || run.timer.hasElapsed(Constants.Field.AUTO_LENGTH_IN_TIME)
         || !DriverStation.isAutonomousEnabled())
@@ -103,17 +99,12 @@ public final class RobotAutos {
   public static Command build_center(Route route, StateMachine robot) {
     Object owner = new Object();
     Run run = new Run();
-    List<Pose2d> points = route.fieldPoints();
     Command sequence = center_sequence(route, state -> new RequestState(state, owner, robot),
         () -> aimAtHub(robot, route.alliance())
             .until(() -> aligned(robot, route.alliance(), Constants.Auto.TURN_TOLERANCE_DEGREES))
             .withTimeout(Constants.Auto.TURN_TIMEOUT_SECONDS),
         () -> aimAtHub(robot, route.alliance()))
-        .build(point -> {
-          int leg = points.indexOf(point);
-          return new DriveToPointCommand(robot.drivetrain, point, Constants.Auto.LEG_TOLERANCE_INCHES[leg],
-              Constants.Auto.LEG_SPEED_COEFFICIENTS[leg], Constants.Auto.LEG_LOCK_HEADING[leg], run::abort);
-        });
+        .build(driveLegFactory(route, robot, run::abort));
     Command guarded = Commands.either(sequence, Commands.none(), () -> run.start(route, robot));
     return guarded.until(() -> run.aborted || run.timer.hasElapsed(Constants.Field.AUTO_LENGTH_IN_TIME)
         || !DriverStation.isAutonomousEnabled())
@@ -125,6 +116,17 @@ public final class RobotAutos {
           if (!run.aborted)
             SignalLogger.writeString("Robot/Auto/Status", interrupted ? "Interrupted" : "Finished");
         }).withName(route.name());
+  }
+
+  private static Function<Pose2d, Command> driveLegFactory(Route route, StateMachine robot, Consumer<String> abort) {
+    // Advance by leg, so repeated poses can carry different parameters.
+    var points = route.points().listIterator();
+    return destination -> {
+      int leg = points.nextIndex();
+      AutoPoint point = points.next();
+      return new DriveToPointCommand(robot.drivetrain, destination, Constants.Auto.LEG_TOLERANCE_INCHES[leg],
+          Constants.Auto.LEG_SPEED_COEFFICIENTS[leg], Constants.Auto.LEG_LOCK_HEADING[leg], point.params(), abort);
+    };
   }
 
   static Auto sequence(Route route, Function<RobotState, Command> request,
